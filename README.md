@@ -13,9 +13,9 @@ Abrir localhost:8080 y verificar si les corre el proyecto
 
 * Si no les corre hay que ejecutar manualmente en terminal lo siguiente:
 
-docker build -f Dockerfile --platform linux/amd64 -t proyectoARC .
+docker build -f Dockerfile --platform linux/amd64 -t arcproject .
 
-docker run -d --name agilecontainer -p 8080:8080 proyectoARC
+docker run -d --name agilecontainer -p 8080:8080 arcproject
 
 Diagrama de Entidad Relacion
 ![Diagrama ER](assets/ER_ARC.png)
