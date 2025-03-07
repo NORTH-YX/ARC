@@ -16,6 +16,6 @@ public interface TaskRepository extends JpaRepository<Task, Integer> {
     List<Task> findByUserId(User userId);
     
     List<Task> findBySprintId(Integer sprintId);
-    List<Task> findByPriority(String priority);
+    List<Task> findByPriority(Integer priority);
     List<Task> findByStatus(String status);
 }
