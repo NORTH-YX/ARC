@@ -3,7 +3,11 @@ package com.springboot.MyTodoList.service;
 import com.springboot.MyTodoList.model.Task;
 import com.springboot.MyTodoList.model.User;
 import com.springboot.MyTodoList.repository.TaskRepository;
+
+import io.swagger.models.Response;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -17,6 +21,15 @@ public class TaskService {
 
     public List<Task> findAll() {
         return taskRepository.findAll();
+    }
+
+    public ResponseEntity<Task> getTaskById(int id) {
+        Optional<Task> taskData = taskRepository.findById(id);
+        if (taskData.isPresent()) {
+            return ResponseEntity.ok(taskData.get());
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     public Optional<Task> findById(int id) {
@@ -36,7 +49,7 @@ public class TaskService {
         return taskRepository.findBySprintId(sprintId);
     }
 
-    public List<Task> findByPriority(String priority) {
+    public List<Task> findByPriority(Integer priority) {
         return taskRepository.findByPriority(priority);
     }
 
@@ -46,6 +59,21 @@ public class TaskService {
 
     public Task addTask(Task task) {
         return taskRepository.save(task);
+    }
+
+    public Task updateTask(int id, Task task) {
+        Optional<Task> taskData = taskRepository.findById(id);
+        if (taskData.isPresent()) {
+            Task _task = taskData.get();
+            _task.setTaskName(task.getTaskName());
+            _task.setUser(task.getUser());
+            _task.setSprint(task.getSprint());
+            _task.setPriority(task.getPriority());
+            _task.setStatus(task.getStatus());
+            return taskRepository.save(_task);
+        } else {
+            return null;
+        }
     }
 
     @Transactional
