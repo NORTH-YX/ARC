@@ -1,5 +1,7 @@
 package com.springboot.MyTodoList.util;
 
+import java.io.ObjectInputFilter.Status;
+
 public enum BotLabels {
 	
 	SHOW_MAIN_SCREEN("Show Main Screen"), 
@@ -10,7 +12,12 @@ public enum BotLabels {
 	UNDO("UNDO"),
 	DELETE("DELETE"),
 	MY_TODO_LIST("MY TODO LIST"),
+	STATUS("Status: "),
+	TO_DO("TO DO"),
+	IN_PROGRESS("IN PROGRESS"),
+	COMPLETED("COMPLETED"),
 	DASH("-");
+
 
 	private String label;
 

@@ -18,8 +18,8 @@ public class Task {
     @Column(name = "DESCRIPTION", nullable = false, length = 255)
     private String description;
 
-    @Column(name = "PRIORITY", nullable = false, length = 50)
-    private String priority;
+    @Column(name = "PRIORITY", nullable = false)
+    private Integer priority;
 
     @Column(name = "STATUS", nullable = false, length = 50)
     private String status;
@@ -48,7 +48,7 @@ public class Task {
         this.creationDate = OffsetDateTime.now();
     }
 
-    public Task(int taskId, String taskName, String description, String priority, String status, Sprint sprintId, User userId, OffsetDateTime creationDate, OffsetDateTime estimatedFinishDate, OffsetDateTime realFinishDate, OffsetDateTime deletedAt) {
+    public Task(int taskId, String taskName, String description, Integer priority, String status, Sprint sprintId, User userId, OffsetDateTime creationDate, OffsetDateTime estimatedFinishDate, OffsetDateTime realFinishDate, OffsetDateTime deletedAt) {
         this.taskId = taskId;
         this.taskName = taskName;
         this.description = description;
@@ -74,7 +74,7 @@ public class Task {
         return description;
     }
 
-    public String getPriority() {
+    public Integer getPriority() {
         return priority;
     }
 
@@ -114,7 +114,7 @@ public class Task {
         this.description = description;
     }
 
-    public void setPriority(String priority) {
+    public void setPriority(Integer priority) {
         this.priority = priority;
     }
 
