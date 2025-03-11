@@ -1,5 +1,7 @@
 package com.springboot.MyTodoList.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.time.OffsetDateTime;
 
@@ -30,6 +32,7 @@ public class User {
     @Column(name = "PHONE_NUMBER", length = 20)
     private String phoneNumber;
 
+    @JsonIgnore
     @Column(name = "PASSWORD", nullable = false, length = 255)
     private String password;
 
@@ -133,6 +136,7 @@ public class User {
         this.phoneNumber = phoneNumber;
     }
 
+    @JsonIgnore
     public String getPassword() {
         return password;
     }
@@ -162,7 +166,6 @@ public class User {
                 ", creationDate=" + creationDate +
                 ", deletedAt=" + deletedAt +
                 ", phoneNumber='" + phoneNumber + '\'' +
-                ", password='" + password + '\'' +
                 '}';
     }
 }

@@ -17,26 +17,49 @@ public class UsersController {
     @Autowired
     private UserService userService;
 
+    // Obtener todos los usuarios
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.findAll();
         return ResponseEntity.ok(users);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable int id) {
+    // Obtener un usuario por ID usando @RequestParam
+    @GetMapping("/by-id")
+    public ResponseEntity<User> getUserById(@RequestParam int id) {
         Optional<User> user = userService.findById(id);
         return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        User savedUser = userService.save(user);
-        return ResponseEntity.ok(savedUser);
+    // Obtener un usuario por email usando @RequestParam
+    @GetMapping("/by-email")
+    public ResponseEntity<User> getUserByEmail(@RequestParam String email) {
+        Optional<User> user = userService.findByEmail(email);
+        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable int id) {
+    // Crear un usuario usando @RequestParam en lugar de @RequestBody
+    @PostMapping("/create")
+    //crea el usuario con cada uno de los parametros necesarios
+    public ResponseEntity<User> createUser(@RequestParam String name, @RequestParam String email, @RequestParam String role,
+                                           @RequestParam String workModality, @RequestParam String telegramId, @RequestParam String phoneNumber,
+                                           @RequestParam String password, @RequestParam int teamId) {
+        User user = new User();
+        user.setName(name);
+        user.setEmail(email);
+        user.setRole(role);
+        user.setWorkModality(workModality);
+        user.setTelegramId(telegramId);
+        user.setPhoneNumber(phoneNumber);
+        user.setPassword(password);
+        user.setTeamId(teamId);
+        User newUser = userService.save(user);
+        return ResponseEntity.ok(newUser);
+    }
+
+    // Eliminar un usuario usando @RequestParam en lugar de @PathVariable
+    @DeleteMapping("/delete")
+    public ResponseEntity<Void> deleteUser(@RequestParam int id) {
         userService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
