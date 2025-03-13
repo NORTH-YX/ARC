@@ -16,6 +16,14 @@ public enum BotLabels {
 	TO_DO("TO DO"),
 	IN_PROGRESS("IN PROGRESS"),
 	COMPLETED("COMPLETED"),
+	SPRINT("Sprint: "),
+	LOW("LOW"),
+	MID("MID"),
+	HIGH("HIGH"),
+	SEARCH_TASKS_BY_USER("Search Tasks By User"),
+	SEARCH_TASKS_BY_SPRINT("Search Tasks By Sprint"),
+	SEARCH_TASKS_BY_PRIORITY("Search Tasks By Priority"),
+	SEARCH_TASKS_BY_STATUS("Search Tasks By Status"),
 	DASH("-");
 
 
