@@ -1,13 +1,19 @@
 package com.springboot.MyTodoList.model;
 
 public class AuthenticationResponse {
-    private final String jwt;
+    private String jwt;
+    private User user;
 
-    public AuthenticationResponse(String jwt) {
+    public AuthenticationResponse(String jwt, User user) {
         this.jwt = jwt;
+        this.user = user;
     }
 
     public String getJwt() {
         return jwt;
+    }
+
+    public User getUser() {
+        return user;
     }
 }
