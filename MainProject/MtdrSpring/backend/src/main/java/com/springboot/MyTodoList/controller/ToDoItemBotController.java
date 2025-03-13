@@ -2,8 +2,12 @@ package com.springboot.MyTodoList.controller;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.time.format.DateTimeFormatter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +28,8 @@ import com.springboot.MyTodoList.model.ToDoItem;
 import com.springboot.MyTodoList.service.ToDoItemService;
 import com.springboot.MyTodoList.model.Task;
 import com.springboot.MyTodoList.service.TaskService;
+import com.springboot.MyTodoList.model.User;
+import com.springboot.MyTodoList.service.UserService;
 import com.springboot.MyTodoList.util.BotCommands;
 import com.springboot.MyTodoList.util.BotHelper;
 import com.springboot.MyTodoList.util.BotLabels;
@@ -34,14 +40,16 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 	private static final Logger logger = LoggerFactory.getLogger(ToDoItemBotController.class);
 	private ToDoItemService toDoItemService;
 	private TaskService taskService;
+	private UserService userService;
 	private String botName;
 
-	public ToDoItemBotController(String botToken, String botName, ToDoItemService toDoItemService, TaskService taskService) {
+	public ToDoItemBotController(String botToken, String botName, ToDoItemService toDoItemService, TaskService taskService, UserService userService) {
 		super(botToken);
 		logger.info("Bot Token: " + botToken);
 		logger.info("Bot name: " + botName);
 		this.toDoItemService = toDoItemService;
 		this.taskService = taskService;
+		this.userService = userService;
 		this.botName = botName;
 	}
 
@@ -66,7 +74,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 				// first row
 				KeyboardRow row = new KeyboardRow();
 				row.add(BotLabels.LIST_ALL_ITEMS.getLabel());
-				row.add(BotLabels.ADD_NEW_ITEM.getLabel());
+				// row.add(BotLabels.ADD_NEW_ITEM.getLabel());
 				// Add the first row to the keyboard
 				keyboard.add(row);
 
@@ -197,7 +205,6 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 					|| messageTextFromTelegram.equals(BotLabels.LIST_ALL_ITEMS.getLabel())
 					|| messageTextFromTelegram.equals(BotLabels.MY_TODO_LIST.getLabel())) {
 
-				List<ToDoItem> allItems = getAllToDoItems();
 				List<Task> allTasks = getAllTasks();
 				ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
 				List<KeyboardRow> keyboard = new ArrayList<>();
@@ -207,43 +214,30 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 				mainScreenRowTop.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
 				keyboard.add(mainScreenRowTop);
 
-				KeyboardRow firstRow = new KeyboardRow();
-				firstRow.add(BotLabels.ADD_NEW_ITEM.getLabel());
-				keyboard.add(firstRow);
+				// KeyboardRow firstRow = new KeyboardRow();
+				// firstRow.add(BotLabels.ADD_NEW_ITEM.getLabel());
+				// keyboard.add(firstRow);
 
-				KeyboardRow myTodoListTitleRow = new KeyboardRow();
-				myTodoListTitleRow.add(BotLabels.MY_TODO_LIST.getLabel());
-				keyboard.add(myTodoListTitleRow);
+				// Nueva fila con el botón "Buscar tareas por usuario"
+				KeyboardRow userTasksRow = new KeyboardRow();
+				userTasksRow.add(BotLabels.SEARCH_TASKS_BY_USER.getLabel());
+				keyboard.add(userTasksRow);
 
-				List<ToDoItem> activeItems = allItems.stream().filter(item -> item.isDone() == false)
-						.collect(Collectors.toList());
-
-				for (ToDoItem item : activeItems) {
-
-					KeyboardRow currentRow = new KeyboardRow();
-					currentRow.add(item.getDescription());
-					currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.DONE.getLabel());
-					keyboard.add(currentRow);
-				}
-
-				List<ToDoItem> doneItems = allItems.stream().filter(item -> item.isDone() == true)
-						.collect(Collectors.toList());
-
-				for (ToDoItem item : doneItems) {
-					KeyboardRow currentRow = new KeyboardRow();
-					currentRow.add(item.getDescription());
-					currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.UNDO.getLabel());
-					currentRow.add(item.getID() + BotLabels.DASH.getLabel() + BotLabels.DELETE.getLabel());
-					keyboard.add(currentRow);
-				}
+				// Nueva fila con el botón "Buscar tareas por prioridad"
+				KeyboardRow priorityTasksRow = new KeyboardRow();
+				priorityTasksRow.add(BotLabels.SEARCH_TASKS_BY_PRIORITY.getLabel());
+				keyboard.add(priorityTasksRow);
 
 				List<Task> activeTasks = allTasks.stream()
 						.collect(Collectors.toList());
 
 				for (Task task : activeTasks) {
 					KeyboardRow currentRow = new KeyboardRow();
-					currentRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + task.getDescription()
-						+ BotLabels.DASH.getLabel() + BotLabels.STATUS.getLabel() + task.getStatus());
+					currentRow.add(
+						"🆔 " + task.getTaskId() + 
+						" | 📄 " + task.getDescription() + 
+						" | 📌 " + BotLabels.STATUS.getLabel() + task.getStatus()
+					);
 					keyboard.add(currentRow);
 					//agregar botones para cambiar el estado de la tarea en la fila de abajo
 					currentRow = new KeyboardRow();
@@ -251,6 +245,31 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 					currentRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.IN_PROGRESS.getLabel());
 					currentRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.COMPLETED.getLabel());
 					keyboard.add(currentRow);
+				}
+
+				// Construir el mensaje de texto
+				StringBuilder taskDetailsMessage = new StringBuilder();
+				taskDetailsMessage.append("📋 *All tasks:*\n");
+
+				// Formateador para la fecha
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+				// En tu loop para formatear las fechas:
+				for (Task task : activeTasks) {
+					String creationDateFormatted = task.getCreationDate().format(formatter);
+					String estimatedFinishDateFormatted = task.getEstimatedFinishDate().format(formatter);
+					String realFinishDateFormatted = task.getRealFinishDate() != null ?
+							task.getRealFinishDate().format(formatter) : "Not Finished";
+				
+					taskDetailsMessage.append("🆔 " + task.getTaskId() + "\n" +
+							"📄 " + task.getDescription() + "\n" +
+							"📌 " + BotLabels.STATUS.getLabel() + task.getStatus() + "\n" +
+							"🚀 Sprint: " + task.getSprint().getSprintName() + "\n" +
+							"🕰️ Created: " + creationDateFormatted + "\n" +
+							"⏳ Estimated Finish: " + estimatedFinishDateFormatted + "\n" +
+							"🔑 Priority: " + task.getPriority() + "\n" +
+							"👤 User: " + task.getUser().getName() + "\n" +
+							"🏁 Real Finish: " + realFinishDateFormatted + "\n\n");
 				}
 
 				// command back to main screen
@@ -262,7 +281,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 
 				SendMessage messageToTelegram = new SendMessage();
 				messageToTelegram.setChatId(chatId);
-				messageToTelegram.setText(BotLabels.MY_TODO_LIST.getLabel());
+				messageToTelegram.setText(taskDetailsMessage.toString());
 				messageToTelegram.setReplyMarkup(keyboardMarkup);
 
 				try {
@@ -288,6 +307,237 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 					logger.error(e.getLocalizedMessage(), e);
 				}
 
+			} else if (messageTextFromTelegram.equals(BotLabels.SEARCH_TASKS_BY_USER.getLabel())) {
+
+				List<User> allUsers = getAllUsers(); // Método para obtener usuarios
+			
+				ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+				List<KeyboardRow> keyboard = new ArrayList<>();
+			
+				for (User user : allUsers) {
+					KeyboardRow row = new KeyboardRow();
+					row.add(user.getUserId() + BotLabels.DASH.getLabel() + user.getName());
+					keyboard.add(row);
+				}
+			
+				SendMessage messageToTelegram = new SendMessage();
+				messageToTelegram.setChatId(chatId);
+				messageToTelegram.setText("Select a user:");
+				keyboardMarkup.setKeyboard(keyboard);
+				messageToTelegram.setReplyMarkup(keyboardMarkup);
+			
+				try {
+					execute(messageToTelegram);
+				} catch (TelegramApiException e) {
+					logger.error(e.getLocalizedMessage(), e);
+				}
+			}   else if (messageTextFromTelegram.contains(BotLabels.DASH.getLabel())) {
+				try {
+					String[] parts = messageTextFromTelegram.split(BotLabels.DASH.getLabel());
+					Integer userId = Integer.valueOf(parts[0]);
+			
+					List<Task> userTasks = getTasksByUserId(userId);
+					ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+					List<KeyboardRow> keyboard = new ArrayList<>();
+			
+					// Botón para volver a la pantalla principal
+					KeyboardRow mainScreenRowTop = new KeyboardRow();
+					mainScreenRowTop.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
+					keyboard.add(mainScreenRowTop);
+			
+					if (userTasks.isEmpty()) {
+						KeyboardRow noTasksRow = new KeyboardRow();
+						noTasksRow.add("There are no tasks assigned to this user.");
+						keyboard.add(noTasksRow);
+					} else {
+						for (Task task : userTasks) {
+							// Fila con la tarea y su estado
+							KeyboardRow taskRow = new KeyboardRow();
+							taskRow.add(
+							"🆔 " + task.getTaskId() + 
+							" | 📄 " + task.getDescription() + 
+							" | 📌 " + BotLabels.STATUS.getLabel() + task.getStatus()
+							);
+							keyboard.add(taskRow);
+			
+							// Fila con los botones para cambiar el estado
+							KeyboardRow statusRow = new KeyboardRow();
+							statusRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.TO_DO.getLabel());
+							statusRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.IN_PROGRESS.getLabel());
+							statusRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.COMPLETED.getLabel());
+							keyboard.add(statusRow);
+						}
+					}
+
+					// Construir el mensaje de texto
+					StringBuilder taskDetailsMessage = new StringBuilder();
+					taskDetailsMessage.append("📋 *Tasks assigned for this user:*\n");
+
+					// Formateador para la fecha
+					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+					// En tu loop para formatear las fechas:
+					for (Task task : userTasks) {
+						String creationDateFormatted = task.getCreationDate().format(formatter);
+						String estimatedFinishDateFormatted = task.getEstimatedFinishDate().format(formatter);
+						String realFinishDateFormatted = task.getRealFinishDate() != null ?
+								task.getRealFinishDate().format(formatter) : "Not Finished";
+					
+						taskDetailsMessage.append("🆔 " + task.getTaskId() + "\n" +
+								"📄 " + task.getDescription() + "\n" +
+								"📌 " + BotLabels.STATUS.getLabel() + task.getStatus() + "\n" +
+								"🚀 Sprint: " + task.getSprint().getSprintName() + "\n" +
+								"🕰️ Created: " + creationDateFormatted + "\n" +
+								"⏳ Estimated Finish: " + estimatedFinishDateFormatted + "\n" +
+								"🔑 Priority: " + task.getPriority() + "\n" +
+								"👤 User: " + task.getUser().getName() + "\n" +
+								"🏁 Real Finish: " + realFinishDateFormatted + "\n\n");
+					}
+			
+					// Botón para volver a la pantalla principal al final
+					KeyboardRow mainScreenRowBottom = new KeyboardRow();
+					mainScreenRowBottom.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
+					keyboard.add(mainScreenRowBottom);
+			
+					keyboardMarkup.setKeyboard(keyboard);
+			
+					SendMessage messageToTelegram = new SendMessage();
+					messageToTelegram.setChatId(chatId);
+					messageToTelegram.setText(taskDetailsMessage.toString());
+					messageToTelegram.setParseMode("Markdown");
+					messageToTelegram.setReplyMarkup(keyboardMarkup);
+			
+					execute(messageToTelegram);
+			
+				} catch (Exception e) {
+					logger.error(e.getLocalizedMessage(), e);
+				}
+			}
+
+			// Método para obtener tareas por prioridad y mostrar botones
+			else if (messageTextFromTelegram.equals(BotLabels.SEARCH_TASKS_BY_PRIORITY.getLabel())) {
+				// Mostrar opciones de prioridad
+				ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+				List<KeyboardRow> keyboard = new ArrayList<>();
+
+				// Fila con botones para elegir prioridad (Low, Mid, High)
+				KeyboardRow row = new KeyboardRow();
+				row.add(BotLabels.LOW.getLabel());    // Low priority
+				row.add(BotLabels.MID.getLabel());    // Mid priority
+				row.add(BotLabels.HIGH.getLabel());   // High priority
+				keyboard.add(row);
+
+				SendMessage messageToTelegram = new SendMessage();
+				messageToTelegram.setChatId(chatId);
+				messageToTelegram.setText("Select a priority:");
+				keyboardMarkup.setKeyboard(keyboard);
+				messageToTelegram.setReplyMarkup(keyboardMarkup);
+
+				try {
+					execute(messageToTelegram);
+				} catch (TelegramApiException e) {
+					logger.error(e.getLocalizedMessage(), e);
+				}
+			} 
+			
+			else if (messageTextFromTelegram.contains(BotLabels.LOW.getLabel()) ||
+			messageTextFromTelegram.contains(BotLabels.MID.getLabel()) ||
+			messageTextFromTelegram.contains(BotLabels.HIGH.getLabel())) {
+
+				// Mapa para convertir las etiquetas de prioridad en enteros
+				Map<String, Integer> priorityMap = new HashMap<>();
+				priorityMap.put(BotLabels.LOW.getLabel(), 1);   // 1 -> Low
+				priorityMap.put(BotLabels.MID.getLabel(), 2);   // 2 -> Mid
+				priorityMap.put(BotLabels.HIGH.getLabel(), 3);  // 3 -> High
+
+				// Extraer la prioridad seleccionada
+				String selectedPriority = messageTextFromTelegram.contains(BotLabels.LOW.getLabel()) ? BotLabels.LOW.getLabel()
+						: messageTextFromTelegram.contains(BotLabels.MID.getLabel()) ? BotLabels.MID.getLabel()
+						: BotLabels.HIGH.getLabel();
+
+				Integer priorityValue = priorityMap.get(selectedPriority);
+
+				if (priorityValue != null) {
+					// Obtener tareas por la prioridad seleccionada
+					List<Task> tasksByPriority = getTasksByPriority(priorityValue);
+
+					// Crear teclado con tareas filtradas por prioridad
+					ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+					List<KeyboardRow> keyboard = new ArrayList<>();
+
+					// Botón para volver a la pantalla principal
+					KeyboardRow mainScreenRowTop = new KeyboardRow();
+					mainScreenRowTop.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
+					keyboard.add(mainScreenRowTop);
+
+					// Construir el mensaje de texto
+					StringBuilder taskDetailsMessage = new StringBuilder();
+					taskDetailsMessage.append("📋 *Tasks with Priority " + selectedPriority + ":*\n");
+
+					// Formateador para la fecha
+					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+					// En tu loop para formatear las fechas:
+					for (Task task : tasksByPriority) {
+						String creationDateFormatted = task.getCreationDate().format(formatter);
+						String estimatedFinishDateFormatted = task.getEstimatedFinishDate().format(formatter);
+						String realFinishDateFormatted = task.getRealFinishDate() != null ?
+								task.getRealFinishDate().format(formatter) : "Not Finished";
+					
+						taskDetailsMessage.append("🆔 " + task.getTaskId() + "\n" +
+								"📄 " + task.getDescription() + "\n" +
+								"📌 " + BotLabels.STATUS.getLabel() + task.getStatus() + "\n" +
+								"🚀 Sprint: " + task.getSprint().getSprintName() + "\n" +
+								"🕰️ Created: " + creationDateFormatted + "\n" +
+								"⏳ Estimated Finish: " + estimatedFinishDateFormatted + "\n" +
+								"🔑 Priority: " + task.getPriority() + "\n" +
+								"👤 User: " + task.getUser().getName() + "\n" +
+								"🏁 Real Finish: " + realFinishDateFormatted + "\n\n");
+					}
+
+					if (tasksByPriority.isEmpty()) {
+						KeyboardRow noTasksRow = new KeyboardRow();
+						noTasksRow.add("No tasks found with this priority.");
+						keyboard.add(noTasksRow);
+					} else {
+						for (Task task : tasksByPriority) {
+							// Fila con la tarea y su estado
+							KeyboardRow taskRow = new KeyboardRow();
+							taskRow.add(
+								"🆔 " + task.getTaskId() +
+								" | 📄 " + task.getDescription() +
+								" | 📌 " + BotLabels.STATUS.getLabel() + task.getStatus()
+							);
+							keyboard.add(taskRow);
+
+							// Fila con los botones para cambiar el estado
+							KeyboardRow statusRow = new KeyboardRow();
+							statusRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.TO_DO.getLabel());
+							statusRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.IN_PROGRESS.getLabel());
+							statusRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.COMPLETED.getLabel());
+							keyboard.add(statusRow);
+						}
+					}
+
+					// Botón para volver a la pantalla principal al final
+					KeyboardRow mainScreenRowBottom = new KeyboardRow();
+					mainScreenRowBottom.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
+					keyboard.add(mainScreenRowBottom);
+
+					keyboardMarkup.setKeyboard(keyboard);
+
+					SendMessage messageToTelegram = new SendMessage();
+					messageToTelegram.setChatId(chatId);
+					messageToTelegram.setText(taskDetailsMessage.toString());
+					messageToTelegram.setParseMode("Markdown");
+					messageToTelegram.setReplyMarkup(keyboardMarkup);
+
+					try {
+						execute(messageToTelegram);
+					} catch (TelegramApiException e) {
+						logger.error(e.getLocalizedMessage(), e);
+					}
+				}
 			}
 
 			else {
@@ -325,6 +575,25 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 		return taskService.findAll();
 	}
 
+	// Método para obtener todos los usuarios
+	public List<User> getAllUsers() {
+		return userService.findAll();
+	}
+
+	// Método para obtener las tareas de un usuario por ID
+	public List<Task> getTasksByUserId(Integer userId) {
+		Optional<User> user = userService.findById(userId);
+		if (!user.isPresent()) {
+			return new ArrayList<>();
+		}
+		return taskService.findByUserId(user.get());
+	}
+
+	//metodo para obtener las tareas por prioridad
+	public List<Task> getTasksByPriority(Integer priority) {
+		return taskService.findByPriority(priority);
+	}
+
 	// GET BY ID /tasks/{id}
 	public ResponseEntity<Task> getTaskById(@PathVariable int id) {
 		try {
@@ -352,6 +621,17 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 		ToDoItem td = toDoItemService.addToDoItem(todoItem);
 		HttpHeaders responseHeaders = new HttpHeaders();
 		responseHeaders.set("location", "" + td.getID());
+		responseHeaders.set("Access-Control-Expose-Headers", "location");
+		// URI location = URI.create(""+td.getID())
+
+		return ResponseEntity.ok().headers(responseHeaders).build();
+	}
+
+	// PUT /tasks
+	public ResponseEntity addTask(@RequestBody Task task) throws Exception {
+		Task td = taskService.addTask(task);
+		HttpHeaders responseHeaders = new HttpHeaders();
+		responseHeaders.set("location", "" + td.getTaskId());
 		responseHeaders.set("Access-Control-Expose-Headers", "location");
 		// URI location = URI.create(""+td.getID())
 
