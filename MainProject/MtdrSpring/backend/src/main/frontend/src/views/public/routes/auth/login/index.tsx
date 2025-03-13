@@ -1,5 +1,5 @@
 import React from "react";
-import { Form, Input, Button, Checkbox, Row, Col, Typography, Image, Card } from "antd";
+import { Form, Input, Button, Row, Col, Typography, Image, Card } from "antd";
 import { LoginCredentials } from "../../../../../api/auth";
 import { useNavigate } from "react-router-dom";
 
@@ -66,18 +66,16 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
               name="basic"
               labelCol={{ span: 12 }}
               wrapperCol={{ span: 32 }}
-              initialValues={{ remember: true }}
               onFinish={handleFormSubmit}
-              // onFinishFailed={onFinishFailed}
               autoComplete="off"
               layout="vertical"
               style={{ width: "100%" }}
             >
               <Form.Item
-                label="Username"
-                name="username"
+                label="Email"
+                name="email"
                 rules={[
-                  { required: true, message: "Please input your username!" },
+                  { required: true, message: "Please input your email!" },
                 ]}
               >
                 <Input />
@@ -97,16 +95,9 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
                 style={{
                   display: "flex",
                   flexDirection: "row",
-                  justifyContent: "space-between",
+                  justifyContent: "flex-end",
                 }}
               >
-                <Form.Item
-                  name="remember"
-                  valuePropName="checked"
-                  wrapperCol={{ span: 24 }}
-                >
-                  <Checkbox>Remember me</Checkbox>
-                </Form.Item>
                 <Link style={{ paddingTop: "4px" }} onClick={() => navigate("/recover")}>Forgot password?</Link>
               </div>
 
@@ -120,7 +111,6 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
                 </Button>
               </Form.Item>
             </Form>
-            {/* {error && <p style={{ color: "red" }}>{error}</p>} */}
             <div style={{ display: "flex", flexDirection: "row", gap: "4px" }}>
               <Text>Don't have an account?</Text>
               <Link>Sign up</Link>
@@ -129,10 +119,10 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
         </Card>
       </Col>
       <Col
-        xs={0} // Hide on extra small screens
-        sm={0} // 10/24 width on small screens
-        md={12} // 12/24 width on medium screens
-        lg={12} // Half screen on large screens
+        xs={0}
+        sm={0}
+        md={12}
+        lg={12}
         style={{
           display: "flex",
           alignItems: "flex-end",

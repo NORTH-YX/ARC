@@ -11,7 +11,6 @@ interface AuthProps {
 }
 
 const Auth: React.FC<AuthProps> = ({ setUser }) => {
-  console.log('path: ', window.location.pathname);
   return (
     <Suspense fallback={<TopBarProgress />}>
       <Routes>

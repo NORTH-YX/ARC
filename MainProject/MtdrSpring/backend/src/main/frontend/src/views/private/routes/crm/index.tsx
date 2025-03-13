@@ -14,6 +14,7 @@ const Profile = lazy(() => import("./routes/dashboard"));
 const AdminDashboard = lazy(() => import("./routes/dashboard"));
 
 const CRM: React.FC<DashProps> = ({ user }) => {
+
   if (user?.role === "admin") {
     {
       return (

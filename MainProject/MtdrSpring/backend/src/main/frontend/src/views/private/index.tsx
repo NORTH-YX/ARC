@@ -1,11 +1,10 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
 import { Spin } from 'antd';
 import { useAuthQuery } from '../../hooks/useAuthQuery';
 import MainLayout from '../../layouts/main';
 import CRM from './routes/crm';
 import { useAuth } from '../../contexts/AuthContext';
-
+import { Navigate, useNavigate } from 'react-router-dom';
 // por mientras, para meterte a login:
 // comentar fakeUser
 // // const fakeUser: User = {
@@ -21,11 +20,11 @@ import { useAuth } from '../../contexts/AuthContext';
 //   const navigate = useNavigate();
 
 const Private: React.FC = () => {
-  const { user, isUserLoading, userError } = useAuthQuery();
+  const { user, isLoading, error } = useAuthQuery();
   const { logout } = useAuth();
-
+  const navigate = useNavigate();
   // Show loading spinner while fetching user data
-  if (isUserLoading) {
+  if (isLoading) {
     return (
       <div style={{ 
         display: 'flex', 
@@ -39,7 +38,9 @@ const Private: React.FC = () => {
   }
 
   // If there's an error or no user, redirect to login
-  if (userError || !user) {
+  if (error || !user) {
+    console.log("error", error);
+    console.log("user", user);
     return <Navigate to="/login" replace />;
   }
 
