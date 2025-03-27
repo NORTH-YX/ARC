@@ -4,8 +4,6 @@ import com.springboot.MyTodoList.model.Task;
 import com.springboot.MyTodoList.model.User;
 import com.springboot.MyTodoList.repository.TaskRepository;
 
-import io.swagger.models.Response;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -70,6 +68,7 @@ public class TaskService {
             _task.setSprint(task.getSprint());
             _task.setPriority(task.getPriority());
             _task.setStatus(task.getStatus());
+            _task.setRealHours(task.getRealHours());
             return taskRepository.save(_task);
         } else {
             return null;
