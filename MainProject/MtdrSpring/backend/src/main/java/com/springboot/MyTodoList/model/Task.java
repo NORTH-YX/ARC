@@ -41,6 +41,12 @@ public class Task {
     @Column(name = "REAL_FINISH_DATE")
     private OffsetDateTime realFinishDate;
 
+    @Column(name = "ESTIMATED_HOURS")
+    private Integer estimatedHours;
+
+    @Column(name = "REAL_HOURS")
+    private Integer realHours;
+
     @Column(name = "DELETED_AT")
     private OffsetDateTime deletedAt;
 
@@ -48,7 +54,9 @@ public class Task {
         this.creationDate = OffsetDateTime.now();
     }
 
-    public Task(int taskId, String taskName, String description, Integer priority, String status, Sprint sprintId, User userId, OffsetDateTime creationDate, OffsetDateTime estimatedFinishDate, OffsetDateTime realFinishDate, OffsetDateTime deletedAt) {
+    public Task(int taskId, String taskName, String description, Integer priority, String status, Sprint sprintId,
+    User userId, OffsetDateTime creationDate, OffsetDateTime estimatedFinishDate,
+    OffsetDateTime realFinishDate, Integer estimatedHours, Integer realHours, OffsetDateTime deletedAt) {
         this.taskId = taskId;
         this.taskName = taskName;
         this.description = description;
@@ -59,6 +67,8 @@ public class Task {
         this.creationDate = creationDate != null ? creationDate : OffsetDateTime.now();
         this.estimatedFinishDate = estimatedFinishDate;
         this.realFinishDate = realFinishDate;
+        this.estimatedHours = estimatedHours;
+        this.realHours = realHours;
         this.deletedAt = deletedAt;
     }
 
@@ -102,6 +112,14 @@ public class Task {
         return realFinishDate;
     }
 
+    public Integer getEstimatedHours() {
+        return estimatedHours;
+    }
+
+    public Integer getRealHours() {
+        return realHours;
+    }
+
     public OffsetDateTime getDeletedAt() {
         return deletedAt;
     }
@@ -138,6 +156,14 @@ public class Task {
         this.realFinishDate = realFinishDate;
     }
 
+    public void setEstimatedHours(Integer estimatedHours) {
+        this.estimatedHours = estimatedHours;
+    }
+
+    public void setRealHours(Integer realHours) {
+        this.realHours = realHours;
+    }
+
     public void setDeletedAt(OffsetDateTime deletedAt) {
         this.deletedAt = deletedAt;
     }
@@ -155,6 +181,8 @@ public class Task {
                 ", creationDate=" + creationDate +
                 ", estimatedFinishDate=" + estimatedFinishDate +
                 ", realFinishDate=" + realFinishDate +
+                ", estimatedHours" + estimatedHours +
+                ", realHours" + realHours +
                 ", deletedAt=" + deletedAt +
                 '}';
     }
