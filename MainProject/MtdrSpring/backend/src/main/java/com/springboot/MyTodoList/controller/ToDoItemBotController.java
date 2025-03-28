@@ -24,8 +24,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRem
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import com.springboot.MyTodoList.model.ToDoItem;
-import com.springboot.MyTodoList.service.ToDoItemService;
 import com.springboot.MyTodoList.model.Task;
 import com.springboot.MyTodoList.service.TaskService;
 import com.springboot.MyTodoList.model.User;
@@ -38,16 +36,15 @@ import com.springboot.MyTodoList.util.BotMessages;
 public class ToDoItemBotController extends TelegramLongPollingBot {
 
 	private static final Logger logger = LoggerFactory.getLogger(ToDoItemBotController.class);
-	private ToDoItemService toDoItemService;
 	private TaskService taskService;
 	private UserService userService;
 	private String botName;
+	private Map<Long, Boolean> userWelcomeState = new HashMap<>();
 
-	public ToDoItemBotController(String botToken, String botName, ToDoItemService toDoItemService, TaskService taskService, UserService userService) {
+	public ToDoItemBotController(String botToken, String botName, TaskService taskService, UserService userService) {
 		super(botToken);
 		logger.info("Bot Token: " + botToken);
 		logger.info("Bot name: " + botName);
-		this.toDoItemService = toDoItemService;
 		this.taskService = taskService;
 		this.userService = userService;
 		this.botName = botName;
@@ -61,9 +58,26 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 			String messageTextFromTelegram = update.getMessage().getText();
 			long chatId = update.getMessage().getChatId();
 
+			User u = validateChatIdAndGetUserData(chatId);
+        	if (u != null) {
+            	// Check if the welcome message has already been sent
+            	if (!userWelcomeState.containsKey(chatId) || !userWelcomeState.get(chatId)) {
+                	// Display the user's name in the bot
+                	String welcomeMessage = "Welcome, " + u.getName() + "! 👋";
+                	BotHelper.sendMessageToTelegram(chatId, welcomeMessage, this);
+
+                	// LAST INSTRUCTION: Mark the user as welcomed
+                	userWelcomeState.put(chatId, true);
+				}
+			} else {
+            	// If no user is found, prompt them to register
+            	String errorMessage = "User not found. Please register to use the bot.";
+            	BotHelper.sendMessageToTelegram(chatId, errorMessage, this);
+            	return; // Stop further processing if the user is not found
+        	}
+
 			if (messageTextFromTelegram.equals(BotCommands.START_COMMAND.getCommand())
 					|| messageTextFromTelegram.equals(BotLabels.SHOW_MAIN_SCREEN.getLabel())) {
-
 				SendMessage messageToTelegram = new SendMessage();
 				messageToTelegram.setChatId(chatId);
 				messageToTelegram.setText(BotMessages.HELLO_MYTODO_BOT.getMessage());
@@ -96,55 +110,9 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 					logger.error(e.getLocalizedMessage(), e);
 				}
 
-			} else if (messageTextFromTelegram.indexOf(BotLabels.DONE.getLabel()) != -1) {
-
-				String done = messageTextFromTelegram.substring(0,
-						messageTextFromTelegram.indexOf(BotLabels.DASH.getLabel()));
-				Integer id = Integer.valueOf(done);
-
-				try {
-
-					ToDoItem item = getToDoItemById(id).getBody();
-					item.setDone(true);
-					updateToDoItem(item, id);
-					BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_DONE.getMessage(), this);
-
-				} catch (Exception e) {
-					logger.error(e.getLocalizedMessage(), e);
-				}
-
-			} else if (messageTextFromTelegram.indexOf(BotLabels.UNDO.getLabel()) != -1) {
-
-				String undo = messageTextFromTelegram.substring(0,
-						messageTextFromTelegram.indexOf(BotLabels.DASH.getLabel()));
-				Integer id = Integer.valueOf(undo);
-
-				try {
-
-					ToDoItem item = getToDoItemById(id).getBody();
-					item.setDone(false);
-					updateToDoItem(item, id);
-					BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_UNDONE.getMessage(), this);
-
-				} catch (Exception e) {
-					logger.error(e.getLocalizedMessage(), e);
-				}
-
-			} else if (messageTextFromTelegram.indexOf(BotLabels.DELETE.getLabel()) != -1) {
-
-				String delete = messageTextFromTelegram.substring(0,
-						messageTextFromTelegram.indexOf(BotLabels.DASH.getLabel()));
-				Integer id = Integer.valueOf(delete);
-
-				try {
-
-					deleteToDoItem(id).getBody();
-					BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_DELETED.getMessage(), this);
-
-				} catch (Exception e) {
-					logger.error(e.getLocalizedMessage(), e);
-				}
-
+			} else if (messageTextFromTelegram.equals(BotCommands.START_COMMAND.getCommand())){
+				userWelcomeState.put(chatId, false); // Reset the welcome state
+				
 			} else if (messageTextFromTelegram.indexOf(BotLabels.TO_DO.getLabel()) != -1) {
 
 				String task = messageTextFromTelegram.substring(0,
@@ -257,19 +225,17 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 				// En tu loop para formatear las fechas:
 				for (Task task : activeTasks) {
 					String creationDateFormatted = task.getCreationDate().format(formatter);
-					String estimatedFinishDateFormatted = task.getEstimatedFinishDate().format(formatter);
-					String realFinishDateFormatted = task.getRealFinishDate() != null ?
-							task.getRealFinishDate().format(formatter) : "Not Finished";
+					String realHoursFormatted = task.getRealHours() != null ? task.getRealHours().toString() : "Not Finished";
 				
 					taskDetailsMessage.append("🆔 " + task.getTaskId() + "\n" +
 							"📄 " + task.getDescription() + "\n" +
 							"📌 " + BotLabels.STATUS.getLabel() + task.getStatus() + "\n" +
 							"🚀 Sprint: " + task.getSprint().getSprintName() + "\n" +
 							"🕰️ Created: " + creationDateFormatted + "\n" +
-							"⏳ Estimated Finish: " + estimatedFinishDateFormatted + "\n" +
+							"⏳ Estimated Hours: " + task.getEstimatedHours() + "\n" +
 							"🔑 Priority: " + task.getPriority() + "\n" +
 							"👤 User: " + task.getUser().getName() + "\n" +
-							"🏁 Real Finish: " + realFinishDateFormatted + "\n\n");
+							"🏁 Real Hours: " + realHoursFormatted + "\n\n");
 				}
 
 				// command back to main screen
@@ -379,19 +345,17 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 					// En tu loop para formatear las fechas:
 					for (Task task : userTasks) {
 						String creationDateFormatted = task.getCreationDate().format(formatter);
-						String estimatedFinishDateFormatted = task.getEstimatedFinishDate().format(formatter);
-						String realFinishDateFormatted = task.getRealFinishDate() != null ?
-								task.getRealFinishDate().format(formatter) : "Not Finished";
+						String realHoursFormatted = task.getRealHours() != null ? task.getRealHours().toString() : "Not Finished";
 					
 						taskDetailsMessage.append("🆔 " + task.getTaskId() + "\n" +
 								"📄 " + task.getDescription() + "\n" +
 								"📌 " + BotLabels.STATUS.getLabel() + task.getStatus() + "\n" +
 								"🚀 Sprint: " + task.getSprint().getSprintName() + "\n" +
 								"🕰️ Created: " + creationDateFormatted + "\n" +
-								"⏳ Estimated Finish: " + estimatedFinishDateFormatted + "\n" +
+								"⏳ Estimated Hours: " + task.getEstimatedHours() + "\n" +
 								"🔑 Priority: " + task.getPriority() + "\n" +
 								"👤 User: " + task.getUser().getName() + "\n" +
-								"🏁 Real Finish: " + realFinishDateFormatted + "\n\n");
+								"🏁 Real Hours: " + realHoursFormatted + "\n\n");
 					}
 			
 					// Botón para volver a la pantalla principal al final
@@ -480,19 +444,17 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 					// En tu loop para formatear las fechas:
 					for (Task task : tasksByPriority) {
 						String creationDateFormatted = task.getCreationDate().format(formatter);
-						String estimatedFinishDateFormatted = task.getEstimatedFinishDate().format(formatter);
-						String realFinishDateFormatted = task.getRealFinishDate() != null ?
-								task.getRealFinishDate().format(formatter) : "Not Finished";
+						String realHoursFormatted = task.getRealHours() != null ? task.getRealHours().toString() : "Not Finished";
 					
 						taskDetailsMessage.append("🆔 " + task.getTaskId() + "\n" +
 								"📄 " + task.getDescription() + "\n" +
 								"📌 " + BotLabels.STATUS.getLabel() + task.getStatus() + "\n" +
 								"🚀 Sprint: " + task.getSprint().getSprintName() + "\n" +
 								"🕰️ Created: " + creationDateFormatted + "\n" +
-								"⏳ Estimated Finish: " + estimatedFinishDateFormatted + "\n" +
+								"⏳ Estimated Hours: " + task.getEstimatedHours() + "\n" +
 								"🔑 Priority: " + task.getPriority() + "\n" +
 								"👤 User: " + task.getUser().getName() + "\n" +
-								"🏁 Real Finish: " + realFinishDateFormatted + "\n\n");
+								"🏁 Real Hours: " + realHoursFormatted + "\n\n");
 					}
 
 					if (tasksByPriority.isEmpty()) {
@@ -539,35 +501,12 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 					}
 				}
 			}
-
-			else {
-				try {
-					ToDoItem newItem = new ToDoItem();
-					newItem.setDescription(messageTextFromTelegram);
-					newItem.setCreation_ts(OffsetDateTime.now());
-					newItem.setDone(false);
-					ResponseEntity entity = addToDoItem(newItem);
-
-					SendMessage messageToTelegram = new SendMessage();
-					messageToTelegram.setChatId(chatId);
-					messageToTelegram.setText(BotMessages.NEW_ITEM_ADDED.getMessage());
-
-					execute(messageToTelegram);
-				} catch (Exception e) {
-					logger.error(e.getLocalizedMessage(), e);
-				}
-			}
 		}
 	}
 
 	@Override
 	public String getBotUsername() {		
 		return botName;
-	}
-
-	// GET /todolist
-	public List<ToDoItem> getAllToDoItems() { 
-		return toDoItemService.findAll();
 	}
 
 	// GET /tasks
@@ -605,28 +544,6 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 		}
 	}
 
-	// GET BY ID /todolist/{id}
-	public ResponseEntity<ToDoItem> getToDoItemById(@PathVariable int id) {
-		try {
-			ResponseEntity<ToDoItem> responseEntity = toDoItemService.getItemById(id);
-			return new ResponseEntity<ToDoItem>(responseEntity.getBody(), HttpStatus.OK);
-		} catch (Exception e) {
-			logger.error(e.getLocalizedMessage(), e);
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-	}
-
-	// PUT /todolist
-	public ResponseEntity addToDoItem(@RequestBody ToDoItem todoItem) throws Exception {
-		ToDoItem td = toDoItemService.addToDoItem(todoItem);
-		HttpHeaders responseHeaders = new HttpHeaders();
-		responseHeaders.set("location", "" + td.getID());
-		responseHeaders.set("Access-Control-Expose-Headers", "location");
-		// URI location = URI.create(""+td.getID())
-
-		return ResponseEntity.ok().headers(responseHeaders).build();
-	}
-
 	// PUT /tasks
 	public ResponseEntity addTask(@RequestBody Task task) throws Exception {
 		Task td = taskService.addTask(task);
@@ -649,29 +566,22 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
 		}
 	}
-
-	// UPDATE /todolist/{id}
-	public ResponseEntity updateToDoItem(@RequestBody ToDoItem toDoItem, @PathVariable int id) {
+	// Method to validate chat ID and return user data if it matches
+	public User validateChatIdAndGetUserData(long chatId) {
 		try {
-			ToDoItem toDoItem1 = toDoItemService.updateToDoItem(id, toDoItem);
-			System.out.println(toDoItem1.toString());
-			return new ResponseEntity<>(toDoItem1, HttpStatus.OK);
+			// Find user by telegram_id
+			Optional<User> user = userService.findByTelegramId(String.valueOf(chatId));
+			if (user.isPresent()) {
+				return user.get(); // Return user data if found
+			} else {
+				logger.info("No user found with telegram_id: " + chatId);
+				return null; // Return null if no user matches
+			}
 		} catch (Exception e) {
-			logger.error(e.getLocalizedMessage(), e);
-			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+			logger.error("Error validating chat ID: " + e.getLocalizedMessage(), e);
+			return null; // Return null in case of an error
 		}
 	}
 
-	// DELETE todolist/{id}
-	public ResponseEntity<Boolean> deleteToDoItem(@PathVariable("id") int id) {
-		Boolean flag = false;
-		try {
-			flag = toDoItemService.deleteToDoItem(id);
-			return new ResponseEntity<>(flag, HttpStatus.OK);
-		} catch (Exception e) {
-			logger.error(e.getLocalizedMessage(), e);
-			return new ResponseEntity<>(flag, HttpStatus.NOT_FOUND);
-		}
-	}
 
 }
