@@ -40,6 +40,10 @@ public class UserService implements UserDetailsService {
         return usersRepository.findByEmail(email);
     }
 
+    public Optional<User> findByTelegramId(String telegramId) {
+        return usersRepository.findByTelegramId(telegramId);
+    }
+
     @Transactional
     public User save(User user) {
         return usersRepository.save(user);
