@@ -22,33 +22,28 @@ public class CorsConfig {
     Logger logger = LoggerFactory.getLogger(CorsConfig.class);
     
     @Bean
-    public CorsFilter corsFilter(){
+    public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
         
-        // Agregar origen de tu frontend
-        config.setAllowedOrigins(List.of(
-            "http://localhost:3000", 
-            "https://objectstorage.us-phoenix-1.oraclecloud.com",
-            "https://petstore.swagger.io", 
-            "http://localhost:5173"
-        ));
-        
+        // Permite cualquier origen dinámicamente
+        config.setAllowedOriginPatterns(Collections.singletonList("*")); 
+
         // Métodos permitidos
         config.setAllowedMethods(List.of("GET","POST","PUT","OPTIONS","DELETE","PATCH"));
-        
+
         // Encabezados permitidos
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
-        
+
         // Expone encabezados
         config.addExposedHeader("location");
-        
+
         // Permite credenciales
         config.setAllowCredentials(true);
-        
+
         // Configuración de CORS
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
-        
+
         return new CorsFilter(source);
     }
 }

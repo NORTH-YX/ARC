@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface UsersRepository extends JpaRepository<User, Integer> {
     Optional<User> findByEmail(String email); // Método para buscar usuario por email
+    Optional<User> findByTelegramId(String telegramId); // Método para buscar usuario por telegramId
 }
