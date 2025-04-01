@@ -1,6 +1,7 @@
 package com.springboot.MyTodoList.repository;
 
 import com.springboot.MyTodoList.model.User;
+import com.springboot.MyTodoList.model.Sprint;
 import com.springboot.MyTodoList.model.Task;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,8 +15,7 @@ public interface TaskRepository extends JpaRepository<Task, Integer> {
     
     // CORRECCIÓN: Devolver lista en lugar de Optional
     List<Task> findByUserId(User userId);
-    
-    List<Task> findBySprintId(Integer sprintId);
+    List<Task> findBySprintId(Sprint sprintId);
     List<Task> findByPriority(Integer priority);
     List<Task> findByStatus(String status);
 }
