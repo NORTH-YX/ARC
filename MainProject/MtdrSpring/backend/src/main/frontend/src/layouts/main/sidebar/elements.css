@@ -1,0 +1,24 @@
+.custom-menu {
+  background-color: #ffffff;
+}
+
+.custom-menu .ant-menu-item {
+  color: #4b5563;
+}
+
+.custom-menu .ant-menu-item .anticon {
+  color: #4b5563;
+}
+
+.custom-menu .ant-menu-item:hover {
+  background-color: #f0f0f0;
+}
+
+.custom-menu .ant-menu-item-selected {
+  background-color: #f9eceb !important;
+  color: #c74634 !important;
+}
+
+.custom-menu .ant-menu-item-selected .anticon {
+  color: #c74634 !important;
+}

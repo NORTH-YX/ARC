@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@reacttodopuebo_tp?TNS_ADMIN=/app/wallet
+      - SPRING_DATASOURCE_USERNAME=TODOUSER
+      - SPRING_DATASOURCE_PASSWORD=None74108520
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=oracle.jdbc.OracleDriver
+      - TELEGRAM_BOT_TOKEN=7299619011:AAHcA01pLW_OgO5EEvn1SYu13nvja0Cn-rg
+      - TELEGRAM_BOT_NAME=ARC_JAVA_BOT
+      - SPRING_APPLICATION_NAME=MicroserviceDemo
+      - JWT_SECRET=jwleqbewbct434?dh892JHFwnjdHv?38
+      - JWT_EXPIRATION=3600
+    volumes:
+      - ./backend/wallet:/app/wallet
+    networks:
+      - mtdr-network
+
+networks:
+  mtdr-network:
+    driver: bridge 

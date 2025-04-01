@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+import com.springboot.MyTodoList.dto.TaskResponse;
+
 @RestController
 @RequestMapping("/tasks")
 @CrossOrigin(origins = "*") 
@@ -23,9 +25,10 @@ public class TaskController {
     private UserService userService;
 
     @GetMapping
-    public ResponseEntity<List<Task>> getAllTasks() {
+    public ResponseEntity<TaskResponse> getAllTasks() {
         List<Task> tasks = taskService.findAll();
-        return ResponseEntity.ok(tasks);
+        TaskResponse response = new TaskResponse(tasks);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
