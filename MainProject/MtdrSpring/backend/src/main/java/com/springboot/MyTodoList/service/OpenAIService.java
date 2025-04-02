@@ -4,10 +4,12 @@ import com.springboot.MyTodoList.model.Action;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import org.springframework.stereotype.Service;
 import java.net.URI;
 import java.net.http.*;
 import java.util.*;
 
+@Service
 public class OpenAIService {
     private static final String OPENAI_API_KEY = System.getenv("OPENAI_API_KEY");
     private static final String OPENAI_ENDPOINT = "https://api.openai.com/v1/chat/completions";

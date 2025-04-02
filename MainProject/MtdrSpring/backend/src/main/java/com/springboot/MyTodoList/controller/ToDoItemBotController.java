@@ -1,21 +1,23 @@
 package com.springboot.MyTodoList.controller;
 
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.time.format.DateTimeFormatter;
-
+import com.springboot.MyTodoList.model.Action;
+import com.springboot.MyTodoList.service.ToDoItemService;
+import com.springboot.MyTodoList.service.TaskService;
+import com.springboot.MyTodoList.service.UserService;
+import com.springboot.MyTodoList.util.BotCommands;
+import com.springboot.MyTodoList.util.BotHelper;
+import com.springboot.MyTodoList.util.BotLabels;
+import com.springboot.MyTodoList.util.BotMessages;
+import com.springboot.MyTodoList.validation.MissingParamResolver;
+import com.springboot.MyTodoList.validation.ValidatorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -24,564 +26,238 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardRem
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import com.springboot.MyTodoList.model.Task;
-import com.springboot.MyTodoList.service.TaskService;
-import com.springboot.MyTodoList.model.User;
-import com.springboot.MyTodoList.service.UserService;
-import com.springboot.MyTodoList.util.BotCommands;
-import com.springboot.MyTodoList.util.BotHelper;
-import com.springboot.MyTodoList.util.BotLabels;
-import com.springboot.MyTodoList.util.BotMessages;
+import java.util.*;
 
+@Component
 public class ToDoItemBotController extends TelegramLongPollingBot {
 
-	private static final Logger logger = LoggerFactory.getLogger(ToDoItemBotController.class);
-	private TaskService taskService;
-	private UserService userService;
-	private String botName;
-	private Map<Long, Boolean> userWelcomeState = new HashMap<>();
-
-	public ToDoItemBotController(String botToken, String botName, TaskService taskService, UserService userService) {
-		super(botToken);
-		logger.info("Bot Token: " + botToken);
-		logger.info("Bot name: " + botName);
-		this.taskService = taskService;
-		this.userService = userService;
-		this.botName = botName;
-	}
-
-	@Override
-	public void onUpdateReceived(Update update) {
-
-		if (update.hasMessage() && update.getMessage().hasText()) {
-
-			String messageTextFromTelegram = update.getMessage().getText();
-			long chatId = update.getMessage().getChatId();
-
-			User u = validateChatIdAndGetUserData(chatId);
-        	if (u != null) {
-            	// Check if the welcome message has already been sent
-            	if (!userWelcomeState.containsKey(chatId) || !userWelcomeState.get(chatId)) {
-                	// Display the user's name in the bot
-                	String welcomeMessage = "Welcome, " + u.getName() + "! 👋";
-                	BotHelper.sendMessageToTelegram(chatId, welcomeMessage, this);
-
-                	// LAST INSTRUCTION: Mark the user as welcomed
-                	userWelcomeState.put(chatId, true);
-				}
-			} else {
-            	// If no user is found, prompt them to register
-            	String errorMessage = "User not found. Please register to use the bot.";
-            	BotHelper.sendMessageToTelegram(chatId, errorMessage, this);
-            	return; // Stop further processing if the user is not found
-        	}
-
-			if (messageTextFromTelegram.equals(BotCommands.START_COMMAND.getCommand())
-					|| messageTextFromTelegram.equals(BotLabels.SHOW_MAIN_SCREEN.getLabel())) {
-				SendMessage messageToTelegram = new SendMessage();
-				messageToTelegram.setChatId(chatId);
-				messageToTelegram.setText(BotMessages.HELLO_MYTODO_BOT.getMessage());
-
-				ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-				List<KeyboardRow> keyboard = new ArrayList<>();
-
-				// first row
-				KeyboardRow row = new KeyboardRow();
-				row.add(BotLabels.LIST_ALL_ITEMS.getLabel());
-				// row.add(BotLabels.ADD_NEW_ITEM.getLabel());
-				// Add the first row to the keyboard
-				keyboard.add(row);
-
-				// second row
-				row = new KeyboardRow();
-				row.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
-				row.add(BotLabels.HIDE_MAIN_SCREEN.getLabel());
-				keyboard.add(row);
-
-				// Set the keyboard
-				keyboardMarkup.setKeyboard(keyboard);
-
-				// Add the keyboard markup
-				messageToTelegram.setReplyMarkup(keyboardMarkup);
-
-				try {
-					execute(messageToTelegram);
-				} catch (TelegramApiException e) {
-					logger.error(e.getLocalizedMessage(), e);
-				}
-
-			} else if (messageTextFromTelegram.equals(BotCommands.START_COMMAND.getCommand())){
-				userWelcomeState.put(chatId, false); // Reset the welcome state
-				
-			} else if (messageTextFromTelegram.indexOf(BotLabels.TO_DO.getLabel()) != -1) {
-
-				String task = messageTextFromTelegram.substring(0,
-						messageTextFromTelegram.indexOf(BotLabels.DASH.getLabel()));
-				Integer id = Integer.valueOf(task);
-
-				try {
-
-					Task task1 = getTaskById(id).getBody();
-					task1.setStatus("To Do");
-					updateTask(task1, id);
-					BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_DONE.getMessage(), this);
-
-				} catch (Exception e) {
-					logger.error(e.getLocalizedMessage(), e);
-				}
-			
-			} else if (messageTextFromTelegram.indexOf(BotLabels.IN_PROGRESS.getLabel()) != -1) {
-
-				String task = messageTextFromTelegram.substring(0,
-						messageTextFromTelegram.indexOf(BotLabels.DASH.getLabel()));
-				Integer id = Integer.valueOf(task);
-
-				try {
-
-					Task task1 = getTaskById(id).getBody();
-					task1.setStatus("In Progress");
-					updateTask(task1, id);
-					BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_DONE.getMessage(), this);
-
-				} catch (Exception e) {
-					logger.error(e.getLocalizedMessage(), e);
-				}
-			
-			} else if (messageTextFromTelegram.indexOf(BotLabels.COMPLETED.getLabel()) != -1) {
-
-				String task = messageTextFromTelegram.substring(0,
-						messageTextFromTelegram.indexOf(BotLabels.DASH.getLabel()));
-				Integer id = Integer.valueOf(task);
-
-				try {
-
-					Task task1 = getTaskById(id).getBody();
-					task1.setStatus("Completed");
-					updateTask(task1, id);
-					BotHelper.sendMessageToTelegram(chatId, BotMessages.ITEM_DONE.getMessage(), this);
-
-				} catch (Exception e) {
-					logger.error(e.getLocalizedMessage(), e);
-				}
-			
-			} else if (messageTextFromTelegram.equals(BotCommands.HIDE_COMMAND.getCommand())
-					|| messageTextFromTelegram.equals(BotLabels.HIDE_MAIN_SCREEN.getLabel())) {
-
-				BotHelper.sendMessageToTelegram(chatId, BotMessages.BYE.getMessage(), this);
-
-			} else if (messageTextFromTelegram.equals(BotCommands.TODO_LIST.getCommand())
-					|| messageTextFromTelegram.equals(BotLabels.LIST_ALL_ITEMS.getLabel())
-					|| messageTextFromTelegram.equals(BotLabels.MY_TODO_LIST.getLabel())) {
-
-				List<Task> allTasks = getAllTasks();
-				ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-				List<KeyboardRow> keyboard = new ArrayList<>();
-
-				// command back to main screen
-				KeyboardRow mainScreenRowTop = new KeyboardRow();
-				mainScreenRowTop.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
-				keyboard.add(mainScreenRowTop);
-
-				// KeyboardRow firstRow = new KeyboardRow();
-				// firstRow.add(BotLabels.ADD_NEW_ITEM.getLabel());
-				// keyboard.add(firstRow);
-
-				// Nueva fila con el botón "Buscar tareas por usuario"
-				KeyboardRow userTasksRow = new KeyboardRow();
-				userTasksRow.add(BotLabels.SEARCH_TASKS_BY_USER.getLabel());
-				keyboard.add(userTasksRow);
-
-				// Nueva fila con el botón "Buscar tareas por prioridad"
-				KeyboardRow priorityTasksRow = new KeyboardRow();
-				priorityTasksRow.add(BotLabels.SEARCH_TASKS_BY_PRIORITY.getLabel());
-				keyboard.add(priorityTasksRow);
-
-				List<Task> activeTasks = allTasks.stream()
-						.collect(Collectors.toList());
-
-				for (Task task : activeTasks) {
-					KeyboardRow currentRow = new KeyboardRow();
-					currentRow.add(
-						"🆔 " + task.getTaskId() + 
-						" | 📄 " + task.getDescription() + 
-						" | 📌 " + BotLabels.STATUS.getLabel() + task.getStatus()
-					);
-					keyboard.add(currentRow);
-					//agregar botones para cambiar el estado de la tarea en la fila de abajo
-					currentRow = new KeyboardRow();
-					currentRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.TO_DO.getLabel());
-					currentRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.IN_PROGRESS.getLabel());
-					currentRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.COMPLETED.getLabel());
-					keyboard.add(currentRow);
-				}
-
-				// Construir el mensaje de texto
-				StringBuilder taskDetailsMessage = new StringBuilder();
-				taskDetailsMessage.append("📋 *All tasks:*\n");
-
-				// Formateador para la fecha
-				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-				// En tu loop para formatear las fechas:
-				for (Task task : activeTasks) {
-					String creationDateFormatted = task.getCreationDate().format(formatter);
-					String realHoursFormatted = task.getRealHours() != null ? task.getRealHours().toString() : "Not Finished";
-				
-					taskDetailsMessage.append("🆔 " + task.getTaskId() + "\n" +
-							"📄 " + task.getDescription() + "\n" +
-							"📌 " + BotLabels.STATUS.getLabel() + task.getStatus() + "\n" +
-							"🚀 Sprint: " + task.getSprint().getSprintName() + "\n" +
-							"🕰️ Created: " + creationDateFormatted + "\n" +
-							"⏳ Estimated Hours: " + task.getEstimatedHours() + "\n" +
-							"🔑 Priority: " + task.getPriority() + "\n" +
-							"👤 User: " + task.getUser().getName() + "\n" +
-							"🏁 Real Hours: " + realHoursFormatted + "\n\n");
-				}
-
-				// command back to main screen
-				KeyboardRow mainScreenRowBottom = new KeyboardRow();
-				mainScreenRowBottom.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
-				keyboard.add(mainScreenRowBottom);
-
-				keyboardMarkup.setKeyboard(keyboard);
-
-				SendMessage messageToTelegram = new SendMessage();
-				messageToTelegram.setChatId(chatId);
-				messageToTelegram.setText(taskDetailsMessage.toString());
-				messageToTelegram.setReplyMarkup(keyboardMarkup);
-
-				try {
-					execute(messageToTelegram);
-				} catch (TelegramApiException e) {
-					logger.error(e.getLocalizedMessage(), e);
-				}
-
-			} else if (messageTextFromTelegram.equals(BotCommands.ADD_ITEM.getCommand())
-					|| messageTextFromTelegram.equals(BotLabels.ADD_NEW_ITEM.getLabel())) {
-				try {
-					SendMessage messageToTelegram = new SendMessage();
-					messageToTelegram.setChatId(chatId);
-					messageToTelegram.setText(BotMessages.TYPE_NEW_TODO_ITEM.getMessage());
-					// hide keyboard
-					ReplyKeyboardRemove keyboardMarkup = new ReplyKeyboardRemove(true);
-					messageToTelegram.setReplyMarkup(keyboardMarkup);
-
-					// send message
-					execute(messageToTelegram);
-
-				} catch (Exception e) {
-					logger.error(e.getLocalizedMessage(), e);
-				}
-
-			} else if (messageTextFromTelegram.equals(BotLabels.SEARCH_TASKS_BY_USER.getLabel())) {
-
-				List<User> allUsers = getAllUsers(); // Método para obtener usuarios
-			
-				ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-				List<KeyboardRow> keyboard = new ArrayList<>();
-			
-				for (User user : allUsers) {
-					KeyboardRow row = new KeyboardRow();
-					row.add(user.getUserId() + BotLabels.DASH.getLabel() + user.getName());
-					keyboard.add(row);
-				}
-			
-				SendMessage messageToTelegram = new SendMessage();
-				messageToTelegram.setChatId(chatId);
-				messageToTelegram.setText("Select a user:");
-				keyboardMarkup.setKeyboard(keyboard);
-				messageToTelegram.setReplyMarkup(keyboardMarkup);
-			
-				try {
-					execute(messageToTelegram);
-				} catch (TelegramApiException e) {
-					logger.error(e.getLocalizedMessage(), e);
-				}
-			}   else if (messageTextFromTelegram.contains(BotLabels.DASH.getLabel())) {
-				try {
-					String[] parts = messageTextFromTelegram.split(BotLabels.DASH.getLabel());
-					Integer userId = Integer.valueOf(parts[0]);
-			
-					List<Task> userTasks = getTasksByUserId(userId);
-					ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-					List<KeyboardRow> keyboard = new ArrayList<>();
-			
-					// Botón para volver a la pantalla principal
-					KeyboardRow mainScreenRowTop = new KeyboardRow();
-					mainScreenRowTop.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
-					keyboard.add(mainScreenRowTop);
-			
-					if (userTasks.isEmpty()) {
-						KeyboardRow noTasksRow = new KeyboardRow();
-						noTasksRow.add("There are no tasks assigned to this user.");
-						keyboard.add(noTasksRow);
-					} else {
-						for (Task task : userTasks) {
-							// Fila con la tarea y su estado
-							KeyboardRow taskRow = new KeyboardRow();
-							taskRow.add(
-							"🆔 " + task.getTaskId() + 
-							" | 📄 " + task.getDescription() + 
-							" | 📌 " + BotLabels.STATUS.getLabel() + task.getStatus()
-							);
-							keyboard.add(taskRow);
-			
-							// Fila con los botones para cambiar el estado
-							KeyboardRow statusRow = new KeyboardRow();
-							statusRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.TO_DO.getLabel());
-							statusRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.IN_PROGRESS.getLabel());
-							statusRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.COMPLETED.getLabel());
-							keyboard.add(statusRow);
-						}
-					}
-
-					// Construir el mensaje de texto
-					StringBuilder taskDetailsMessage = new StringBuilder();
-					taskDetailsMessage.append("📋 *Tasks assigned for this user:*\n");
-
-					// Formateador para la fecha
-					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-					// En tu loop para formatear las fechas:
-					for (Task task : userTasks) {
-						String creationDateFormatted = task.getCreationDate().format(formatter);
-						String realHoursFormatted = task.getRealHours() != null ? task.getRealHours().toString() : "Not Finished";
-					
-						taskDetailsMessage.append("🆔 " + task.getTaskId() + "\n" +
-								"📄 " + task.getDescription() + "\n" +
-								"📌 " + BotLabels.STATUS.getLabel() + task.getStatus() + "\n" +
-								"🚀 Sprint: " + task.getSprint().getSprintName() + "\n" +
-								"🕰️ Created: " + creationDateFormatted + "\n" +
-								"⏳ Estimated Hours: " + task.getEstimatedHours() + "\n" +
-								"🔑 Priority: " + task.getPriority() + "\n" +
-								"👤 User: " + task.getUser().getName() + "\n" +
-								"🏁 Real Hours: " + realHoursFormatted + "\n\n");
-					}
-			
-					// Botón para volver a la pantalla principal al final
-					KeyboardRow mainScreenRowBottom = new KeyboardRow();
-					mainScreenRowBottom.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
-					keyboard.add(mainScreenRowBottom);
-			
-					keyboardMarkup.setKeyboard(keyboard);
-			
-					SendMessage messageToTelegram = new SendMessage();
-					messageToTelegram.setChatId(chatId);
-					messageToTelegram.setText(taskDetailsMessage.toString());
-					messageToTelegram.setParseMode("Markdown");
-					messageToTelegram.setReplyMarkup(keyboardMarkup);
-			
-					execute(messageToTelegram);
-			
-				} catch (Exception e) {
-					logger.error(e.getLocalizedMessage(), e);
-				}
-			}
-
-			// Método para obtener tareas por prioridad y mostrar botones
-			else if (messageTextFromTelegram.equals(BotLabels.SEARCH_TASKS_BY_PRIORITY.getLabel())) {
-				// Mostrar opciones de prioridad
-				ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-				List<KeyboardRow> keyboard = new ArrayList<>();
-
-				// Fila con botones para elegir prioridad (Low, Mid, High)
-				KeyboardRow row = new KeyboardRow();
-				row.add(BotLabels.LOW.getLabel());    // Low priority
-				row.add(BotLabels.MID.getLabel());    // Mid priority
-				row.add(BotLabels.HIGH.getLabel());   // High priority
-				keyboard.add(row);
-
-				SendMessage messageToTelegram = new SendMessage();
-				messageToTelegram.setChatId(chatId);
-				messageToTelegram.setText("Select a priority:");
-				keyboardMarkup.setKeyboard(keyboard);
-				messageToTelegram.setReplyMarkup(keyboardMarkup);
-
-				try {
-					execute(messageToTelegram);
-				} catch (TelegramApiException e) {
-					logger.error(e.getLocalizedMessage(), e);
-				}
-			} 
-			
-			else if (messageTextFromTelegram.contains(BotLabels.LOW.getLabel()) ||
-			messageTextFromTelegram.contains(BotLabels.MID.getLabel()) ||
-			messageTextFromTelegram.contains(BotLabels.HIGH.getLabel())) {
-
-				// Mapa para convertir las etiquetas de prioridad en enteros
-				Map<String, Integer> priorityMap = new HashMap<>();
-				priorityMap.put(BotLabels.LOW.getLabel(), 1);   // 1 -> Low
-				priorityMap.put(BotLabels.MID.getLabel(), 2);   // 2 -> Mid
-				priorityMap.put(BotLabels.HIGH.getLabel(), 3);  // 3 -> High
-
-				// Extraer la prioridad seleccionada
-				String selectedPriority = messageTextFromTelegram.contains(BotLabels.LOW.getLabel()) ? BotLabels.LOW.getLabel()
-						: messageTextFromTelegram.contains(BotLabels.MID.getLabel()) ? BotLabels.MID.getLabel()
-						: BotLabels.HIGH.getLabel();
-
-				Integer priorityValue = priorityMap.get(selectedPriority);
-
-				if (priorityValue != null) {
-					// Obtener tareas por la prioridad seleccionada
-					List<Task> tasksByPriority = getTasksByPriority(priorityValue);
-
-					// Crear teclado con tareas filtradas por prioridad
-					ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-					List<KeyboardRow> keyboard = new ArrayList<>();
-
-					// Botón para volver a la pantalla principal
-					KeyboardRow mainScreenRowTop = new KeyboardRow();
-					mainScreenRowTop.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
-					keyboard.add(mainScreenRowTop);
-
-					// Construir el mensaje de texto
-					StringBuilder taskDetailsMessage = new StringBuilder();
-					taskDetailsMessage.append("📋 *Tasks with Priority " + selectedPriority + ":*\n");
-
-					// Formateador para la fecha
-					DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-					// En tu loop para formatear las fechas:
-					for (Task task : tasksByPriority) {
-						String creationDateFormatted = task.getCreationDate().format(formatter);
-						String realHoursFormatted = task.getRealHours() != null ? task.getRealHours().toString() : "Not Finished";
-					
-						taskDetailsMessage.append("🆔 " + task.getTaskId() + "\n" +
-								"📄 " + task.getDescription() + "\n" +
-								"📌 " + BotLabels.STATUS.getLabel() + task.getStatus() + "\n" +
-								"🚀 Sprint: " + task.getSprint().getSprintName() + "\n" +
-								"🕰️ Created: " + creationDateFormatted + "\n" +
-								"⏳ Estimated Hours: " + task.getEstimatedHours() + "\n" +
-								"🔑 Priority: " + task.getPriority() + "\n" +
-								"👤 User: " + task.getUser().getName() + "\n" +
-								"🏁 Real Hours: " + realHoursFormatted + "\n\n");
-					}
-
-					if (tasksByPriority.isEmpty()) {
-						KeyboardRow noTasksRow = new KeyboardRow();
-						noTasksRow.add("No tasks found with this priority.");
-						keyboard.add(noTasksRow);
-					} else {
-						for (Task task : tasksByPriority) {
-							// Fila con la tarea y su estado
-							KeyboardRow taskRow = new KeyboardRow();
-							taskRow.add(
-								"🆔 " + task.getTaskId() +
-								" | 📄 " + task.getDescription() +
-								" | 📌 " + BotLabels.STATUS.getLabel() + task.getStatus()
-							);
-							keyboard.add(taskRow);
-
-							// Fila con los botones para cambiar el estado
-							KeyboardRow statusRow = new KeyboardRow();
-							statusRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.TO_DO.getLabel());
-							statusRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.IN_PROGRESS.getLabel());
-							statusRow.add(task.getTaskId() + BotLabels.DASH.getLabel() + BotLabels.COMPLETED.getLabel());
-							keyboard.add(statusRow);
-						}
-					}
-
-					// Botón para volver a la pantalla principal al final
-					KeyboardRow mainScreenRowBottom = new KeyboardRow();
-					mainScreenRowBottom.add(BotLabels.SHOW_MAIN_SCREEN.getLabel());
-					keyboard.add(mainScreenRowBottom);
-
-					keyboardMarkup.setKeyboard(keyboard);
-
-					SendMessage messageToTelegram = new SendMessage();
-					messageToTelegram.setChatId(chatId);
-					messageToTelegram.setText(taskDetailsMessage.toString());
-					messageToTelegram.setParseMode("Markdown");
-					messageToTelegram.setReplyMarkup(keyboardMarkup);
-
-					try {
-						execute(messageToTelegram);
-					} catch (TelegramApiException e) {
-						logger.error(e.getLocalizedMessage(), e);
-					}
-				}
-			}
-		}
-	}
-
-	@Override
-	public String getBotUsername() {		
-		return botName;
-	}
-
-	// GET /tasks
-	public List<Task> getAllTasks() {
-		return taskService.findAll();
-	}
-
-	// Método para obtener todos los usuarios
-	public List<User> getAllUsers() {
-		return userService.findAll();
-	}
-
-	// Método para obtener las tareas de un usuario por ID
-	public List<Task> getTasksByUserId(Integer userId) {
-		Optional<User> user = userService.findById(userId);
-		if (!user.isPresent()) {
-			return new ArrayList<>();
-		}
-		return taskService.findByUserId(user.get());
-	}
-
-	//metodo para obtener las tareas por prioridad
-	public List<Task> getTasksByPriority(Integer priority) {
-		return taskService.findByPriority(priority);
-	}
-
-	// GET BY ID /tasks/{id}
-	public ResponseEntity<Task> getTaskById(@PathVariable int id) {
-		try {
-			ResponseEntity<Task> responseEntity = taskService.getTaskById(id);
-			return new ResponseEntity<Task>(responseEntity.getBody(), HttpStatus.OK);
-		} catch (Exception e) {
-			logger.error(e.getLocalizedMessage(), e);
-			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-		}
-	}
-
-	// PUT /tasks
-	public ResponseEntity addTask(@RequestBody Task task) throws Exception {
-		Task td = taskService.addTask(task);
-		HttpHeaders responseHeaders = new HttpHeaders();
-		responseHeaders.set("location", "" + td.getTaskId());
-		responseHeaders.set("Access-Control-Expose-Headers", "location");
-		// URI location = URI.create(""+td.getID())
-
-		return ResponseEntity.ok().headers(responseHeaders).build();
-	}
-
-	// UPDATE /tasks/{id}
-	public ResponseEntity updateTask(@RequestBody Task task, @PathVariable int id) {
-		try {
-			Task task1 = taskService.updateTask(id, task);
-			System.out.println(task1.toString());
-			return new ResponseEntity<>(task1, HttpStatus.OK);
-		} catch (Exception e) {
-			logger.error(e.getLocalizedMessage(), e);
-			return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
-		}
-	}
-	// Method to validate chat ID and return user data if it matches
-	public User validateChatIdAndGetUserData(long chatId) {
-		try {
-			// Find user by telegram_id
-			Optional<User> user = userService.findByTelegramId(String.valueOf(chatId));
-			if (user.isPresent()) {
-				return user.get(); // Return user data if found
-			} else {
-				logger.info("No user found with telegram_id: " + chatId);
-				return null; // Return null if no user matches
-			}
-		} catch (Exception e) {
-			logger.error("Error validating chat ID: " + e.getLocalizedMessage(), e);
-			return null; // Return null in case of an error
-		}
-	}
+    private static final Logger logger = LoggerFactory.getLogger(ToDoItemBotController.class);
+    
+    @Value("${telegram.bot.token}")
+    private String telegramBotToken;
+
+    @Value("${telegram.bot.name}")
+    private String botName;
+
+    @Value("${nlp.service.url}")
+    private String nlpServiceUrl;
+
+    private final TaskService taskService;
+    private final UserService userService;
+    
+    // URLs base para los servicios (ajusta según corresponda)
+    private static final String NLP_SERVICE_URL = "http://localhost:5000/interpret";
+    private static final String PROJECTS_SERVICE_URL = "http://localhost:8080/projects";
+    private static final String USERS_SERVICE_URL = "http://localhost:8080/users";
+    
+    // Mapa para almacenar acciones pendientes por chat (ideal para mantener el estado conversacional)
+    private static final Map<Long, Action> pendingActions = new HashMap<>();
+    
+    private RestTemplate restTemplate = new RestTemplate();
+	
+    // Constructor for autowiring TaskService, UserService
+    @Autowired
+    public ToDoItemBotController(TaskService taskService, UserService userService) {
+        super(""); // We'll override getBotToken() instead
+        this.taskService = taskService;
+        this.userService = userService;
+    }
+
+    @Override
+    public String getBotUsername() {
+        return botName;
+    }
+
+    @Override
+    public String getBotToken() {
+        // Return the token that was injected via @Value
+        return telegramBotToken;
+    }
+    
+    @Override
+    public void onUpdateReceived(Update update) {
+        if (update.hasMessage() && update.getMessage().hasText()) {
+            String messageText = update.getMessage().getText();
+            long chatId = update.getMessage().getChatId();
+
+            // Si existe una acción pendiente, se procesa la respuesta del usuario
+            if (pendingActions.containsKey(chatId)) {
+                processPendingActionResponse(chatId, messageText);
+                return;
+            }
+
+            // Comandos para listar proyectos o usuarios
+			if (messageText.equalsIgnoreCase("/list_projects")) {
+				String projectsList = getProjectsList();
+				BotHelper.sendMessageToTelegram(chatId, projectsList, this);
+				return;
+			} else if (messageText.equalsIgnoreCase("/list_users")) {
+				String usersList = getUsersList();
+				BotHelper.sendMessageToTelegram(chatId, usersList, this);
+				return;
+			}	
+            
+            // Si el mensaje no es un comando específico, se envía al servicio NLP real.
+            // Se asume que el usuario envía un mensaje natural (por ejemplo: "Crea una tarea urgente para subir el backend mañana")
+            Action action = callNLPService(messageText);
+            if (action == null) {
+                BotHelper.sendMessageToTelegram(chatId, "Error procesando el mensaje. Intenta nuevamente.", this);
+                return;
+            }
+            
+            // Validar la acción usando el ValidatorService
+            List<String> errors = ValidatorService.validateAction(action);
+            if (!errors.isEmpty()) {
+                // Si hay errores o campos faltantes, generar preguntas para completarlos
+                Map<String, String> questions = MissingParamResolver.generateMissingFieldQuestions(action);
+                StringBuilder questionMsg = new StringBuilder("Faltan o son inválidos los siguientes campos:\n");
+                questions.forEach((field, question) -> {
+                    questionMsg.append(field).append(": ").append(question).append("\n");
+                });
+                // Almacenar la acción pendiente para este chat
+                pendingActions.put(chatId, action);
+                BotHelper.sendMessageToTelegram(chatId, questionMsg.toString(), this);
+            } else {
+                // Acción completamente validada, proceder a ejecutarla (por ejemplo, creando una tarea real en la base de datos OCI)
+                executeAction(action, chatId);
+            }
+        }
+    }
+    
+    /**
+     * Llama al microservicio Python para interpretar el lenguaje natural.
+     * Se envía un POST con el campo "input" y se espera recibir un JSON con "actions" y "summary".
+     * Se toma la primera acción del array.
+     */
+    private Action callNLPService(String userInput) {
+        try {
+            logger.debug("callNLPService: Preparing to call NLP service with userInput: {}", userInput);
+            Map<String, String> requestPayload = new HashMap<>();
+            requestPayload.put("input", userInput);
+            logger.debug("callNLPService: Request payload: {}", requestPayload);
+    
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            HttpEntity<Map<String, String>> requestEntity = new HttpEntity<>(requestPayload, headers);
+    
+            logger.debug("callNLPService: Sending POST request to NLP service at URL: {}", nlpServiceUrl);
+            ResponseEntity<Map> response = restTemplate.postForEntity(nlpServiceUrl, requestEntity, Map.class);
+            logger.debug("callNLPService: Received response with status: {}", response.getStatusCode());
+            
+            if (response.getStatusCode() == HttpStatus.OK) {
+                Map body = response.getBody();
+                logger.debug("callNLPService: Response body: {}", body);
+                
+                List<Map<String, Object>> actionsList = (List<Map<String, Object>>) body.get("actions");
+                logger.debug("callNLPService: Actions list: {}", actionsList);
+                
+                if (actionsList != null && !actionsList.isEmpty()) {
+                    Map<String, Object> actionMap = actionsList.get(0);
+                    logger.debug("callNLPService: First action map: {}", actionMap);
+                    
+                    Action action = new Action();
+                    action.setAction((String) actionMap.get("action"));
+                    action.setParams((Map<String, Object>) actionMap.get("params"));
+                    logger.debug("callNLPService: Parsed action: {}", action);
+                    
+                    return action;
+                } else {
+                    logger.warn("callNLPService: Actions list is null or empty");
+                }
+            } else {
+                logger.warn("callNLPService: Response status is not OK: {}", response.getStatusCode());
+            }
+        } catch (Exception e) {
+            logger.error("Error al llamar al servicio NLP", e);
+        }
+        return null;
+    }
+    
+    /**
+     * Realiza una petición GET al servicio de proyectos para obtener la lista real.
+     */
+    private String getProjectsList() {
+        try {
+            ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+                    PROJECTS_SERVICE_URL,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<List<Map<String, Object>>>() {});
+            if (response.getStatusCode() == HttpStatus.OK) {
+                List<Map<String, Object>> projects = response.getBody();
+                StringBuilder sb = new StringBuilder("Lista de Proyectos:\n");
+                for (Map<String, Object> project : projects) {
+                    sb.append(project.get("id")).append(": ").append(project.get("name")).append("\n");
+                }
+                return sb.toString();
+            }
+        } catch (Exception e) {
+            logger.error("Error al obtener la lista de proyectos", e);
+        }
+        return "No se pudieron obtener los proyectos.";
+    }
+    
+    /**
+     * Realiza una petición GET al servicio de usuarios para obtener la lista real.
+     */
+    private String getUsersList() {
+        try {
+            ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+                    USERS_SERVICE_URL,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<List<Map<String, Object>>>() {});
+            if (response.getStatusCode() == HttpStatus.OK) {
+                List<Map<String, Object>> users = response.getBody();
+                StringBuilder sb = new StringBuilder("Lista de Usuarios:\n");
+                for (Map<String, Object> user : users) {
+                    sb.append(user.get("id")).append(": ").append(user.get("name")).append("\n");
+                }
+                return sb.toString();
+            }
+        } catch (Exception e) {
+            logger.error("Error al obtener la lista de usuarios", e);
+        }
+        return "No se pudieron obtener los usuarios.";
+    }
+    
+    /**
+     * Procesa la respuesta del usuario para una acción pendiente.
+     * Se espera que el usuario responda en el formato "FIELD:valor"
+     */
+    private void processPendingActionResponse(long chatId, String messageText) {
+        Action pendingAction = pendingActions.get(chatId);
+        String[] parts = messageText.split(":", 2);
+        if (parts.length < 2) {
+            BotHelper.sendMessageToTelegram(chatId, "Formato incorrecto. Usa FIELD:valor", this);
+            return;
+        }
+        String field = parts[0].trim().toUpperCase();
+        String value = parts[1].trim();
+        pendingAction.getParams().put(field, value);
+        List<String> errors = ValidatorService.validateAction(pendingAction);
+        if (!errors.isEmpty()) {
+            Map<String, String> questions = MissingParamResolver.generateMissingFieldQuestions(pendingAction);
+            StringBuilder questionMsg = new StringBuilder("Aún faltan o son inválidos los siguientes campos:\n");
+            questions.forEach((f, q) -> questionMsg.append(f).append(": ").append(q).append("\n"));
+            pendingActions.put(chatId, pendingAction);
+            BotHelper.sendMessageToTelegram(chatId, questionMsg.toString(), this);
+        } else {
+            pendingActions.remove(chatId);
+            executeAction(pendingAction, chatId);
+        }
+    }
+    
+    /**
+     * Ejecuta la acción validada.
+     * Aquí debes integrar la lógica real para crear, actualizar o ejecutar la acción en la base de datos OCI.
+     */
+    private void executeAction(Action action, long chatId) {
+        // Ejemplo: para "create_task", se llamaría a TaskService.addTask(...) o similar.
+        // Por ahora, confirmamos la acción con un mensaje.
+        String response = "Acción '" + action.getAction() + "' ejecutada correctamente con parámetros: " + action.getParams();
+        BotHelper.sendMessageToTelegram(chatId, response, this);
+    }
 
 
 }
