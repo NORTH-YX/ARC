@@ -24,6 +24,7 @@ public enum BotLabels {
 	SEARCH_TASKS_BY_SPRINT("Search Tasks By Sprint"),
 	SEARCH_TASKS_BY_PRIORITY("Search Tasks By Priority"),
 	SEARCH_TASKS_BY_STATUS("Search Tasks By Status"),
+	UNDERSCORE("_"),
 	DASH("-");
 
 

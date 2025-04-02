@@ -1,5 +1,6 @@
 package com.springboot.MyTodoList.service;
 
+import com.springboot.MyTodoList.model.Sprint;
 import com.springboot.MyTodoList.model.Task;
 import com.springboot.MyTodoList.model.User;
 import com.springboot.MyTodoList.repository.TaskRepository;
@@ -43,7 +44,7 @@ public class TaskService {
         return taskRepository.findByUserId(userId);
     }
 
-    public List<Task> findBySprintId(Integer sprintId) {
+    public List<Task> findBySprintId(Sprint sprintId) {
         return taskRepository.findBySprintId(sprintId);
     }
 
