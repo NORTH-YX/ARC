@@ -13,9 +13,7 @@ public class ActionSchemaService {
             "DESCRIPTION", 
             "PRIORITY", 
             "ESTIMATED_FINISH_DATE",
-            "PROJECT_ID",   // agregado
-            "SPRINT_ID",
-            "ASSIGNED_USER_ID"     // agregado
+            "SPRINT_ID" 
         )));
         supportedActions.add(new SupportedAction("update_task_status", Arrays.asList("NAME", "STATUS")));
         supportedActions.add(new SupportedAction("add_comment", Arrays.asList("NAME", "COMMENT", "MENTIONS")));
