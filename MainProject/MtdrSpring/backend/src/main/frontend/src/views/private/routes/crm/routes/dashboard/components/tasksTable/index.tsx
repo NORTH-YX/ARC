@@ -1,5 +1,6 @@
 import { Button, Space } from 'antd';
 import { format } from 'date-fns';
+import { PlusOutlined } from '@ant-design/icons';
 import type { SorterResult } from 'antd/es/table/interface';
 import { useTaskBook } from '../../../../../../../../modules/tasks/hooks/useTaskBook';
 import { useDataInitialization } from '../../../../../../../../modules/tasks/hooks/useDataInitialization';
@@ -34,6 +35,11 @@ const TasksTable: React.FC = () => {
     }
   };
 
+  const handleCreateTask = () => {
+    store.setSelectedTask(null); // Ensure no task is selected
+    store.openTaskModal(); // Open modal for creating a new task
+  };
+
   const handleTableChange = (_: any, __: any, sorter: SorterResult<any> | SorterResult<any>[]) => {
     console.log('Sort change:', sorter);
   };
@@ -65,10 +71,17 @@ const TasksTable: React.FC = () => {
               width: "101%",
               display: "flex",
               alignItems: "center",
-              justifyContent: "flex-start",
+              justifyContent: "space-between",
             }}
           >
             <h2 style={{ margin: 0 }}>Recent Tasks</h2>
+            <Button 
+              type="primary" 
+              icon={<PlusOutlined />}
+              onClick={handleCreateTask}
+            >
+              Create Task
+            </Button>
           </div>
         }
       >
