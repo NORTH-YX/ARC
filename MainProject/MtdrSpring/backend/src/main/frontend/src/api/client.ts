@@ -1,21 +1,19 @@
 const getBackendUrl = (): string => {
-  try {
-      // Obtener el hostname actual dinámicamente
-      const currentHost = window.location.hostname;
-      const port = ':8080'; // Puerto del backend
+    try {
+        const currentHost = window.location.hostname;
 
-      // Si se ejecuta localmente, usar localhost
-      if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
-          return `http://localhost${port}`;
-      }
+        // Si se ejecuta localmente, usar localhost con el puerto 8080
+        if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+            return `http://localhost:8080/api`;
+        }
 
-      // En producción/nube, usar el hostname actual
-      return `http://${currentHost}${port}`;
-  } catch (error) {
-      console.error('Error getting backend URL:', error);
-      // Fallback a una URL predeterminada si algo falla
-      return 'http://localhost:8080';
-  }
+        // En producción/nube, usar el hostname actual sin el puerto 8080
+        return `http://${currentHost}/api`;
+    } catch (error) {
+        console.error('Error getting backend URL:', error);
+        // Fallback a una URL predeterminada si algo falla
+        return 'http://localhost:8080/api';
+    }
 };
 
 const API_BASE_URL = getBackendUrl();
