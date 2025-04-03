@@ -3,6 +3,14 @@ package com.springboot.MyTodoList.validation;
 import java.time.Instant;
 import java.util.*;
 
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class FieldValidator {
 
     // Definir las restricciones de valores por tabla y campo
@@ -35,7 +43,7 @@ public class FieldValidator {
         tableConstraints.put("USERS", usersConstraints);
 
         // CAMPOS REQUERIDOS
-        requiredFieldsByTable.put("TASKS", Arrays.asList("TASK_NAME", "DESCRIPTION", "PRIORITY", "STATUS", "USER_ID"));
+        requiredFieldsByTable.put("TASKS", Arrays.asList("TASK_NAME", "DESCRIPTION", "PRIORITY", "STATUS", "USER_ID", "PROJECT_ID", "SPRINT_ID", "ESTIMATED_HOURS"));
         requiredFieldsByTable.put("PROJECTS", Arrays.asList("PROJECT_NAME", "DESCRIPTION", "STATUS", "START_DATE"));
         requiredFieldsByTable.put("SPRINTS", Arrays.asList("SPRINT_NAME", "START_DATE", "FINISH_DATE", "STATUS"));
         requiredFieldsByTable.put("USERS", Arrays.asList("NAME", "EMAIL", "ROLE", "WORK_MODALITY", "PASSWORD"));
@@ -44,7 +52,7 @@ public class FieldValidator {
         // CAMPOS QUE PUEDEN SER NULOS
         nullableFieldsByTable.put("PROJECTS", Arrays.asList("DELETED_AT", "REAL_FINISH_DATE"));
         nullableFieldsByTable.put("SPRINTS", Arrays.asList("DELETED_AT"));
-        nullableFieldsByTable.put("TASKS", Arrays.asList("DELETED_AT", "REAL_FINISH_DATE", "ESTIMATED_HOURS", "REAL_HOURS"));
+        nullableFieldsByTable.put("TASKS", Arrays.asList("DELETED_AT", "REAL_FINISH_DATE", "REAL_HOURS"));
         nullableFieldsByTable.put("USERS", Arrays.asList("TELEGRAM_ID", "PHONE_NUMBER", "TEAM_ID", "DELETED_AT"));
 
         // CAMPOS DE TIPO FECHA
@@ -68,19 +76,27 @@ public class FieldValidator {
         // Validar campo de tipo fecha
         if (isDatetimeField(table, field)) {
             try {
-                // Suponiendo que el valor viene en formato ISO 8601.
+                // Intentar parsear directamente en formato ISO_INSTANT (ej: 2025-04-03T20:06:10Z)
                 Instant instant = Instant.parse(value);
                 return instant.toString();
-            } catch (Exception e) {
-                System.out.println("⚠️ No se reconoció '" + value + "' como fecha válida para " + table + "." + field);
-                return null;
+            } catch (DateTimeParseException e) {
+                try {
+                    // Si falla, intentar parsearlo como LocalDateTime (ej: 2025-04-03T20:06:10)
+                    LocalDateTime ldt = LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                    // Asumir que es UTC; si se requiere otra zona, modificar aquí
+                    Instant instant = ldt.atZone(ZoneOffset.UTC).toInstant();
+                    return instant.toString();
+                } catch (DateTimeParseException ex) {
+                    System.out.println("⚠️ No se reconoció '" + value + "' como fecha válida para " + table + "." + field);
+                    return null;
+                }
             }
         }
 
         // Validar restricciones tipo ENUM
         Map<String, List<String>> constraints = tableConstraints.get(table);
         if (constraints == null || !constraints.containsKey(field)) {
-            return value; // No tiene restricciones
+            return value; // Sin restricciones especiales
         }
 
         List<String> validOptions = constraints.get(field);
@@ -90,7 +106,7 @@ public class FieldValidator {
             }
         }
         System.out.println("⚠️ Valor inválido para " + table + "." + field + ": '" + value +
-                           "'. Opciones válidas: " + String.join(", ", validOptions));
+                        "'. Opciones válidas: " + String.join(", ", validOptions));
         return null;
     }
 

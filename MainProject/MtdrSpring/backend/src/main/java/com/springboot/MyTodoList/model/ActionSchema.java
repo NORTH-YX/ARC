@@ -7,8 +7,8 @@ public class ActionSchema {
     public static final Map<String, List<String>> optionalFields = new HashMap<>();
 
     static {
-        requiredFields.put("create_task", List.of("NAME", "DESCRIPTION", "PRIORITY", "ESTIMATED_FINISH_DATE"));
-        optionalFields.put("create_task", List.of("ASSIGNED_USER_ID", "SPRINT_ID", "PROJECT_ID"));
+        requiredFields.put("create_task", List.of("NAME", "DESCRIPTION", "PRIORITY", "ESTIMATED_FINISH_DATE", "SPRINT_ID", "PROJECT_ID"));
+        optionalFields.put("create_task", List.of("ASSIGNED_USER_ID"));
 
         requiredFields.put("update_task_status", List.of("TASK_ID", "STATUS"));
         requiredFields.put("assign_user_to_task", List.of("TASK_ID", "USER_ID"));

@@ -1,5 +1,6 @@
 package com.springboot.MyTodoList.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.MyTodoList.model.Action;
 import com.springboot.MyTodoList.service.ToDoItemService;
 import com.springboot.MyTodoList.service.TaskService;
@@ -10,6 +11,8 @@ import com.springboot.MyTodoList.util.BotLabels;
 import com.springboot.MyTodoList.util.BotMessages;
 import com.springboot.MyTodoList.validation.MissingParamResolver;
 import com.springboot.MyTodoList.validation.ValidatorService;
+import com.springboot.MyTodoList.model.BotSession;
+import com.springboot.MyTodoList.service.BotSessionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
@@ -54,6 +57,9 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
     private static final Map<Long, Action> pendingActions = new HashMap<>();
     
     private RestTemplate restTemplate = new RestTemplate();
+
+    @Autowired
+    private BotSessionService botSessionService;
 	
     // Constructor for autowiring TaskService, UserService
     @Autowired
@@ -80,47 +86,77 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
             String messageText = update.getMessage().getText();
             long chatId = update.getMessage().getChatId();
 
-            // Si existe una acción pendiente, se procesa la respuesta del usuario
-            if (pendingActions.containsKey(chatId)) {
-                processPendingActionResponse(chatId, messageText);
+            // Recuperar la sesión (contexto) para el chat desde la base de datos
+            Optional<BotSession> sessionOpt = botSessionService.getSession(chatId);
+            Action action = null;
+
+            if (sessionOpt.isPresent()) {
+                // Si ya existe una sesión, se parsea el contexto almacenado a un objeto Action
+                BotSession session = sessionOpt.get();
+                action = parseActionFromJson(session.getContextJson());
+                logger.debug("Se recuperó contexto para chat {}: {}", chatId, action);
+            } else {
+                // Si no existe sesión, se llama al microservicio NLP para interpretar el mensaje
+                action = callNLPService(messageText);
+                logger.debug("No había sesión. Se llamó al NLP y se obtuvo acción: {}", action);
+            }
+            
+            if (action == null) {
+                BotHelper.sendMessageToTelegram(chatId, "Error procesando el mensaje. Intenta nuevamente.", this);
                 return;
             }
 
-            // Comandos para listar proyectos o usuarios
-			if (messageText.equalsIgnoreCase("/list_projects")) {
-				String projectsList = getProjectsList();
-				BotHelper.sendMessageToTelegram(chatId, projectsList, this);
-				return;
-			} else if (messageText.equalsIgnoreCase("/list_users")) {
-				String usersList = getUsersList();
-				BotHelper.sendMessageToTelegram(chatId, usersList, this);
-				return;
-			}	
-            
-            // Si el mensaje no es un comando específico, se envía al servicio NLP real.
-            // Se asume que el usuario envía un mensaje natural (por ejemplo: "Crea una tarea urgente para subir el backend mañana")
-            Action action = callNLPService(messageText);
-            if (action == null) {
-                BotHelper.sendMessageToTelegram(chatId, "Error procesando el mensaje. Intenta nuevamente.", this);
+            if (pendingActions.containsKey(chatId)) {
+                processPendingActionResponse(chatId, messageText);
                 return;
             }
             
             // Validar la acción usando el ValidatorService
             List<String> errors = ValidatorService.validateAction(action);
             if (!errors.isEmpty()) {
-                // Si hay errores o campos faltantes, generar preguntas para completarlos
-                Map<String, String> questions = MissingParamResolver.generateMissingFieldQuestions(action);
-                StringBuilder questionMsg = new StringBuilder("Faltan o son inválidos los siguientes campos:\n");
-                questions.forEach((field, question) -> {
-                    questionMsg.append(field).append(": ").append(question).append("\n");
-                });
-                // Almacenar la acción pendiente para este chat
+                // Generar un prompt de corrección que incluya el JSON actual y las reglas de validación
+                String correctionPrompt = MissingParamResolver.generateCorrectionPrompt(action);
+                
+                // Actualizar o crear la sesión con el contexto actual
+                BotSession session = sessionOpt.orElse(new BotSession());
+                session.setChatId(chatId);
+                session.setContextJson(convertActionToJson(action));
+                botSessionService.saveSession(session);
+               
+                // 3. **Agregar la acción a pendingActions** para que processPendingActionResponse
+                //    se ejecute la próxima vez que el usuario responda
                 pendingActions.put(chatId, action);
-                BotHelper.sendMessageToTelegram(chatId, questionMsg.toString(), this);
+
+
+                // Enviar el prompt de corrección al usuario
+                BotHelper.sendMessageToTelegram(chatId, correctionPrompt, this);
             } else {
-                // Acción completamente validada, proceder a ejecutarla (por ejemplo, creando una tarea real en la base de datos OCI)
+                // Acción validada: se elimina la sesión y se ejecuta la acción
+                botSessionService.deleteSession(chatId);
                 executeAction(action, chatId);
             }
+        }
+    }
+
+        // Método auxiliar para parsear el JSON almacenado en BotSession a un objeto Action
+    private Action parseActionFromJson(String json) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(json, Action.class);
+        } catch (Exception e) {
+            logger.error("Error al parsear el contexto de BotSession", e);
+            return null;
+        }
+    }
+
+    // Método auxiliar para convertir un objeto Action a JSON
+    private String convertActionToJson(Action action) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writeValueAsString(action);
+        } catch (Exception e) {
+            logger.error("Error al convertir Action a JSON", e);
+            return null;
         }
     }
     
