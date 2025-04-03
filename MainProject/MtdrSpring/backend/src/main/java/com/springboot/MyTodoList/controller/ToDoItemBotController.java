@@ -136,11 +136,6 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 	}
 
 	private void handleTaskCreationStep(long chatId, String messageText) {
-		if (messageText.equals("Cancel Task")) {
-			cancelTaskCreation(chatId);
-			return;
-		}
-	
 		Task task = userTaskCreationState.get(chatId);
 		String currentStep = userTaskCreationStep.get(chatId);
 	
@@ -159,7 +154,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 	
 			case "priority":
 				try {
-					int priority = Integer.parseInt(messageText);
+					int priority = Integer.parseInt(messageText.trim());
 					if (priority < 1 || priority > 3) {
 						sendMessage(chatId, "Invalid priority. Please enter a number (1 = Low, 2 = Medium, 3 = High):");
 						return;
@@ -170,7 +165,6 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 					// Mostrar usuarios disponibles
 					showUsers(chatId);
 	
-					// Limpiar el teclado dinámico después de mostrar los usuarios
 					sendMessage(chatId, "Please select a user:");
 				} catch (NumberFormatException e) {
 					sendMessage(chatId, "Invalid priority. Please enter a number (1 = Low, 2 = Medium, 3 = High):");
@@ -180,7 +174,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 			case "userId":
 				try {
 					String[] parts = messageText.split(BotLabels.DASH.getLabel());
-					int userId = Integer.parseInt(parts[0]); // Extraer solo el ID numérico
+					int userId = Integer.parseInt(parts[0].trim());
 	
 					Optional<User> user = userService.findById(userId);
 					if (user.isPresent()) {
@@ -190,7 +184,6 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 						// Mostrar sprints disponibles
 						showSprints(chatId);
 	
-						// Limpiar el teclado dinámico después de mostrar los sprints
 						sendMessage(chatId, "Please select a sprint:");
 					} else {
 						sendMessage(chatId, "Invalid user ID. Please select a valid user:");
@@ -207,15 +200,14 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 			case "sprintId":
 				try {
 					String[] parts = messageText.split(BotLabels.UNDERSCORE.getLabel());
-					int sprintId = Integer.parseInt(parts[0]); // Extraer solo el ID numérico
-			
+					int sprintId = Integer.parseInt(parts[0].trim());
+	
 					Optional<Sprint> sprint = sprintService.findById(sprintId);
 					if (sprint.isPresent()) {
 						task.setSprint(sprint.get());
 						userTaskCreationStep.put(chatId, "estimatedHours");
-			
-						// Limpiar el teclado dinámico después de seleccionar el sprint
-						sendKeyboard(chatId, "Please enter the estimated hours:", new ArrayList<>());
+	
+						sendMessage(chatId, "Please enter the estimated hours:");
 					} else {
 						sendMessage(chatId, "Invalid sprint ID. Please select a valid sprint:");
 						showSprints(chatId);
@@ -230,36 +222,30 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 	
 			case "estimatedHours":
 				try {
-					int estimatedHours = Integer.parseInt(messageText);
+					int estimatedHours = Integer.parseInt(messageText.trim());
 					if (estimatedHours <= 0 || estimatedHours > 4) {
 						sendMessage(chatId, "Invalid input. Please enter a number between 1 and 4:");
 						return;
 					}
 					task.setEstimatedHours(estimatedHours);
-			
+	
 					// Asignar un estado predeterminado
 					task.setStatus("To Do");
-			
+	
 					// Guardar la tarea en la base de datos
 					taskService.addTask(task);
-			
+	
 					// Limpiar el estado
 					userTaskCreationState.remove(chatId);
 					userTaskCreationStep.remove(chatId);
-			
+	
 					sendMessage(chatId, "Task created successfully! 🎉");
-					showMainMenu(chatId); // Volver al menú principal
+					showMainMenu(chatId);
 				} catch (NumberFormatException e) {
-					// Mostrar el mensaje de error y mantener el botón "Cancel Task"
-					List<KeyboardRow> keyboard = new ArrayList<>();
-					keyboard.add(createRow("Cancel Task")); // Agregar el botón "Cancel Task"
-					sendKeyboard(chatId, "Invalid input. Please enter a valid number for estimated hours:", keyboard);
+					sendMessage(chatId, "Invalid input. Please enter a valid number for estimated hours:");
 				} catch (Exception e) {
 					logger.error("Error saving task: " + e.getMessage(), e);
-					// Mostrar el mensaje de error y mantener el botón "Cancel Task"
-					List<KeyboardRow> keyboard = new ArrayList<>();
-					keyboard.add(createRow("Cancel Task")); // Agregar el botón "Cancel Task"
-					sendKeyboard(chatId, "An error occurred while saving the task. Please try again:", keyboard);
+					sendMessage(chatId, "An error occurred while saving the task. Please try again.");
 				}
 				break;
 	
@@ -276,21 +262,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 		userTaskCreationState.put(chatId, new Task());
 		userTaskCreationStep.put(chatId, "taskName");
 	
-		List<KeyboardRow> keyboard = new ArrayList<>();
-		keyboard.add(createRow("Cancel Task")); // Botón para cancelar la tarea
-		sendKeyboard(chatId, "Please enter the task name or click 'Cancel Task' to cancel:", keyboard);
-	}
-
-	private void cancelTaskCreation(long chatId) {
-		// Limpiar el estado relacionado con la creación de la tarea
-		userTaskCreationState.remove(chatId);
-		userTaskCreationStep.remove(chatId);
-	
-		// Notificar al usuario que la tarea ha sido cancelada
-		sendMessage(chatId, "Task creation has been canceled. All progress has been reset. ✅");
-	
-		// Mostrar el menú principal
-		showMainMenu(chatId);
+		sendMessage(chatId, "Please enter the task name:");
 	}
 
     private void showAllTasks(long chatId) {
