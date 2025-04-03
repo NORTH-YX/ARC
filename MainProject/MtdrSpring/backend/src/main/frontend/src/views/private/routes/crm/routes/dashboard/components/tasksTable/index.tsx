@@ -1,5 +1,6 @@
 import { Button, Space } from 'antd';
 import { format } from 'date-fns';
+import type { SorterResult } from 'antd/es/table/interface';
 import { useTaskBook } from '../../../../../../../../modules/tasks/hooks/useTaskBook';
 import { useDataInitialization } from '../../../../../../../../modules/tasks/hooks/useDataInitialization';
 import useTaskStore from '../../../../../../../../modules/tasks/store/useTaskStore.tsx';
@@ -33,11 +34,24 @@ const TasksTable: React.FC = () => {
     }
   };
 
+  const handleTableChange = (_: any, __: any, sorter: SorterResult<any> | SorterResult<any>[]) => {
+    console.log('Sort change:', sorter);
+  };
+
+  // Custom date comparison for sorting
+  const compareDates = (a: string | null, b: string | null) => {
+    if (!a && !b) return 0;
+    if (!a) return -1;
+    if (!b) return 1;
+    return new Date(a).getTime() - new Date(b).getTime();
+  };
+
   return (
     <StyledTable 
       dataSource={store.filteredTasks || []}
       loading={isLoading}
       rowKey="taskId"
+      onChange={handleTableChange}
     >
       <StyledTable.ColumnGroup
         title={
@@ -71,20 +85,33 @@ const TasksTable: React.FC = () => {
         />
         <StyledTable.Column 
           title="Sprint" 
-          dataIndex="sprintId" 
-          key="sprintId" 
+          dataIndex={["sprint", "sprintName"]}
+          key="sprint"
+          sorter={{
+            compare: (a: any, b: any) => {
+              const sprintA = a.sprint?.sprintName || '';
+              const sprintB = b.sprint?.sprintName || '';
+              return sprintA.localeCompare(sprintB);
+            }
+          }}
         />
         <StyledTable.Column
           title="Creation Date"
           dataIndex="creationDate"
           key="creationDate"
-          render={(date: string) => format(new Date(date), "yyyy-MM-dd HH:mm:ss")}
+          render={(date: string) => format(new Date(date), "MMM d, yyyy h:mm a")}
+          sorter={{
+            compare: (a: any, b: any) => compareDates(a.creationDate, b.creationDate)
+          }}
         />
         <StyledTable.Column
           title="Estimated Finish"
           dataIndex="estimatedFinishDate"
           key="estimatedFinishDate"
-          render={(date: string) => date ? format(new Date(date), "yyyy-MM-dd HH:mm:ss") : "Not Set"}
+          render={(date: string) => date ? format(new Date(date), "MMM d, yyyy h:mm a") : "Not Set"}
+          sorter={{
+            compare: (a: any, b: any) => compareDates(a.estimatedFinishDate, b.estimatedFinishDate)
+          }}
         />
         <StyledTable.Column
           title="Priority"
@@ -93,16 +120,19 @@ const TasksTable: React.FC = () => {
         />
         <StyledTable.Column 
           title="User" 
-          dataIndex="userId" 
-          key="userId" 
+          dataIndex={["user", "name"]}
+          key="user" 
         />
         <StyledTable.Column
           title="Real Finish"
           dataIndex="realFinishDate"
           key="realFinishDate"
           render={(date: string | null) =>
-            date ? format(new Date(date), "yyyy-MM-dd HH:mm:ss") : "Not Finished"
+            date ? format(new Date(date), "MMM d, yyyy h:mm a") : "Not Finished"
           }
+          sorter={{
+            compare: (a: any, b: any) => compareDates(a.realFinishDate, b.realFinishDate)
+          }}
         />
         <StyledTable.Column
           title="Action"
