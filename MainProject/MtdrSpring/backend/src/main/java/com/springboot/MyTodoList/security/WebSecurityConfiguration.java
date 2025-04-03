@@ -10,12 +10,15 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 
 @Configuration
 @EnableWebSecurity
-@Order(2) // Asegúrate de que este valor sea único y diferente del anterior
+@Order(2)
 public class WebSecurityConfiguration extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf().disable();
-        // httpSecurity.authorizeRequests().anyRequest().authenticated().and().
-        //         formLogin().and().logout().permitAll();
+        httpSecurity
+            .cors().and()
+            .csrf().disable()
+            .requestMatchers(matchers -> matchers.antMatchers("/swagger-ui/**", "/v3/api-docs/**"))
+            .authorizeRequests()
+            .anyRequest().permitAll();
     }
 }

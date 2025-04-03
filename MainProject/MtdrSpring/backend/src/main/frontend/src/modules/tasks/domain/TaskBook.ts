@@ -14,6 +14,11 @@ export default class TaskBook {
       this.updateTask,
       this.deleteTask,
       this.restoreTask,
+      this.getTaskById,
+      this.getTasksBySprint,
+      this.getTasksByUser,
+      this.getTasksByStatus,
+      this.getTasks
     ];
     
     // Bind methods to maintain correct 'this' context
@@ -21,27 +26,32 @@ export default class TaskBook {
     this.updateTask = this.updateTask.bind(this);
     this.deleteTask = this.deleteTask.bind(this);
     this.restoreTask = this.restoreTask.bind(this);
+    this.getTaskById = this.getTaskById.bind(this);
+    this.getTasksBySprint = this.getTasksBySprint.bind(this);
+    this.getTasksByUser = this.getTasksByUser.bind(this);
+    this.getTasksByStatus = this.getTasksByStatus.bind(this);
+    this.getTasks = this.getTasks.bind(this);
   }
 
-  // getTasks(): Task[] {
-  //   return this.tasks;
-  // }
+  getTasks(): Task[] {
+    return this.tasks;
+  }
 
-  // getTaskById(taskId: number): Task | undefined {
-  //   return this.tasks.find(task => task.taskId === taskId);
-  // }
+  getTaskById(taskId: number): Task | undefined {
+    return this.tasks.find(task => task.taskId === taskId);
+  }
 
-  // getTasksBySprint(sprintId: number): Task[] {
-  //   return this.tasks.filter(task => task.sprintId === sprintId);
-  // }
+  getTasksBySprint(sprintId: number): Task[] {
+    return this.tasks.filter(task => task.sprint.sprintId === sprintId);
+  }
 
-  // getTasksByUser(userId: number): Task[] {
-  //   return this.tasks.filter(task => task.userId === userId);
-  // }
+  getTasksByUser(userId: number): Task[] {
+    return this.tasks.filter(task => task.user.userId === userId);
+  }
 
-  // getTasksByStatus(status: string): Task[] {
-  //   return this.tasks.filter(task => task.status === status);
-  // }
+  getTasksByStatus(status: string): Task[] {
+    return this.tasks.filter(task => task.status === status);
+  }
 
   async createTask(taskData: TaskCreate): Promise<Task> {
     const response = await createTask(taskData);

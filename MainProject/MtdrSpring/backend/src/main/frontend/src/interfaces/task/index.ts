@@ -61,4 +61,8 @@ export interface TaskUpdate {
   sprintId?: number;
 }
 
-export interface TasksResponse extends Array<Task> {} 
+export interface TasksResponse {
+  tasks: Task[];
+  count: number;
+  status: string;
+} 

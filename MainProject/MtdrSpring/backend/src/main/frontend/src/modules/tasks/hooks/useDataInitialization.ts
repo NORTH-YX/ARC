@@ -1,14 +1,16 @@
 import { useEffect, useRef } from 'react';
-import { Task } from '../../../interfaces/task';
+import { Task, TasksResponse } from '../../../interfaces/task';
 import TaskBook from '../domain/TaskBook';
 
 
-export function useDataInitialization(tasks: Task[], store: any) {
+export function useDataInitialization(data: TasksResponse | undefined, store: any) {
   const isInitialized = useRef(false);
-  const tasksRef = useRef(tasks);
+  const tasksRef = useRef<Task[]>([]);
 
   useEffect(() => {
-    if (!tasks) return;
+    if (!data || !data.tasks) return;
+    
+    const tasks = data.tasks;
     
     // Only initialize if tasks have changed or haven't been initialized yet
     if (!isInitialized.current || JSON.stringify(tasksRef.current) !== JSON.stringify(tasks)) {
@@ -18,5 +20,5 @@ export function useDataInitialization(tasks: Task[], store: any) {
       isInitialized.current = true;
       tasksRef.current = tasks;
     }
-  }, [tasks, store]);
+  }, [data, store]);
 } 

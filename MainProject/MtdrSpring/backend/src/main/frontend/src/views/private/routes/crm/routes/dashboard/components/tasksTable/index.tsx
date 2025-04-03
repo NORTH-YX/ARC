@@ -11,7 +11,7 @@ const TasksTable: React.FC = () => {
   console.log('data', data);
   const store = useTaskStore();
   
-  useDataInitialization(data || [], store);
+  useDataInitialization(data, store);
 
   if (error) return <div>Failed to load tasks</div>;
   if (isLoading) return <div>Loading...</div>;
@@ -35,7 +35,7 @@ const TasksTable: React.FC = () => {
 
   return (
     <StyledTable 
-      dataSource={store.filteredTasks}
+      dataSource={store.filteredTasks || []}
       loading={isLoading}
       rowKey="taskId"
     >
@@ -84,7 +84,7 @@ const TasksTable: React.FC = () => {
           title="Estimated Finish"
           dataIndex="estimatedFinishDate"
           key="estimatedFinishDate"
-          render={(date: string) => format(new Date(date), "yyyy-MM-dd HH:mm:ss")}
+          render={(date: string) => date ? format(new Date(date), "yyyy-MM-dd HH:mm:ss") : "Not Set"}
         />
         <StyledTable.Column
           title="Priority"
