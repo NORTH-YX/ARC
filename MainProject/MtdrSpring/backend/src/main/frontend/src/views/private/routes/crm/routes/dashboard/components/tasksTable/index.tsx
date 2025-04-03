@@ -99,7 +99,7 @@ const TasksTable: React.FC = () => {
           title="Creation Date"
           dataIndex="creationDate"
           key="creationDate"
-          render={(date: string) => format(new Date(date), "MMM d, yyyy h:mm a")}
+          render={(date: string) => format(new Date(date), "yyyy-MM-dd HH:mm:ss")}
           sorter={{
             compare: (a: any, b: any) => compareDates(a.creationDate, b.creationDate)
           }}
@@ -108,7 +108,7 @@ const TasksTable: React.FC = () => {
           title="Estimated Finish"
           dataIndex="estimatedFinishDate"
           key="estimatedFinishDate"
-          render={(date: string) => date ? format(new Date(date), "MMM d, yyyy h:mm a") : "Not Set"}
+          render={(date: string) => date ? format(new Date(date), "yyyy-MM-dd HH:mm:ss") : "Not Set"}
           sorter={{
             compare: (a: any, b: any) => compareDates(a.estimatedFinishDate, b.estimatedFinishDate)
           }}
@@ -128,7 +128,7 @@ const TasksTable: React.FC = () => {
           dataIndex="realFinishDate"
           key="realFinishDate"
           render={(date: string | null) =>
-            date ? format(new Date(date), "MMM d, yyyy h:mm a") : "Not Finished"
+            date ? format(new Date(date), "yyyy-MM-dd HH:mm:ss") : "Not Finished"
           }
           sorter={{
             compare: (a: any, b: any) => compareDates(a.realFinishDate, b.realFinishDate)
