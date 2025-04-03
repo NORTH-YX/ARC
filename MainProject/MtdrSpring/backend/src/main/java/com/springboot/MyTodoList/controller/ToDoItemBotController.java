@@ -231,6 +231,10 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 			case "estimatedHours":
 				try {
 					int estimatedHours = Integer.parseInt(messageText);
+					if (estimatedHours <= 0 || estimatedHours > 4) {
+						sendMessage(chatId, "Invalid input. Please enter a number between 1 and 4:");
+						return;
+					}
 					task.setEstimatedHours(estimatedHours);
 			
 					// Asignar un estado predeterminado
