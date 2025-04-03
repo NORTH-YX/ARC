@@ -4,6 +4,7 @@ import { User, SetUser } from "../../interfaces/user";
 import Navbar from "./navbar";
 import Sidebar from "./sidebar";
 import FooterLayout from "./footer";
+import { useNavigate } from "react-router-dom";
 
 const { Content } = Layout;
 
@@ -14,9 +15,16 @@ interface MainLayoutProps {
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ user, setUser, children }) => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    setUser(null);
+    navigate("/login");
+  };
+
   return (
     <Layout>
-      <Navbar user={user} setUser={setUser} />
+      <Navbar user={user} onLogout={handleLogout} />
       <Layout>
         <Sidebar />
         <Content style={{ margin: "0 24px 0" }}>

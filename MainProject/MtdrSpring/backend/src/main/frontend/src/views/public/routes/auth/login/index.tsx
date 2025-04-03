@@ -1,9 +1,10 @@
 import React from "react";
-import { Form, Input, Button, Row, Col, Typography, Image, Card } from "antd";
+import { Form, Input, Button, Checkbox, Row, Col, Typography, Card, Image } from "antd";
 import { LoginCredentials } from "../../../../../api/auth";
 import { useNavigate } from "react-router-dom";
+import { StyledLink, StyledImage } from "../elements";
 
-const { Text, Title, Link } = Typography;
+const { Text, Title } = Typography;
 
 interface LoginProps {
   setUser: (credentials: LoginCredentials) => void;
@@ -29,6 +30,30 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
         flexDirection: "row",
       }}
     >
+      <Col
+        xs={0} // Hide on extra small screens
+        sm={0} // 10/24 width on small screens
+        md={12} // 12/24 width on medium screens
+        lg={12} // Half screen on large screens
+        style={{
+          display: "flex",
+          alignItems: "flex-end",
+        }}
+      >
+        <StyledImage>
+        <Image
+          src="https://images.pexels.com/photos/392018/pexels-photo-392018.jpeg?cs=srgb&dl=pexels-vojtech-okenka-127162-392018.jpg&fm=jpg"
+          preview={false}
+          style={{
+            width: "100%",
+            height: "100vh",
+            objectFit: "cover",
+            borderRadius: "0 16px 16px 0",
+            display: "block",
+          }}
+        />
+        </StyledImage>
+      </Col>
       <Col
         xs={24}
         sm={16}
@@ -98,7 +123,19 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
                   justifyContent: "flex-end",
                 }}
               >
-                <Link style={{ paddingTop: "4px" }} onClick={() => navigate("/recover")}>Forgot password?</Link>
+                <Form.Item
+                  name="remember"
+                  valuePropName="checked"
+                  wrapperCol={{ span: 24 }}
+                >
+                  <Checkbox>Remember me</Checkbox>
+                </Form.Item>
+                <StyledLink
+                  style={{ paddingTop: "4px" }}
+                  onClick={() => navigate("/recover")}
+                >
+                  Forgot password?
+                </StyledLink>
               </div>
 
               <Form.Item wrapperCol={{ span: 32 }}>
@@ -113,7 +150,7 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
             </Form>
             <div style={{ display: "flex", flexDirection: "row", gap: "4px" }}>
               <Text>Don't have an account?</Text>
-              <Link>Sign up</Link>
+              <StyledLink onClick={() => navigate("/create")}>Sign up</StyledLink>
             </div>
           </div>
         </Card>

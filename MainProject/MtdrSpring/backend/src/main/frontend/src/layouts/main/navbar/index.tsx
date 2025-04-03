@@ -4,16 +4,16 @@ import Logo from "../../../assets/logo.svg";
 import { BellOutlined, MailOutlined } from "@ant-design/icons";
 import { Layout, Col, Row, Button } from "antd";
 import PopView from "./components/PopView";
-import { User, SetUser } from "../../../interfaces/user";
+import { User } from "../../../interfaces/user";
 
 const { Header } = Layout;
 
 interface NavbarProps {
   user: User;
-  setUser: SetUser;
+  onLogout?: () => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ user, setUser }) => {
+const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
   return (
     <Header
       style={{
@@ -60,6 +60,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, setUser }) => {
                 margin: 0,
                 padding: 0,
                 lineHeight: "35px",
+                fontWeight: 400,
               }}
             >
               ProjectFlow
@@ -82,7 +83,7 @@ const Navbar: React.FC<NavbarProps> = ({ user, setUser }) => {
               icon={<MailOutlined />}
               style={{ fontSize: "15px" }}
             />
-            <PopView user={user} setUser={setUser} />
+            <PopView user={user} onLogout={onLogout} />
           </Row>
         </div>
       </Col>

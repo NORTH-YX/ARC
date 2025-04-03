@@ -6,7 +6,7 @@ export default class TaskBook {
   public injectable: any[];
 
   constructor(tasks: Task[]) {
-    this.tasks = tasks;
+    this.tasks = tasks || [];
     
     // Define which methods should be injectable into the store
     this.injectable = [
@@ -14,10 +14,6 @@ export default class TaskBook {
       this.updateTask,
       this.deleteTask,
       this.restoreTask,
-      // this.getTaskById,
-      // this.getTasksBySprint,
-      // this.getTasksByUser,
-      // this.getTasksByStatus
     ];
     
     // Bind methods to maintain correct 'this' context
@@ -25,10 +21,6 @@ export default class TaskBook {
     this.updateTask = this.updateTask.bind(this);
     this.deleteTask = this.deleteTask.bind(this);
     this.restoreTask = this.restoreTask.bind(this);
-    // this.getTaskById = this.getTaskById.bind(this);
-    // this.getTasksBySprint = this.getTasksBySprint.bind(this);
-    // this.getTasksByUser = this.getTasksByUser.bind(this);
-    // this.getTasksByStatus = this.getTasksByStatus.bind(this);
   }
 
   // getTasks(): Task[] {
@@ -85,7 +77,7 @@ export default class TaskBook {
     await restoreTask(taskId);
     this.tasks[taskIndex] = {
       ...this.tasks[taskIndex],
-      deletedAt: undefined,
+      deletedAt: null,
     };
     return true;
   }

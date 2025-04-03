@@ -16,7 +16,7 @@ const Dashboard: React.FC<DashProps> = ({ user }) => {
     >
       <h1 style={{ marginBottom: "5px" }}>Dashboard Overview</h1>
       <p style={{ color: "#6B7280", marginBottom: "40PX" }}>
-        Welcome back, {user?.name}! Here's what's happening today.
+        Welcome back, {user?.name || 'User'}! Here's what's happening today.
       </p>
 
       <TasksTable />

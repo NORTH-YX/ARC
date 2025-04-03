@@ -1,23 +1,64 @@
+export interface User {
+  userId: number;
+  name: string;
+  email: string;
+  role: string;
+  workModality: string;
+  telegramId: string;
+  phoneNumber: string;
+  creationDate: string;
+  deletedAt: string | null;
+  teamId: number;
+}
+
+export interface Sprint {
+  sprintId: number;
+  sprintName: string;
+  projectId: number;
+  status: string;
+  creationDate: string;
+  estimatedFinishDate: string;
+  deletedAt: string | null;
+}
+
 export interface Task {
   taskId: number;
   taskName: string;
   description: string;
   priority: number;
   status: string;
-  sprintId: number;
-  userId: number;
   creationDate: string;
+  estimatedFinishDate: string | null;
+  realFinishDate: string | null;
+  estimatedHours: number;
+  realHours: number;
+  deletedAt: string | null;
+  user: User;
+  sprint: Sprint;
+}
+
+export interface TaskCreate {
+  taskName: string;
+  description: string;
+  priority: number;
+  status: string;
+  estimatedFinishDate?: string;
+  estimatedHours: number;
+  userId: number;
+  sprintId: number;
+}
+
+export interface TaskUpdate {
+  taskName?: string;
+  description?: string;
+  priority?: number;
+  status?: string;
   estimatedFinishDate?: string;
   realFinishDate?: string;
-  deletedAt?: string;
+  estimatedHours?: number;
+  realHours?: number;
+  userId?: number;
+  sprintId?: number;
 }
 
-export interface TaskCreate extends Omit<Task, 'taskId' | 'creationDate' | 'deletedAt' | 'realFinishDate'> {}
-
-export interface TaskUpdate extends Partial<TaskCreate> {
-  taskId: number;
-}
-
-export interface TasksResponse {
-  tasks: Task[];
-} 
+export interface TasksResponse extends Array<Task> {} 

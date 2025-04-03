@@ -7,30 +7,43 @@ interface DashProps {
   user: User;
 }
 
-//User Routes
-const Profile = lazy(() => import("./routes/dashboard"));
-
-//Admin Routes
-const AdminDashboard = lazy(() => import("./routes/dashboard"));
+// Common Routes for Users and Admins
+const Dashboard = lazy(() => import("./routes/dashboard"));
+const ProjectDashboard = lazy(() => import("./routes/projectDashboard"));
+const Projects = lazy(() => import("./routes/projects"));
+const Teams = lazy(() => import("./routes/teams"));
+const Reports = lazy(() => import("./routes/reports"));
 
 const CRM: React.FC<DashProps> = ({ user }) => {
-
   if (user?.role === "admin") {
-    {
-      return (
-        <Suspense fallback={<TopBarProgress />}>
-          <Routes>
-            <Route path="/dashboard" element={<AdminDashboard user={user} />} />
-            <Route path="*" element={<Navigate to="/dashboard" />} />
-          </Routes>
-        </Suspense>
-      );
-    }
+    return (
+      <Suspense fallback={<TopBarProgress />}>
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard user={user} />} />
+          <Route path="/projects" element={<Projects user={user} />} />
+          <Route
+              path="/projectDashboard"
+              element={<ProjectDashboard user={user} />}
+            />
+          <Route path="/teams" element={<Teams user={user} />} />
+          <Route path="/reports" element={<Reports user={user} />} />
+          <Route path="*" element={<Navigate to="/dashboard" />} />
+        </Routes>
+      </Suspense>
+    );
   }
+
   return (
     <Suspense fallback={<TopBarProgress />}>
       <Routes>
-        <Route path="/dashboard" element={<Profile user={user} />} />
+        <Route path="/dashboard" element={<Dashboard user={user} />} />
+        <Route
+          path="/projectDashboard"
+          element={<ProjectDashboard user={user} />}
+        />
+        <Route path="/projects" element={<Projects user={user} />} />
+        <Route path="/teams" element={<Teams user={user} />} />
+        <Route path="/reports" element={<Reports user={user} />} />
         <Route path="*" element={<Navigate to="/dashboard" />} />
       </Routes>
     </Suspense>

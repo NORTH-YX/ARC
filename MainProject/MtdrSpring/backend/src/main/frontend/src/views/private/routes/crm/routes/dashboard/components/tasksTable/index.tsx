@@ -3,15 +3,15 @@ import { format } from 'date-fns';
 import { useTaskBook } from '../../../../../../../../modules/tasks/hooks/useTaskBook';
 import { useDataInitialization } from '../../../../../../../../modules/tasks/hooks/useDataInitialization';
 import useTaskStore from '../../../../../../../../modules/tasks/store/useTaskStore.tsx';
-import { getStatusTag } from './utils.tsx';
+import { getStatusTag } from '../../../utils.tsx';
 import { StyledTable } from './styles.ts';
 
 const TasksTable: React.FC = () => {
   const { data, error, isLoading, mutate } = useTaskBook();
+  console.log('data', data);
   const store = useTaskStore();
   
-  // Move hook to top level - it will handle the conditional logic internally
-  useDataInitialization(data?.tasks || [], store);
+  useDataInitialization(data || [], store);
 
   if (error) return <div>Failed to load tasks</div>;
   if (isLoading) return <div>Loading...</div>;

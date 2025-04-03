@@ -1,11 +1,11 @@
 import React from "react";
 import { LogoutOutlined } from "@ant-design/icons";
 import { Col, Row, Button, Avatar, Popconfirm } from "antd";
-import { User, SetUser } from "../../../../interfaces/user";
+import { User } from "../../../../interfaces/user";
 
 interface PopViewProps {
   user: User;
-  setUser: SetUser;
+  onLogout?: () => void;
 }
 const getInitials = (name: string): string => {
   const names = name.split(" ");
@@ -16,7 +16,13 @@ const getInitials = (name: string): string => {
   return initials;
 };
 
-const PopView: React.FC<PopViewProps> = ({ user, setUser }) => {
+const PopView: React.FC<PopViewProps> = ({ user, onLogout }) => {
+  const handleLogout = () => {
+    if (onLogout) {
+      onLogout();
+    }
+  };
+
   return (
     <Popconfirm
       title={
@@ -85,10 +91,7 @@ const PopView: React.FC<PopViewProps> = ({ user, setUser }) => {
               color="danger"
               variant="filled"
               style={{ fontSize: "15px", width: "100%" }}
-              onClick={() => {
-                setUser(null);
-                localStorage.removeItem('token');
-              }}
+              onClick={handleLogout}
             >
               Log Out
             </Button>

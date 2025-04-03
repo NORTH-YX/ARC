@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiClient } from '../api/client';
+import { User } from '../interfaces/user';
 
 interface AuthContextType {
   token: string | null;
   setToken: (token: string | null) => void;
+  user: User | null;
+  setUser: (user: User | null) => void;
   isAuthenticated: boolean;
   logout: () => void;
 }
@@ -16,6 +19,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return storedToken;
   });
 
+  const [user, setUser] = useState<User | null>(() => {
+    const storedUser = localStorage.getItem('user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  });
+
   useEffect(() => {
     if (token) {
       localStorage.setItem('auth_token', token);
@@ -26,9 +34,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [token]);
 
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+    }
+  }, [user]);
+
   const logout = () => {
     setToken(null);
-    localStorage.removeItem('user');
+    setUser(null);
   };
 
   const isAuthenticated = !!token;
@@ -38,6 +54,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       value={{
         token,
         setToken,
+        user,
+        setUser,
         isAuthenticated,
         logout,
       }}

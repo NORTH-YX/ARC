@@ -15,7 +15,8 @@ const Public: React.FC = () => {
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        minHeight: '100vh' 
+        minHeight: '100vh',
+        background: 'white',
       }}>
         <Spin size="large" />
       </div>

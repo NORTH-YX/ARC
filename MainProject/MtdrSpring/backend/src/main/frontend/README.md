@@ -1,3 +1,58 @@
+# Oracle JavaBot Frontend
+
+This is the frontend application for Oracle JavaBot, built with React, TypeScript, and Vite.
+
+## Getting Started
+
+1. Install dependencies:
+```bash
+npm install
+```
+
+2. Run the development server:
+```bash
+npm run dev
+```
+
+3. Build for production:
+```bash
+npm run build
+```
+
+4. Preview the production build:
+```bash
+npm run preview
+```
+
+## Project Structure
+
+- `/src`: Source code
+  - `/api`: API client and services
+  - `/assets`: Static assets (images, etc.)
+  - `/components`: Reusable UI components
+  - `/contexts`: React contexts for state management
+  - `/hooks`: Custom React hooks
+  - `/interfaces`: TypeScript interfaces and types
+  - `/layouts`: Page layout components
+  - `/modules`: Feature-specific modules
+  - `/utils`: Utility functions
+  - `/views`: Page components
+
+## Technologies
+
+- React 18
+- TypeScript
+- Vite
+- Ant Design
+- React Router
+- React Query (TanStack Query)
+- Styled Components
+- Zustand (State Management)
+
+## Proxy Configuration
+
+The development server is configured to proxy API requests to `http://localhost:8080`.
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

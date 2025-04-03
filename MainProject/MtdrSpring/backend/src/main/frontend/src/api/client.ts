@@ -1,8 +1,7 @@
-const API_BASE_URL = '';  // Use proxy path instead of direct URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 class ApiClient {
   private static instance: ApiClient;
-  private token: string | null = null;
   private headers = {
     'Accept': '*/*',
   };
@@ -17,7 +16,6 @@ class ApiClient {
   }
 
   setToken(token: string | null) {
-    this.token = token;
     this.headers = {
       'Accept': '*/*',
       ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
@@ -28,11 +26,8 @@ class ApiClient {
     const fullUrl = `${API_BASE_URL}${endpoint}`;
     console.log('Making request to:', fullUrl);
     
-    // Prepare headers with token if available
-    const requestHeaders = new Headers({
-      ...this.headers,
-      ...(this.token ? { 'Authorization': `Bearer ${this.token}` } : {})
-    });
+    // Prepare headers
+    const requestHeaders = new Headers(this.headers);
     
     // Only add Content-Type for POST/PUT requests with a body
     if (options.body) {
