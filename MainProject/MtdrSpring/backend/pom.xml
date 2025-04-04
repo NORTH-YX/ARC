@@ -154,6 +154,23 @@
 							</resources>
 						</configuration>
 					</execution>
+					<!-- Nueva ejecución para copiar a src/main/resources/static -->
+					<execution>
+						<id>copy-to-static-resources</id>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<phase>prepare-package</phase>
+						<configuration>
+							<outputDirectory>${project.basedir}/src/main/resources/static</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${frontend-src-dir}/dist</directory>
+									<filtering>false</filtering>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
 				</executions>
 			</plugin>
 			<plugin>
