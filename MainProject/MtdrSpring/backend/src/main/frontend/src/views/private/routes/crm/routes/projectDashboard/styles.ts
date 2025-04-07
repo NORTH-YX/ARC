@@ -47,3 +47,21 @@ export const ButtonsContainer = styled.div`
     align-items: stretch;
   }
 `;
+
+export const IndicatorsContainer = styled.div`
+  padding: 40px 40px 20px;
+
+  @media (max-width: 768px) {
+    padding: 20px 10px 0px;
+  }
+`;
+
+export const SprintsContainer = styled.div`
+  display: flex;
+  width: 70%;
+  flex-direction: column;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;

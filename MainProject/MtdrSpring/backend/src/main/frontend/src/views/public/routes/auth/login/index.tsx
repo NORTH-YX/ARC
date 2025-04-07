@@ -3,6 +3,7 @@ import { Form, Input, Button, Checkbox, Row, Col, Typography, Card, Image } from
 import { LoginCredentials } from "../../../../../api/auth";
 import { useNavigate } from "react-router-dom";
 import { StyledLink, StyledImage } from "../elements";
+import { UserOutlined, LockFilled } from "@ant-design/icons";
 
 const { Text, Title } = Typography;
 
@@ -95,6 +96,7 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
               autoComplete="off"
               layout="vertical"
               style={{ width: "100%" }}
+              
             >
               <Form.Item
                 label="Email"
@@ -103,24 +105,25 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
                   { required: true, message: "Please input your email!" },
                 ]}
               >
-                <Input />
+                <Input prefix={<UserOutlined style={{ color: "gray" }}/>}/>
               </Form.Item>
 
               <Form.Item
                 label="Password"
                 name="password"
+                
                 rules={[
                   { required: true, message: "Please input your password!" },
                 ]}
               >
-                <Input.Password />
+                <Input.Password prefix={<LockFilled style={{ color: "gray" }} />} />
               </Form.Item>
 
               <div
                 style={{
                   display: "flex",
                   flexDirection: "row",
-                  justifyContent: "flex-end",
+                  justifyContent: "space-between",
                 }}
               >
                 <Form.Item
