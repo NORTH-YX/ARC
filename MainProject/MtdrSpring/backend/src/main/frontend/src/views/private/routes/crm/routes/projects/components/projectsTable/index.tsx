@@ -1,18 +1,16 @@
 import { useState } from "react";
 import {
-  StyledTable,
-  StyledButton,
-  StyledProgress,
-  Hearder,
-  StytledSearchDesktop,
-  StytledSearchMobile,
+    StyledTable,
+    StyledButton,
+    StyledProgress,
+    Hearder,
+    StytledSearchDesktop,
+    StytledSearchMobile,
 } from "./elements";
-import { Select, Input, Tooltip, Avatar } from "antd";
+import { Select, Tooltip, Avatar } from "antd";
 import { testdata } from "./testData";
 import { MoreOutlined } from "@ant-design/icons";
 import { getStatusTag } from "../../../utils";
-
-const { Search } = Input;
 
 // Ya se creo en otro archivo(PopView), ver como manejarla en ambos
 const getInitials = (name: string): string => {

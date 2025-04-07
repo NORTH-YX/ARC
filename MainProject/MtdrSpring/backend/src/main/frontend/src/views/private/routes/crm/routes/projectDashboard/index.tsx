@@ -1,5 +1,4 @@
 import React from "react";
-import { User } from "../../../../../../interfaces/user";
 import { Row, Button } from "antd";
 import {
   Container,
@@ -62,7 +61,7 @@ const sprintsData: SprintData[] = [
   },
 ];
 
-const ProjectDashboard: React.FC<{ user: User }> = ({ user }) => {
+const ProjectDashboard: React.FC = () => {
   return (
     <Container>
       <Row>

@@ -94,6 +94,12 @@
 			<scope>runtime</scope>
 			<optional>true</optional>
 		</dependency>		
+		<!-- JSON Library -->
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20231013</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

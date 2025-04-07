@@ -23,7 +23,7 @@ const CRM: React.FC<DashProps> = ({ user }) => {
           <Route path="/projects" element={<Projects user={user} />} />
           <Route
               path="/projectDashboard"
-              element={<ProjectDashboard user={user} />}
+              element={<ProjectDashboard />}
             />
           <Route path="/teams" element={<Teams user={user} />} />
           <Route path="/reports" element={<Reports user={user} />} />
@@ -39,7 +39,7 @@ const CRM: React.FC<DashProps> = ({ user }) => {
         <Route path="/dashboard" element={<Dashboard user={user} />} />
         <Route
           path="/projectDashboard"
-          element={<ProjectDashboard user={user} />}
+          element={<ProjectDashboard />}
         />
         <Route path="/projects" element={<Projects user={user} />} />
         <Route path="/teams" element={<Teams user={user} />} />
