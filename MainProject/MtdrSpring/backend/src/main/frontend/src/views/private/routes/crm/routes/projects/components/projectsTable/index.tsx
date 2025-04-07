@@ -1,88 +1,147 @@
-import { useState } from 'react';
-import { StyledTable, StyledButton } from './elements';
-import { Select, Input } from 'antd';
-import { testdata } from './testData';
+import { useState } from "react";
+import {
+  StyledTable,
+  StyledButton,
+  StyledProgress,
+  Hearder,
+  StytledSearchDesktop,
+  StytledSearchMobile,
+} from "./elements";
+import { Select, Input, Tooltip, Avatar } from "antd";
+import { testdata } from "./testData";
 import { MoreOutlined } from "@ant-design/icons";
-import { getStatusTag } from '../../../utils';
+import { getStatusTag } from "../../../utils";
 
 const { Search } = Input;
 
+// Ya se creo en otro archivo(PopView), ver como manejarla en ambos
+const getInitials = (name: string): string => {
+  const names = name.split(" ");
+  const initials = names
+    .slice(0, 2)
+    .map((n) => n.charAt(0).toUpperCase())
+    .join("");
+  return initials;
+};
+
 const ProjectsTable = () => {
-    const [_, setSearchText] = useState('');
+  const [_, setSearchText] = useState("");
 
-    // const filteredData = data.filter(item =>
-    // item.name.toLowerCase().includes(searchText.toLowerCase())
-    // );
+  // const filteredData = data.filter(item =>
+  // item.name.toLowerCase().includes(searchText.toLowerCase())
+  // );
 
-    const handleChange = (value: string) => {
-        console.log(`selected ${value}`);
-      };
+  const handleChange = (value: string) => {
+    console.log(`selected ${value}`);
+  };
 
   return (
     <StyledTable
-    dataSource={testdata}
-    title={() => (
-        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>Active Projects</span>
+      dataSource={testdata}
+      title={() => (
+        <Hearder>
+          <span style={{ fontWeight: "400" }}>Active Projects</span>
           <div>
-          <Search 
+            <StytledSearchDesktop
+              placeholder="Search something..."
+              allowClear
+              onSearch={(value) => setSearchText(value)}
+              style={{ width: 300, marginRight: "10px" }}
+            />
+            <Select
+              defaultValue="allProjects"
+              style={{ width: 120 }}
+              onChange={handleChange}
+              options={[
+                { value: "allProjects", label: "All Projects" },
+                { value: "toDo", label: "To Do" },
+                { value: "inProgress", label: "In Progress" },
+                { value: "completed", label: "Completed" },
+              ]}
+            />
+          </div>
+          <StytledSearchMobile
             placeholder="Search something..."
             allowClear
             onSearch={(value) => setSearchText(value)}
-            style={{ width: 300, marginRight: "10px" }}></Search>
-          <Select
-            defaultValue="lucy"
-            style={{ width: 120 }}
-            onChange={handleChange}
-            options={[
-                { value: 'jack', label: 'Jack' },
-                { value: 'lucy', label: 'Lucy' },
-                { value: 'Yiminghe', label: 'yiminghe' },
-            ]}
-            />
-          </div>
-        </div>
+            style={{ width: "100%" }}
+          />
+        </Hearder>
       )}
-        >
-          <StyledTable.ColumnGroup>
-            <StyledTable.Column 
-              title="Project Name"
-              dataIndex="projectName"
-              key="projectName"
-            />
-            <StyledTable.Column 
-              title="Team"
-              dataIndex="team"
-              key="team"
-            />
-            <StyledTable.Column 
-              title="Progress"
-              dataIndex="progress"
-              key="progress"
-            />
-             <StyledTable.Column 
-              title="Deadline"
-              dataIndex="deadline"
-              key="deadline"
-            />
-             <StyledTable.Column 
-              title="Status"
-              dataIndex="status"
-              key="status"
-              render={(status: string) => getStatusTag(status)}
-            />
-             <StyledTable.Column 
-              title="Actions"
-              key="actions"
-              render={() => (
-                <div style={{ padding: "5px" }}>
-                  <StyledButton><MoreOutlined style={{ fontSize: "25px" }} /></StyledButton>
-                </div>
-              )}
-            />
-          </StyledTable.ColumnGroup>
-        </StyledTable>
-  )
-}
+      scroll={{ x: "max-content", y: "max-content" }}
+    >
+      <StyledTable.ColumnGroup>
+        <StyledTable.Column
+          title="Project Name"
+          dataIndex="projectName"
+          key="projectName"
+        />
+        <StyledTable.Column
+          title="Team"
+          dataIndex="team"
+          key="team"
+          render={(team: Array<{ name: string; avatar: string }>) => (
+            <Avatar.Group
+              max={{
+                count: 2,
+                style: { color: "#f56a00", backgroundColor: "#fde3cf" },
+              }}
+            >
+              {team.map((member, index) => (
+                <Avatar
+                  key={index}
+                  style={{
+                    backgroundColor: "#d9d9d9",
+                    color: "#111",
+                    fontWeight: 500,
+                  }}
+                >
+                  {getInitials(member.name)}
+                </Avatar>
+              ))}
+            </Avatar.Group>
+          )}
+        />
+        <StyledTable.Column
+          title="Progress"
+          dataIndex="progress"
+          key="progress"
+          render={(progress: number) => (
+            <Tooltip title={`${progress}%`} placement="right">
+              <StyledProgress
+                percent={progress}
+                showInfo={false}
+                strokeColor="#C74634"
+              />
+            </Tooltip>
+          )}
+          width={150}
+        />
+        <StyledTable.Column
+          title="Deadline"
+          dataIndex="deadline"
+          key="deadline"
+        />
+        <StyledTable.Column
+          title="Status"
+          dataIndex="status"
+          key="status"
+          render={(status: string) => getStatusTag(status)}
+        />
+        <StyledTable.Column
+          title="Actions"
+          key="actions"
+          render={() => (
+            <div style={{ padding: "5px" }}>
+              <StyledButton
+                icon={<MoreOutlined style={{ fontSize: "25px" }} />}
+              />
+            </div>
+          )}
+        />
+      </StyledTable.ColumnGroup>
+    </StyledTable>
+  );
+};
 
-export default ProjectsTable
+export default ProjectsTable;

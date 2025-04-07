@@ -1,8 +1,44 @@
 import styled from "styled-components";
-import { Table, Button } from "antd";
+import { Table, Button, Progress, Input } from "antd";
+
+const { Search } = Input;
+
+const Hearder = styled.div`
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+
+  @media (max-width: 600px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    grid-gap: 10px;
+
+    & > :nth-child(2) {
+      justify-self: end;
+    }
+
+    & > :nth-child(3) {
+      grid-column: 1 / span 2;
+    }
+  }
+`;
+
+const StytledSearchDesktop = styled(Search)`
+  @media (max-width: 600px) {
+    display: none;
+  }
+`;
+const StytledSearchMobile = styled(Search)`
+  @media (min-width: 600px) {
+    display: none;
+  }
+`;
 
 const StyledTable = styled(Table)`
- background-color: white;
+  background-color: white;
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.1);
@@ -37,4 +73,13 @@ const StyledButton = styled(Button)`
   }
 `;
 
-export { StyledTable, StyledButton }
+const StyledProgress = styled(Progress)``;
+
+export {
+  StyledTable,
+  StyledButton,
+  StyledProgress,
+  Hearder,
+  StytledSearchDesktop,
+  StytledSearchMobile,
+};

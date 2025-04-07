@@ -5,8 +5,17 @@ import Navbar from "./navbar";
 import Sidebar from "./sidebar";
 import FooterLayout from "./footer";
 import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
 
-const { Content } = Layout;
+const { Content: AntContent } = Layout;
+
+const Content = styled(AntContent)`
+  margin: 0 24px 0;
+
+  @media (max-width: 768px) {
+    margin: 0;
+  }
+`;
 
 interface MainLayoutProps {
   user: User;
@@ -27,7 +36,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ user, setUser, children }) => {
       <Navbar user={user} onLogout={handleLogout} />
       <Layout>
         <Sidebar />
-        <Content style={{ margin: "0 24px 0" }}>
+        <Content>
           <div
             style={{
               minHeight: "100vh",
