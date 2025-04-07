@@ -12,8 +12,6 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 import com.springboot.MyTodoList.controller.ToDoItemBotController;
-import com.springboot.MyTodoList.service.TaskService;
-import com.springboot.MyTodoList.service.UserService;
 import com.springboot.MyTodoList.util.BotMessages;
 import com.springboot.MyTodoList.service.*;
 
@@ -43,13 +41,19 @@ public class MyTodoListApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		try {
-			TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
-			telegramBotsApi.registerBot(new ToDoItemBotController(telegramBotToken, botName, taskService,
-					userService, SprintService));
-			logger.info(BotMessages.BOT_REGISTERED_STARTED.getMessage());
-		} catch (TelegramApiException e) {
-			e.printStackTrace();
+		// Verificar si se debe ejecutar el bot
+		String runBot = System.getenv("RUN_TELEGRAM_BOT"); // Leer la variable de entorno
+		if ("true".equalsIgnoreCase(runBot)) {
+			try {
+				TelegramBotsApi telegramBotsApi = new TelegramBotsApi(DefaultBotSession.class);
+				telegramBotsApi.registerBot(new ToDoItemBotController(telegramBotToken, botName, taskService,
+						userService, SprintService));
+				logger.info(BotMessages.BOT_REGISTERED_STARTED.getMessage());
+			} catch (TelegramApiException e) {
+				logger.error("Error starting Telegram bot: " + e.getMessage(), e);
+			}
+		} else {
+			logger.info("Telegram bot is disabled. Set RUN_TELEGRAM_BOT=true to enable it.");
 		}
 	}
 }

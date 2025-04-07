@@ -102,6 +102,13 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 	}
 
     private void handleCommand(long chatId, String messageText) {
+		// Verificar si el usuario está en el flujo de creación de tareas
+		if (userTaskCreationStep.containsKey(chatId)) {
+			handleTaskCreationStep(chatId, messageText);
+			return; // Salir para evitar procesar comandos generales
+		}
+	
+		// Procesar comandos generales
 		if (messageText.equals("Main Menu")) {
 			showMainMenu(chatId); // Mostrar el menú principal
 		} else if (messageText.equals(BotCommands.START_COMMAND.getCommand()) || messageText.equals(BotLabels.SHOW_MAIN_SCREEN.getLabel())) {
@@ -170,33 +177,38 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 			case "taskName":
 				task.setTaskName(messageText);
 				userTaskCreationStep.put(chatId, "description");
-				sendKeyboard(chatId, "Please enter the task description:", cancelKeyboard());
+				sendKeyboard(chatId, "📄 Please enter the task description:", cancelKeyboard());
 				break;
 	
 			case "description":
 				task.setDescription(messageText);
 				userTaskCreationStep.put(chatId, "priority");
-				sendKeyboard(chatId, "Please enter the priority (1 = Low, 2 = Medium, 3 = High):", cancelKeyboard());
+				sendKeyboard(chatId, "🔑 Please enter the priority (1 = Low, 2 = Medium, 3 = High):", cancelKeyboard());
 				break;
 	
 			case "priority":
 				try {
 					int priority = Integer.parseInt(messageText.trim());
 					if (priority < 1 || priority > 3) {
-						sendKeyboard(chatId, "Invalid priority. Please enter a number (1 = Low, 2 = Medium, 3 = High):", cancelKeyboard());
+						sendKeyboard(chatId, "⚠️ Invalid priority. Please enter a number (1 = Low, 2 = Medium, 3 = High):", cancelKeyboard());
 						return;
 					}
 					task.setPriority(priority);
 					userTaskCreationStep.put(chatId, "userId");
 	
-					showUsers(chatId); // Puedes agregar el botón cancelar también aquí si lo deseas
-					cancelKeyboard();
+					showUsers(chatId);
 				} catch (NumberFormatException e) {
-					sendKeyboard(chatId, "Invalid priority. Please enter a number (1 = Low, 2 = Medium, 3 = High):", cancelKeyboard());
+					sendKeyboard(chatId, "⚠️ Invalid priority. Please enter a number (1 = Low, 2 = Medium, 3 = High):", cancelKeyboard());
 				}
 				break;
 	
 			case "userId":
+				if (!messageText.matches("\\d+" + BotLabels.DASH.getLabel() + ".*")) {
+					sendMessage(chatId, "⚠️ Invalid input. Please select a user from the menu:");
+					showUsers(chatId); // Volver a mostrar la lista de usuarios
+					return;
+				}
+	
 				try {
 					String[] parts = messageText.split(BotLabels.DASH.getLabel());
 					int userId = Integer.parseInt(parts[0].trim());
@@ -207,18 +219,24 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 						userTaskCreationStep.put(chatId, "sprintId");
 	
 						showSprints(chatId);
-						cancelKeyboard();
 					} else {
-						sendKeyboard(chatId, "Invalid user ID. Please select a valid user:", cancelKeyboard());
-						showUsers(chatId);
+						sendKeyboard(chatId, "⚠️ Invalid user ID. Please select a valid user:", cancelKeyboard());
+						showUsers(chatId); // Volver a mostrar la lista de usuarios
 					}
 				} catch (Exception e) {
 					logger.error("Error processing user ID: " + e.getMessage(), e);
-					sendKeyboard(chatId, "An error occurred while processing the user. Please try again:", cancelKeyboard());
+					sendKeyboard(chatId, "⚠️ An error occurred while processing the user. Please try again:", cancelKeyboard());
+					showUsers(chatId); // Volver a mostrar la lista de usuarios
 				}
 				break;
 	
 			case "sprintId":
+				if (!messageText.matches("\\d+" + BotLabels.UNDERSCORE.getLabel() + ".*")) {
+					sendMessage(chatId, "⚠️ Invalid input. Please select a sprint from the menu:");
+					showSprints(chatId); // Volver a mostrar la lista de sprints
+					return;
+				}
+	
 				try {
 					String[] parts = messageText.split(BotLabels.UNDERSCORE.getLabel());
 					int sprintId = Integer.parseInt(parts[0].trim());
@@ -228,14 +246,15 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 						task.setSprint(sprint.get());
 						userTaskCreationStep.put(chatId, "estimatedHours");
 	
-						sendKeyboard(chatId, "Please enter the estimated hours:", cancelKeyboard());
+						sendKeyboard(chatId, "⏳ Please enter the estimated hours (1-4):", cancelKeyboard());
 					} else {
-						sendKeyboard(chatId, "Invalid sprint ID. Please select a valid sprint:", cancelKeyboard());
-						showSprints(chatId);
+						sendKeyboard(chatId, "⚠️ Invalid sprint ID. Please select a valid sprint:", cancelKeyboard());
+						showSprints(chatId); // Volver a mostrar la lista de sprints
 					}
 				} catch (Exception e) {
 					logger.error("Error processing sprint ID: " + e.getMessage(), e);
-					sendKeyboard(chatId, "An error occurred while processing the sprint. Please try again:", cancelKeyboard());
+					sendKeyboard(chatId, "⚠️ An error occurred while processing the sprint. Please try again:", cancelKeyboard());
+					showSprints(chatId); // Volver a mostrar la lista de sprints
 				}
 				break;
 	
@@ -243,7 +262,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 				try {
 					int estimatedHours = Integer.parseInt(messageText.trim());
 					if (estimatedHours <= 0 || estimatedHours > 4) {
-						sendKeyboard(chatId, "Invalid input. Please enter a number between 1 and 4:", cancelKeyboard());
+						sendKeyboard(chatId, "⚠️ Invalid input. Please enter a number between 1 and 4:", cancelKeyboard());
 						return;
 					}
 					task.setEstimatedHours(estimatedHours);
@@ -252,17 +271,20 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 					taskService.addTask(task);
 	
 					clearUserCreationState(chatId);
-					sendMessage(chatId, "Task created successfully! 🎉");
+					sendMessage(chatId, "✅ Task created successfully! 🎉");
+					//mostrar la tarea creada
+					String taskDetails = formatTaskDetails(task);
+					sendMessage(chatId, taskDetails);
 					showMainMenu(chatId);
 				} catch (Exception e) {
 					logger.error("Error saving task: " + e.getMessage(), e);
-					sendKeyboard(chatId, "An error occurred while saving the task. Please try again:", cancelKeyboard());
+					sendKeyboard(chatId, "⚠️ An error occurred while saving the task. Please try again:", cancelKeyboard());
 				}
 				break;
 	
 			default:
 				clearUserCreationState(chatId);
-				sendMessage(chatId, "An error occurred. Please try again.");
+				sendMessage(chatId, "⚠️ An error occurred. Please try again.");
 				showMainMenu(chatId);
 				break;
 		}
@@ -273,7 +295,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 		userTaskCreationState.put(chatId, new Task());
 		userTaskCreationStep.put(chatId, "taskName");
 	
-		sendKeyboard(chatId, "Please enter the task name:", cancelKeyboard());
+		sendKeyboard(chatId, "📝 Please enter the task name:", cancelKeyboard());
 	}	
 
 	private ReplyKeyboardMarkup cancelKeyboard() {
@@ -319,7 +341,9 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 		List<KeyboardRow> keyboard = new ArrayList<>();
 	
 		for (Task task : tasks) {
-			taskNames.append("🆔 ").append(task.getTaskId()).append(" | 📄 ").append(task.getTaskName()).append("\n");
+			taskNames.append("ID: ").append(task.getTaskId())
+				 .append(" | 📄 ").append(task.getTaskName())
+				 .append("\n");
 	
 			// Crear un botón principal para cada tarea
 			KeyboardRow taskInfoRow = new KeyboardRow();

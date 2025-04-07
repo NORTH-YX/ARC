@@ -51,24 +51,31 @@ public class TaskController {
     }
 
     @PostMapping
-    public ResponseEntity<Task> addTask(@RequestBody Task task) {
+    public ResponseEntity<String> addTask(@RequestBody Task task) {
         Task newTask = taskService.addTask(task);
-        return ResponseEntity.ok(newTask);
+        String responseMessage = String.format("Task created successfully with ID %d.", newTask.getTaskId());
+        return ResponseEntity.ok(responseMessage);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Task> updateTask(@PathVariable int id, @RequestBody Task task) {
+    public ResponseEntity<String> updateTask(@PathVariable int id, @RequestBody Task task) {
         try {
             Task updatedTask = taskService.updateTask(id, task);
-            return ResponseEntity.ok(updatedTask);
+            return ResponseEntity.ok(String.format("Task with ID %d was successfully updated.", updatedTask.getTaskId()));
         } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(404).body(String.format("Task with ID %d not found.", id));
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTask(@PathVariable int id) {
-        taskService.deleteById(id);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<String> deleteTask(@PathVariable int id) {
+        Optional<Task> task = taskService.findById(id);
+        if (task.isPresent()) {
+            taskService.deleteById(id);
+            String responseMessage = String.format("Task with ID %d and name '%s' was successfully deleted.", id, task.get().getTaskName());
+            return ResponseEntity.ok(responseMessage);
+        } else {
+            return ResponseEntity.status(404).body(String.format("Task with ID %d not found.", id));
+        }
     }
 }
