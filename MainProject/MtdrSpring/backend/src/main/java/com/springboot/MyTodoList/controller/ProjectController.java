@@ -9,8 +9,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+import com.springboot.MyTodoList.dto.ProjectResponse;
+
 @RestController
-@RequestMapping("/projects")
+@RequestMapping("/api/projects")
 @CrossOrigin(origins = "*")
 public class ProjectController {
 
@@ -18,9 +20,11 @@ public class ProjectController {
     private ProjectService projectService;
 
     @GetMapping
-    public ResponseEntity<List<Project>> getAllProjects() {
+    public ResponseEntity<ProjectResponse> getAllProjects() {
         List<Project> projects = projectService.findAll();
-        return ResponseEntity.ok(projects);
+        ProjectResponse response = new ProjectResponse(projects);
+        // Devuelve el objeto ProjectResponse en lugar de la lista
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
