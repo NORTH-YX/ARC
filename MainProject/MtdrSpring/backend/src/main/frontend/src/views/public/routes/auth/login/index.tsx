@@ -102,7 +102,7 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
                 label="Email"
                 name="email"
                 rules={[
-                  { required: true, message: "Please input your email!" },
+                  { required: true, message: "Please enter your email!" },
                 ]}
               >
                 <Input prefix={<UserOutlined style={{ color: "gray" }}/>}/>
