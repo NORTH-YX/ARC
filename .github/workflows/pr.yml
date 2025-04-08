@@ -1,0 +1,57 @@
+name: Pull Request Workflow
+
+on:
+  pull_request:
+    branches: [ main, stage ]
+
+jobs:
+  lint-and-build:
+    name: Lint and Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Super-Linter
+        uses: super-linter/super-linter@v5
+        env:
+          VALIDATE_ALL_CODEBASE: true
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build Backend
+        working-directory: MainProject/MtdrSpring/backend
+        run: |
+          chmod +x mvnw
+          ./mvnw clean install -DskipTests
+
+      - name: Run Backend Tests
+        working-directory: MainProject/MtdrSpring/backend
+        run: ./mvnw test
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: MainProject/MtdrSpring/backend/src/main/frontend/package-lock.json
+
+      - name: Install Frontend Dependencies
+        working-directory: MainProject/MtdrSpring/backend/src/main/frontend
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: MainProject/MtdrSpring/backend/src/main/frontend
+        run: npm run build
+
+      - name: Run Frontend Tests
+        working-directory: MainProject/MtdrSpring/backend/src/main/frontend
+        run: npm test 
