@@ -1,0 +1,72 @@
+# Super-Linter configuration file
+# For more information, see: https://github.com/super-linter/super-linter
+
+# Linter rules
+VALIDATE_ALL_CODEBASE: true
+DEFAULT_BRANCH: main
+GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+# Language specific configurations
+VALIDATE_JAVA: true
+VALIDATE_JAVASCRIPT_ES: true
+VALIDATE_TYPESCRIPT_ES: true
+VALIDATE_JSON: true
+VALIDATE_YAML: true
+VALIDATE_MARKDOWN: true
+
+# Java specific configurations
+JAVA_FILE_EXTENSIONS: .java
+JAVA_DEFAULT_STYLE: google
+
+# JavaScript/TypeScript specific configurations
+JAVASCRIPT_ES_CONFIG_FILE: MtdrSpring/backend/src/main/frontend/.eslintrc.js
+TYPESCRIPT_ES_CONFIG_FILE: MtdrSpring/backend/src/main/frontend/.eslintrc.js
+
+# Exclude patterns
+FILTER_REGEX_EXCLUDE: |
+  .*\.min\.js
+  .*\.min\.css
+  .*\.min\.html
+  .*\.min\.json
+  .*\.min\.xml
+  .*\.min\.svg
+  .*\.min\.ico
+  .*\.min\.png
+  .*\.min\.jpg
+  .*\.min\.jpeg
+  .*\.min\.gif
+  .*\.min\.webp
+  .*\.min\.woff
+  .*\.min\.woff2
+  .*\.min\.ttf
+  .*\.min\.eot
+  .*\.min\.otf
+  .*\.min\.mp4
+  .*\.min\.webm
+  .*\.min\.ogg
+  .*\.min\.mp3
+  .*\.min\.wav
+  .*\.min\.flac
+  .*\.min\.aac
+  .*\.min\.m4a
+  .*\.min\.m4v
+  .*\.min\.mov
+  .*\.min\.avi
+  .*\.min\.wmv
+  .*\.min\.flv
+  .*\.min\.mkv
+  .*\.min\.mpg
+  .*\.min\.mpeg
+  .*\.min\.3gp
+  .*\.min\.3g2
+  .*\.min\.m4v
+  .*\.min\.f4v
+  .*\.min\.f4p
+  .*\.min\.f4a
+  .*\.min\.f4b
+  .*\.min\.f4m
+  .*\.min\.f4v
+  .*\.min\.f4p
+  .*\.min\.f4a
+  .*\.min\.f4b
+  .*\.min\.f4m 
