@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/teams")
+@RequestMapping("api/teams")
 @CrossOrigin(origins = "*") 
 public class TeamController {
 
