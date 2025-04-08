@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.List;
 
 public class MissingParamResolver {
 
@@ -88,8 +87,6 @@ public class MissingParamResolver {
         actionName = actionName.toLowerCase();
         if (actionName.contains("task")) {
             return "TASKS";
-        } else if (actionName.contains("project")) {
-            return "PROJECTS";
         } else if (actionName.contains("sprint")) {
             return "SPRINTS";
         } else if (actionName.contains("user")) {

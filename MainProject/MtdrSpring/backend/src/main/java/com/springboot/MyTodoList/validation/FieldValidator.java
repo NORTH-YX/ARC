@@ -5,11 +5,8 @@ import java.util.*;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class FieldValidator {
 
@@ -26,7 +23,7 @@ public class FieldValidator {
         // TABLE CONSTRAINTS
         Map<String, List<String>> tasksConstraints = new HashMap<>();
         tasksConstraints.put("STATUS", Arrays.asList("To Do", "in progress", "completed"));
-        tasksConstraints.put("PRIORITY", Arrays.asList("alta", "media", "baja"));
+        tasksConstraints.put("PRIORITY", Arrays.asList("1", "2", "3"));
         tableConstraints.put("TASKS", tasksConstraints);
 
         Map<String, List<String>> projectsConstraints = new HashMap<>();
@@ -43,14 +40,14 @@ public class FieldValidator {
         tableConstraints.put("USERS", usersConstraints);
 
         // CAMPOS REQUERIDOS
-        requiredFieldsByTable.put("TASKS", Arrays.asList("TASK_NAME", "DESCRIPTION", "PRIORITY", "STATUS", "USER_ID", "PROJECT_ID", "SPRINT_ID", "ESTIMATED_HOURS"));
+        requiredFieldsByTable.put("TASKS", Arrays.asList("TASK_NAME", "DESCRIPTION", "PRIORITY", "STATUS", "USER_ID", "SPRINT_ID"));
         requiredFieldsByTable.put("PROJECTS", Arrays.asList("PROJECT_NAME", "DESCRIPTION", "STATUS", "START_DATE"));
         requiredFieldsByTable.put("SPRINTS", Arrays.asList("SPRINT_NAME", "START_DATE", "FINISH_DATE", "STATUS"));
         requiredFieldsByTable.put("USERS", Arrays.asList("NAME", "EMAIL", "ROLE", "WORK_MODALITY", "PASSWORD"));
         requiredFieldsByTable.put("TEAMS", Arrays.asList("TEAM_NAME", "PROJECT_ID"));
 
         // CAMPOS QUE PUEDEN SER NULOS
-        nullableFieldsByTable.put("PROJECTS", Arrays.asList("DELETED_AT", "REAL_FINISH_DATE"));
+        nullableFieldsByTable.put("PROJECTS", Arrays.asList("DELETED_AT", "REAL_FINISH_DATE", "ESTIMATED_HOURS", "REAL_HOURS"));
         nullableFieldsByTable.put("SPRINTS", Arrays.asList("DELETED_AT"));
         nullableFieldsByTable.put("TASKS", Arrays.asList("DELETED_AT", "REAL_FINISH_DATE", "REAL_HOURS"));
         nullableFieldsByTable.put("USERS", Arrays.asList("TELEGRAM_ID", "PHONE_NUMBER", "TEAM_ID", "DELETED_AT"));
@@ -90,6 +87,18 @@ public class FieldValidator {
                     System.out.println("⚠️ No se reconoció '" + value + "' como fecha válida para " + table + "." + field);
                     return null;
                 }
+            }
+        }
+
+        // Integrar la conversión de PRIORITY para la tabla TASKS.
+        // Si se recibe un valor textual, se convierte a su representación numérica.
+        if (table.equals("TASKS") && field.equals("PRIORITY")) {
+            if (value.equalsIgnoreCase("low") || value.equalsIgnoreCase("baja")) {
+                value = "1";
+            } else if (value.equalsIgnoreCase("medium") || value.equalsIgnoreCase("media")) {
+                value = "2";
+            } else if (value.equalsIgnoreCase("high") || value.equalsIgnoreCase("alta") || value.equalsIgnoreCase("urgent") || value.equalsIgnoreCase("urgente")) {
+                value = "3";
             }
         }
 

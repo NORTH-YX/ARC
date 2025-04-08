@@ -67,7 +67,11 @@ public class TaskService {
             _task.setUser(task.getUser());
             _task.setSprint(task.getSprint());
             _task.setPriority(task.getPriority());
-            _task.setStatus(task.getStatus());
+            if (task.getStatus() == null) {
+                _task.setStatus("TO DO");
+            } else {
+                _task.setStatus(task.getStatus());
+            }
             _task.setRealHours(task.getRealHours());
             return taskRepository.save(_task);
         } else {

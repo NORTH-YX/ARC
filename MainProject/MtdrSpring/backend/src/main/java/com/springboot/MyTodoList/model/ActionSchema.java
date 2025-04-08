@@ -7,7 +7,7 @@ public class ActionSchema {
     public static final Map<String, List<String>> optionalFields = new HashMap<>();
 
     static {
-        requiredFields.put("create_task", List.of("NAME", "DESCRIPTION", "PRIORITY", "ESTIMATED_FINISH_DATE", "SPRINT_ID", "PROJECT_ID"));
+        requiredFields.put("create_task", List.of("NAME", "DESCRIPTION", "PRIORITY", "ESTIMATED_FINISH_DATE", "SPRINT_ID"));
         optionalFields.put("create_task", List.of("ASSIGNED_USER_ID"));
 
         requiredFields.put("update_task_status", List.of("TASK_ID", "STATUS"));
@@ -32,7 +32,7 @@ public class ActionSchema {
         requiredFields.put("create_todo", List.of("TASK_ID", "TITLE", "DESCRIPTION"));
         requiredFields.put("update_todo_status", List.of("TODO_ID", "STATUS"));
     }
-    /**
+    /*
      * Obtiene los campos requeridos para una acción específica.
      *
      * @param actionName Nombre de la acción.

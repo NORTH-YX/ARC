@@ -8,13 +8,7 @@ public class ActionSchemaService {
 
     static {
         // Actualizamos el esquema de create_task para incluir PROJECT_ID y SPRINT_ID
-        supportedActions.add(new SupportedAction("create_task", Arrays.asList(
-            "NAME", 
-            "DESCRIPTION", 
-            "PRIORITY", 
-            "ESTIMATED_FINISH_DATE",
-            "SPRINT_ID" 
-        )));
+        supportedActions.add(new SupportedAction("create_task", Arrays.asList("NAME", "DESCRIPTION", "PRIORITY", "ESTIMATED_FINISH_DATE", "SPRINT_ID")));
         supportedActions.add(new SupportedAction("update_task_status", Arrays.asList("NAME", "STATUS")));
         supportedActions.add(new SupportedAction("add_comment", Arrays.asList("NAME", "COMMENT", "MENTIONS")));
         supportedActions.add(new SupportedAction("request_help", Arrays.asList("NAME")));
