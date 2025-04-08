@@ -1,0 +1,37 @@
+# Labeler configuration
+# For more information, see: https://github.com/actions/labeler
+
+# Frontend changes
+frontend:
+  - MainProject/MtdrSpring/backend/src/main/frontend/**/*
+  - MainProject/MtdrSpring/backend/src/main/frontend/package.json
+  - MainProject/MtdrSpring/backend/src/main/frontend/package-lock.json
+
+# Backend changes
+backend:
+  - MainProject/MtdrSpring/backend/src/main/java/**/*
+  - MainProject/MtdrSpring/backend/pom.xml
+  - MainProject/MtdrSpring/backend/Dockerfile
+
+# Infrastructure changes
+infrastructure:
+  - MainProject/MtdrSpring/docker-compose.yml
+  - MainProject/MtdrSpring/terraform/**/*
+  - MainProject/MtdrSpring/setup.sh
+  - MainProject/MtdrSpring/destroy.sh
+  - MainProject/MtdrSpring/env.sh
+
+# Documentation changes
+documentation:
+  - MainProject/README.md
+  - MainProject/CONTRIBUTING.md
+  - MainProject/SECURITY.md
+  - MainProject/LICENSE.txt
+  - MainProject/THIRD_PARTY_LICENSES.txt
+  - MainProject/.github/**/*.md
+
+# Dependencies updates
+dependencies:
+  - MainProject/MtdrSpring/backend/pom.xml
+  - MainProject/MtdrSpring/backend/src/main/frontend/package.json
+  - MainProject/MtdrSpring/backend/src/main/frontend/package-lock.json 

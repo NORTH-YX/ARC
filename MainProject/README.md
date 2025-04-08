@@ -17,3 +17,10 @@ The lab executes scripts that require the following software to run properly: (T
 * mvn (maven) 
 
 ## Expect more ...
+
+# Main Project
+
+This is the main project repository.
+
+## CI/CD Status
+Testing GitHub Actions workflow
