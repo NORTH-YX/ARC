@@ -14,7 +14,7 @@ import java.util.Optional;
 import com.springboot.MyTodoList.dto.TaskResponse;
 
 @RestController
-@RequestMapping("/tasks")
+@RequestMapping("api/tasks")
 @CrossOrigin(origins = "*") 
 public class TaskController {
 

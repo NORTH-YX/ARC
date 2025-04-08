@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("api/users")
 @CrossOrigin(origins = "*") // Permitir peticiones desde cualquier origen
 public class UsersController {
 
