@@ -12,7 +12,7 @@ import java.util.Optional;
 import com.springboot.MyTodoList.dto.ProjectResponse;
 
 @RestController
-@RequestMapping("/api/projects")
+@RequestMapping("/projects")
 @CrossOrigin(origins = "*")
 public class ProjectController {
 
