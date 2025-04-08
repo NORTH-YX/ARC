@@ -24,6 +24,9 @@ public class MyTodoListApplication implements CommandLineRunner {
 	private TaskService taskService;
 
 	@Autowired
+	private ProjectService projectService;
+
+	@Autowired
 	private UserService userService;
 
 	@Autowired

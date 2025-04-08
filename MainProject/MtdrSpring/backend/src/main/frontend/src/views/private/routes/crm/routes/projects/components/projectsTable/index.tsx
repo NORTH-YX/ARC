@@ -1,16 +1,19 @@
 import { useState } from "react";
 import {
-    StyledTable,
-    StyledButton,
-    StyledProgress,
-    Hearder,
-    StytledSearchDesktop,
-    StytledSearchMobile,
+  StyledTable,
+  StyledButton,
+  StyledProgress,
+  Hearder,
+  StytledSearchDesktop,
+  StytledSearchMobile,
 } from "./elements";
 import { Select, Tooltip, Avatar } from "antd";
 import { testdata } from "./testData";
 import { MoreOutlined } from "@ant-design/icons";
 import { getStatusTag } from "../../../utils";
+import { useDataInitialization } from "../../../../../../../../modules/projects/hooks/useDataInitialization";
+import { useProjectBook } from "../../../../../../../../modules/projects/hooks/useProjectBook";
+import useProjectStore from "../../../../../../../../modules/projects/store/useProjectStore";
 
 // Ya se creo en otro archivo(PopView), ver como manejarla en ambos
 const getInitials = (name: string): string => {
@@ -23,6 +26,12 @@ const getInitials = (name: string): string => {
 };
 
 const ProjectsTable = () => {
+  const { data, error, isLoading, mutate } = useProjectBook();
+  console.log("dataaaa", data);
+  const store = useProjectStore();
+  useDataInitialization(data, store);
+  if (error) return <div>Failed to load projects</div>;
+  if (isLoading) return <div>Loading...</div>;
   const [_, setSearchText] = useState("");
 
   // const filteredData = data.filter(item =>
