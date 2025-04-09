@@ -7,6 +7,11 @@ interface TeamPerformanceProps {
   kpis: Kpis | null;
 }
 
+interface PieChartData {
+  type: string;
+  value: number;
+}
+
 const TeamPerformance: React.FC<TeamPerformanceProps> = ({ kpis }) => {
   const complianceData = kpis?.compliance_rate?.users?.map(user => ({
     name: user.name,
@@ -51,8 +56,15 @@ const TeamPerformance: React.FC<TeamPerformanceProps> = ({ kpis }) => {
     colorField: 'type',
     radius: 0.8,
     label: {
-      content: (data: any) => {
-        return `${data.type}: ${data.value}`;
+      offset: 20,
+      style: {
+        fontSize: 14,
+        textAlign: 'center',
+      },
+      formatter: (data: PieChartData) => {
+        const total = taskDistributionData.reduce((sum, item) => sum + (item.value || 0), 0);
+        const percent = ((data.value / total) * 100).toFixed(1);
+        return `${data.type}\n${percent}%`;
       },
     },
     interactions: [
@@ -62,6 +74,7 @@ const TeamPerformance: React.FC<TeamPerformanceProps> = ({ kpis }) => {
     ],
   };
 
+  
   return (
     <div style={{ marginBottom: "40px" }}>
       <h2 style={{ marginBottom: "20px" }}>Team Performance</h2>

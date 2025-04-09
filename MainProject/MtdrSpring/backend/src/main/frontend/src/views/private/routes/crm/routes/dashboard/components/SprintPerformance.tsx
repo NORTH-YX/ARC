@@ -40,17 +40,25 @@ const SprintPerformance: React.FC<SprintPerformanceProps> = ({ kpis }) => {
         <span style={{ 
           color: record.desviacion_promedio_horas > 0 ? '#cf1322' : '#3f8600' 
         }}>
-          {record.desviacion_promedio_horas}hrs
+          {record.desviacion_promedio_horas ? record.desviacion_promedio_horas : 0}hrs
         </span>
       ),
     },
   ];
 
-  const sprintData = kpis?.compliance_rate?.sprints?.map((sprint, index) => ({
+  // Create a map of estimation precision data by sprint ID
+  const estimationMap = new Map(
+    kpis?.estimation_precision?.sprints?.map(sprint => [sprint.id, sprint]) || []
+  );
+
+  // Merge compliance rate data with estimation precision data using sprint ID
+  const sprintData = kpis?.compliance_rate?.sprints?.map(sprint => ({
     ...sprint,
-    ...(kpis?.estimation_precision?.sprints?.[index] || {}),
+    ...(estimationMap.get(sprint.id) || {}),
     key: sprint.id,
   })) || [];
+
+  console.log(sprintData);
 
   return (
     <div style={{ marginBottom: "40px" }}>
