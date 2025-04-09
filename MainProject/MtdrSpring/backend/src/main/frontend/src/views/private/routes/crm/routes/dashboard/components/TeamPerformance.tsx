@@ -23,7 +23,7 @@ const TeamPerformance: React.FC<TeamPerformanceProps> = ({ kpis }) => {
     xField: 'name',
     yField: 'value',
     label: {
-      position: 'middle',
+      position: 'top',
       style: {
         fill: '#FFFFFF',
         opacity: 0.6,
@@ -51,8 +51,9 @@ const TeamPerformance: React.FC<TeamPerformanceProps> = ({ kpis }) => {
     colorField: 'type',
     radius: 0.8,
     label: {
-      type: 'outer',
-      content: '{name}: {percentage}',
+      content: (data: any) => {
+        return `${data.type}: ${data.value}`;
+      },
     },
     interactions: [
       {
