@@ -1,11 +1,11 @@
 import { useState } from "react";
 import {
-    StyledTable,
-    StyledButton,
-    StyledProgress,
-    Hearder,
-    StytledSearchDesktop,
-    StytledSearchMobile,
+  StyledTable,
+  StyledButton,
+  StyledProgress,
+  Hearder,
+  StytledSearchDesktop,
+  StytledSearchMobile,
 } from "./elements";
 import { Select, Tooltip, Avatar } from "antd";
 import { testdata } from "./testData";
