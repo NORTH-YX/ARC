@@ -23,6 +23,7 @@ private static instance: ApiClient;
 private headers = {
     'Accept': '*/*',
 };
+private onUnauthorized: (() => void) | null = null;
 
 private constructor() {}
 
@@ -40,6 +41,10 @@ setToken(token: string | null) {
     };
 }
 
+setOnUnauthorized(callback: () => void) {
+    this.onUnauthorized = callback;
+}
+
 private async request(endpoint: string, options: RequestInit = {}) {
     const fullUrl = `${API_BASE_URL}${endpoint}`;
     console.log('Making request to:', fullUrl);
@@ -55,6 +60,16 @@ private async request(endpoint: string, options: RequestInit = {}) {
             ...options,
             headers: requestHeaders,
         });
+
+        if (response.status === 403) {
+            // Clear token and redirect to login
+            this.setToken(null);
+            if (this.onUnauthorized) {
+                this.onUnauthorized();
+            }
+            window.location.href = '/login';
+            throw new Error('Unauthorized access');
+        }
 
         if (!response.ok) {
             const errorText = await response.text();

@@ -8,9 +8,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 
+import com.springboot.MyTodoList.dto.KpiResponse;
 import com.springboot.MyTodoList.dto.TaskResponse;
 
 @RestController
@@ -77,5 +80,16 @@ public class TaskController {
         } else {
             return ResponseEntity.status(404).body(String.format("Task with ID %d not found.", id));
         }
+    }
+
+    @GetMapping("/kpis")
+    public Map<String, Object> getComplianceRate() {
+        KpiResponse kpiResponse = taskService.getComplianceRateKpis();
+
+        // Envolverlo como: { "kpis": { "compliance_rate": {...} } }
+        Map<String, Object> wrapper = new HashMap<>();
+        wrapper.put("kpis", kpiResponse);
+
+        return wrapper;
     }
 }
