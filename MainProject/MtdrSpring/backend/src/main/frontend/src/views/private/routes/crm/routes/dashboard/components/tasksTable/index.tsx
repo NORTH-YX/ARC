@@ -10,7 +10,6 @@ import { StyledTable } from './styles.ts';
 
 const TasksTable: React.FC = () => {
   const { data, error, isLoading, mutate } = useTaskBook();
-  console.log('data', data);
   const store = useTaskStore();
   
   useDataInitialization(data, store);
