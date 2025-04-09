@@ -14,52 +14,37 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [token, setToken] = useState<string | null>(() => {
-    const storedToken = localStorage.getItem('auth_token');
-    return storedToken;
-  });
-
-  const [user, setUser] = useState<User | null>(() => {
-    const storedUser = localStorage.getItem('user');
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    // Set up the unauthorized callback
+    apiClient.setOnUnauthorized(() => {
+      setUser(null);
+      setToken(null);
+      setIsAuthenticated(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    setIsAuthenticated(!!user && !!token);
     if (token) {
-      localStorage.setItem('auth_token', token);
       apiClient.setToken(token);
     } else {
-      localStorage.removeItem('auth_token');
       apiClient.setToken(null);
     }
-  }, [token]);
-
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('user');
-    }
-  }, [user]);
+  }, [user, token]);
 
   const logout = () => {
-    setToken(null);
     setUser(null);
+    setToken(null);
+    setIsAuthenticated(false);
+    apiClient.setToken(null);
   };
 
-  const isAuthenticated = !!token;
-
   return (
-    <AuthContext.Provider
-      value={{
-        token,
-        setToken,
-        user,
-        setUser,
-        isAuthenticated,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={{ user, setUser, token, setToken, isAuthenticated, logout }}>
       {children}
     </AuthContext.Provider>
   );
