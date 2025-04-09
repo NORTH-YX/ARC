@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import com.springboot.MyTodoList.dto.ProjectResponse;
 
 @RestController
 @RequestMapping("api/projects")
@@ -18,9 +19,11 @@ public class ProjectController {
     private ProjectService projectService;
 
     @GetMapping
-    public ResponseEntity<List<Project>> getAllProjects() {
+    public ResponseEntity<ProjectResponse> getAllProjects() {
         List<Project> projects = projectService.findAll();
-        return ResponseEntity.ok(projects);
+        ProjectResponse response = new ProjectResponse(projects);
+        System.out.println("Response----------------------------------------------------------------------------: " + response);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
