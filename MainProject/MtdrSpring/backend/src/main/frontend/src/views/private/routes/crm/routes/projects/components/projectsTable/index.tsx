@@ -91,7 +91,7 @@ const ProjectsTable = () => {
           title="Team"
           dataIndex="team"
           key="team"
-          render={(team: Array<{ name: string; avatar: string }>, record: any) => (
+          render={(_team: Array<{ name: string; avatar: string }>, record: any) => (
             <Avatar.Group
               key={`team-${record.projectId}`}
               max={{
