@@ -58,7 +58,7 @@ export const useKpiStore = create<KpiStore>((set, get) => ({
     });
   },
   _updateBook: () => {
-    const { kpiBook, kpis } = get();
+    const { kpiBook } = get();
     
     if (!kpiBook) return;
     
