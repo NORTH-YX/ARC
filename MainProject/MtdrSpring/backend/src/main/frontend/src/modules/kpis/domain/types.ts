@@ -45,6 +45,12 @@ export interface Kpis {
   estimation_precision: EstimationPrecision;
 }
 
+export interface KpisResponse {
+  kpis: Kpis;
+  count: number;
+  status: string;
+}
+
 export interface KpiState {
   kpis: Kpis | null;
   loading: boolean;
