@@ -1,5 +1,6 @@
 package com.springboot.MyTodoList.service;
 
+import com.springboot.MyTodoList.dto.KpiResponse;
 import com.springboot.MyTodoList.model.Sprint;
 import com.springboot.MyTodoList.model.Task;
 import com.springboot.MyTodoList.model.User;
@@ -9,8 +10,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 
 @Service
 public class TaskService {
@@ -79,5 +84,34 @@ public class TaskService {
     @Transactional
     public void deleteById(int id) {
         taskRepository.deleteById(id);
+    }
+
+    public KpiResponse getComplianceRateKpis() {
+        Map<String, List<Map<String, Object>>> complianceRate = new HashMap<>();
+        Map<String, List<Map<String, Object>>> estimationPrecision = new HashMap<>();
+
+        // Compliance Rate Data
+        complianceRate.put("users", convertKeysToLowercase(taskRepository.getUserComplianceRate()));
+        complianceRate.put("projects", convertKeysToLowercase(taskRepository.getProjectComplianceRate()));
+        complianceRate.put("sprints", convertKeysToLowercase(taskRepository.getSprintComplianceRate()));
+
+        // Estimation Precision Data
+        estimationPrecision.put("users", convertKeysToLowercase(taskRepository.getUserEstimationPrecision()));
+        estimationPrecision.put("projects", convertKeysToLowercase(taskRepository.getProjectEstimationPrecision()));
+        estimationPrecision.put("sprints", convertKeysToLowercase(taskRepository.getSprintEstimationPrecision()));
+
+        return new KpiResponse(complianceRate, estimationPrecision);
+    }
+
+    private List<Map<String, Object>> convertKeysToLowercase(List<Map<String, Object>> originalList) {
+        List<Map<String, Object>> lowerCaseList = new ArrayList<>();
+        for (Map<String, Object> map : originalList) {
+            Map<String, Object> lowerCaseMap = new HashMap<>();
+            for (Map.Entry<String, Object> entry : map.entrySet()) {
+                lowerCaseMap.put(entry.getKey().toLowerCase(), entry.getValue());
+            }
+            lowerCaseList.add(lowerCaseMap);
+        }
+        return lowerCaseList;
     }
 }

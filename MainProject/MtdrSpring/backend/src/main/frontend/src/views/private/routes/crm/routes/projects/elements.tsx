@@ -2,7 +2,7 @@ import styled, { keyframes } from "styled-components";
 import { Card } from "antd";
 
 interface IconWrapperProps {
-  bgColor: string;
+  $bgColor: string;
 }
 
 const shine = keyframes`
@@ -15,7 +15,7 @@ const shine = keyframes`
 `;
 
 const IconWrapper = styled.div<IconWrapperProps>`
-  background-color: ${({ bgColor }) => bgColor};
+  background-color: ${({ $bgColor }) => $bgColor};
   padding: 8px;
   border-radius: 10px;
   display: inline-flex;

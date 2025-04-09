@@ -4,6 +4,12 @@ import { ClockCircleOutlined, UserOutlined, CalendarOutlined } from '@ant-design
 import { User } from "../../../../../../interfaces/user";
 import TasksTable from "./components/tasksTable";
 import useTaskStore from "../../../../../../modules/tasks/store/useTaskStore";
+import { useDataInitialization } from "../../../../../../modules/kpis/hooks/useDataInitialization";
+import { useKpiStore } from "../../../../../../modules/kpis/store/useKpiStore";
+import { useKpisBook } from "../../../../../../modules/kpis/hooks/useKpisBook";
+import KpiOverview from "./components/KpiOverview";
+import TeamPerformance from "./components/TeamPerformance";
+import SprintPerformance from "./components/SprintPerformance";
 
 const { Title, Text } = Typography;
 
@@ -14,6 +20,10 @@ interface DashProps {
 const Dashboard: React.FC<DashProps> = ({ user }) => {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   const { filteredTasks } = useTaskStore();
+
+  const { data, isLoading, error } = useKpisBook();
+  const store = useKpiStore();
+  useDataInitialization(data?.kpis, store);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -182,6 +192,19 @@ const Dashboard: React.FC<DashProps> = ({ user }) => {
           </div>
         </div>
       )}
+
+      {/* KPI Section */}
+      {isLoading ? (
+        <div style={{ textAlign: 'center', padding: '20px' }}>Loading KPIs...</div>
+      ) : error ? (
+        <div style={{ color: '#cf1322', padding: '20px' }}>{error}</div>
+      ) : store.kpis ? (
+        <>
+          <KpiOverview kpis={store.kpis} />
+          <TeamPerformance kpis={store.kpis} />
+          <SprintPerformance kpis={store.kpis} />
+        </>
+      ) : null}
 
       <TasksTable />
     </div>

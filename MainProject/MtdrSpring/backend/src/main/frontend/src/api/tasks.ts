@@ -1,5 +1,6 @@
 import { apiClient } from "./client";
 import { Task, TaskCreate, TaskUpdate, TasksResponse } from "../interfaces/task";
+import { KpisResponse } from "../modules/kpis/domain/types";
 
 export const getTasks = {
   all: async (): Promise<TasksResponse> => {
@@ -13,6 +14,9 @@ export const getTasks = {
   },
   byUser: async (userId: number): Promise<TasksResponse> => {
     return apiClient.get(`/tasks/user/${userId}`);
+  },
+  kpis: async (): Promise<KpisResponse> => {
+    return apiClient.get("/tasks/kpis");
   },
 };
 
