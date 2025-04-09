@@ -20,7 +20,7 @@ const TeamPerformance: React.FC<TeamPerformanceProps> = ({ kpis }) => {
 
   const taskDistributionData = kpis?.compliance_rate?.users?.map(user => ({
     type: user.name,
-    value: user.tareas_completadas,
+    value: user.tareas_completadas || 0,
   })) || [];
 
   const complianceConfig = {
@@ -50,21 +50,24 @@ const TeamPerformance: React.FC<TeamPerformanceProps> = ({ kpis }) => {
     },
   };
 
+  const total = taskDistributionData.reduce((sum, item) => sum + item.value, 0);
+
   const taskDistributionConfig = {
     data: taskDistributionData,
     angleField: 'value',
     colorField: 'type',
     radius: 0.8,
     label: {
+      type: 'outer',
       offset: 20,
       style: {
         fontSize: 14,
         textAlign: 'center',
       },
-      formatter: (data: PieChartData) => {
-        const total = taskDistributionData.reduce((sum, item) => sum + (item.value || 0), 0);
-        const percent = ((data.value / total) * 100).toFixed(1);
-        return `${data.type}\n${percent}%`;
+      formatter: (datum: any) => {
+        if (!datum || typeof datum.value === 'undefined') return '';
+        const percent = ((datum.value / total) * 100).toFixed(1);
+        return `${datum.type}\n${datum.value} tasks (${percent}%)`;
       },
     },
     interactions: [
@@ -74,7 +77,6 @@ const TeamPerformance: React.FC<TeamPerformanceProps> = ({ kpis }) => {
     ],
   };
 
-  
   return (
     <div style={{ marginBottom: "40px" }}>
       <h2 style={{ marginBottom: "20px" }}>Team Performance</h2>
