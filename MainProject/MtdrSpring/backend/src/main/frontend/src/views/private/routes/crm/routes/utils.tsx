@@ -39,3 +39,12 @@ export const shortenText = (text: string, maxWords: number): string => {
   }
   return text;
 };
+
+export const getInitials = (name: string): string => {  
+  const names = name.split(" ");
+  const initials = names
+    .slice(0, 2)
+    .map((n) => n.charAt(0).toUpperCase())
+    .join("");
+  return initials;
+};
