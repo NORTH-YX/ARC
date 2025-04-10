@@ -7,7 +7,34 @@ import { getStatusTag } from '../../../utils.tsx';
 import { StyledTable } from './styles.ts';
 import { Task } from '../../../../../../../../interfaces/task/index';
 
-const TASK_STATUSES = ['To Do', 'In Progress', 'Completed'];
+const TASK_STATUSES = ['To Do', 'In Progress', 'Completed', 'Blocked'];
+
+const styleSheet = document.createElement('style');
+styleSheet.textContent = `
+  .status-select .ant-select-selector {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .status-select-to-do .ant-select-selector {
+    background-color: #DBEAFE !important;
+  }
+  .status-select-in-progress .ant-select-selector {
+    background-color: #FEF3C7 !important;
+  }
+  .status-select-completed .ant-select-selector {
+    background-color: #D1FAE5 !important;
+  }
+  .status-select-blocked .ant-select-selector {
+    background-color: #FEE2E2 !important;
+  }
+  .status-select-dropdown .ant-select-item-option-selected {
+    background-color: #F3F4F6 !important;
+  }
+  .status-select-dropdown .ant-select-item-option:hover {
+    background-color: #F9FAFB !important;
+  }
+`;
+document.head.appendChild(styleSheet);
 
 const TasksTable: React.FC = () => {
   const store = useTaskStore();
@@ -94,19 +121,26 @@ const TasksTable: React.FC = () => {
           title="Status"
           dataIndex="status"
           key="status"
-          render={(status: string, record: Task) => (
-            <Select
-              value={status}
-              style={{ width: 130 }}
-              onChange={(newStatus) => handleStatusChange(newStatus, record)}
-            >
-              {TASK_STATUSES.map((statusOption) => (
-                <Select.Option key={statusOption} value={statusOption}>
-                  {getStatusTag(statusOption)}
-                </Select.Option>
-              ))}
-            </Select>
-          )}
+          render={(status: string, record: Task) => {
+            const statusInfo = getStatusTag(status);
+            return (
+              <Select
+                value={status}
+                style={{ width: 120 }}
+                onChange={(newStatus) => handleStatusChange(newStatus, record)}
+                options={TASK_STATUSES.map((statusOption) => {
+                  const optionInfo = getStatusTag(statusOption);
+                  return {
+                    value: statusOption,
+                    label: optionInfo.label
+                  };
+                })}
+                className="status-select"
+                rootClassName={`status-select-${status.toLowerCase().replace(' ', '-')}`}
+                popupClassName="status-select-dropdown"
+              />
+            );
+          }}
         />
         <StyledTable.Column 
           title="Sprint" 
