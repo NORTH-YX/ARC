@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Card, Badge, Typography, Avatar, Row, Col, Progress, Tooltip } from 'antd';
+import { Card, Badge, Typography, Avatar, Row, Col, Progress, Tooltip, Spin } from 'antd';
 import { ClockCircleOutlined, UserOutlined, CalendarOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
 import { User } from "../../../../../../interfaces/user";
 import TasksTable from "./components/tasksTable";
 import useTaskStore from "../../../../../../modules/tasks/store/useTaskStore";
-import { useDataInitialization } from "../../../../../../modules/kpis/hooks/useDataInitialization";
 import { useKpiStore } from "../../../../../../modules/kpis/store/useKpiStore";
 import { useKpisBook } from "../../../../../../modules/kpis/hooks/useKpisBook";
-import KpiOverview from "./components/KpiOverview";
+import { useTaskBook } from "../../../../../../modules/tasks/hooks/useTaskBook";
 import SprintPerformance from "./components/SprintPerformance";
 import { Task } from "../../../../../../interfaces/task";
+import { useDashboardInitialization } from "../../../../../../hooks/useDashboardInitialization";
 
 const { Title, Text } = Typography;
 
@@ -21,14 +21,22 @@ interface DashProps {
 const Dashboard: React.FC<DashProps> = ({ user }) => {
   const [currentDateTime, setCurrentDateTime] = useState(new Date());
   
-  const { taskBook } = useTaskStore();
+  // Initialize both KPIs and Tasks data
+  const { data: kpisData, isLoading: isKpisLoading, error: kpisError } = useKpisBook();
+  const { data: tasksData, isLoading: isTasksLoading, error: tasksError } = useTaskBook();
+  
+  const kpiStore = useKpiStore();
+  const taskStore = useTaskStore();
 
-  const { data, isLoading, error } = useKpisBook();
-  const store = useKpiStore();
-  useDataInitialization(data?.kpis, store);
+  // Use the combined initialization hook
+  useDashboardInitialization(kpisData, tasksData, kpiStore, taskStore);
+
+  // Combined loading and error states
+  const isLoading = isKpisLoading || isTasksLoading;
+  const hasError = kpisError || tasksError;
 
   // Get tasks data directly from taskBook
-  const tasks = (taskBook?.tasks || []) as Task[];
+  const tasks = (taskStore.taskBook?.tasks || []) as Task[];
   const completedTasks = tasks.filter((t: Task) => t.status === 'Completed').length;
   const inProgressTasks = tasks.filter((t: Task) => t.status === 'In Progress').length;
   const toStartTasks = tasks.filter((t: Task) => t.status === 'To Do').length;
@@ -40,8 +48,8 @@ const Dashboard: React.FC<DashProps> = ({ user }) => {
   
   // Calculate project averages from KPIs
   const projectStats = (() => {
-    const projects = store.kpis?.compliance_rate?.projects || [];
-    const estimationProjects = store.kpis?.estimation_precision?.projects || [];
+    const projects = kpiStore.kpis?.compliance_rate?.projects || [];
+    const estimationProjects = kpiStore.kpis?.estimation_precision?.projects || [];
     
     if (projects.length === 0) return {
       avgCompliance: 0,
@@ -171,6 +179,34 @@ const Dashboard: React.FC<DashProps> = ({ user }) => {
     });
   };
 
+  if (hasError) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <Title level={3} type="danger">Error Loading Dashboard Data</Title>
+        <Text type="secondary">
+          {kpisError && 'Failed to load KPIs. '}
+          {tasksError && 'Failed to load Tasks.'}
+        </Text>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div style={{ 
+        height: '100vh', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <Spin size="large" />
+        <Text>Loading dashboard data...</Text>
+      </div>
+    );
+  }
+
   return (
     <div style={{ height: "100%", width: "100%", padding: "32px" }}>
       {/* Header Section */}
@@ -180,7 +216,7 @@ const Dashboard: React.FC<DashProps> = ({ user }) => {
             {formatDate(currentDateTime)}
           </Text>
           <Title level={2} style={{ margin: 0, fontSize: '32px', fontWeight: 600 }}>
-            {formatTime(currentDateTime)}! {user?.name || 'User'},
+            {formatTime(currentDateTime)}! {user?.name || 'User'}
           </Title>
         </Col>
       </Row>
@@ -307,9 +343,6 @@ const Dashboard: React.FC<DashProps> = ({ user }) => {
         </Col>
       </Row>
 
-      {/* Projects Table Section */}
-      <TasksTable />
-
       {/* Overdue Tasks Section */}
       {overdueTasks.length > 0 && (
         <div style={{ marginBottom: "40px" }}>
@@ -385,17 +418,11 @@ const Dashboard: React.FC<DashProps> = ({ user }) => {
         </div>
       )}
 
-      {/* KPI Section */}
-      {isLoading ? (
-        <div style={{ textAlign: 'center', padding: '20px' }}>Loading KPIs...</div>
-      ) : error ? (
-        <div style={{ color: '#cf1322', padding: '20px' }}>{error}</div>
-      ) : store.kpis ? (
-        <>
-          <KpiOverview kpis={store.kpis} />
-          <SprintPerformance kpis={store.kpis} />
-        </>
-      ) : null}
+      {/* Projects Table Section - Now passing mutate function */}
+      <TasksTable />
+
+      {/* KPI Section - Simplified since we handle loading at the top level */}
+      <SprintPerformance kpis={kpiStore.kpis} />
     </div>
   );
 };

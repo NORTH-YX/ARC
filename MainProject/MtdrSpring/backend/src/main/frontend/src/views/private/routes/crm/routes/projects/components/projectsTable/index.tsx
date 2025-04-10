@@ -36,7 +36,6 @@ const ProjectsTable = () => {
 
   // Initialize the store with data
   useDataInitialization(data, store);
-  console.log("dataaaa", data);
   if (error) return <div>Failed to load projects</div>;
   if (isLoading) return <div>Loading...</div>;
 
