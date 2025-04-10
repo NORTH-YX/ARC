@@ -58,8 +58,6 @@ const SprintPerformance: React.FC<SprintPerformanceProps> = ({ kpis }) => {
     key: sprint.id,
   })) || [];
 
-  console.log(sprintData);
-
   return (
     <div style={{ marginBottom: "40px" }}>
       <h2 style={{ marginBottom: "20px" }}>Sprint Performance</h2>
