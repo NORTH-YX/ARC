@@ -26,6 +26,7 @@ export const createTask = async (taskData: TaskCreate): Promise<Task> => {
 
 export const updateTask = async (taskId: number, taskData: TaskUpdate): Promise<Task> => {
   return apiClient.put(`/tasks/${taskId}`, taskData);
+  
 };
 
 export const deleteTask = async (taskId: number): Promise<void> => {

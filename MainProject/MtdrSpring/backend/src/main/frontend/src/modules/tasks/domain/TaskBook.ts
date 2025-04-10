@@ -60,6 +60,7 @@ export default class TaskBook {
   }
 
   async updateTask(taskId: number, taskData: TaskUpdate): Promise<Task | undefined> {
+    console.log('Updating task:', taskId, taskData);
     const taskIndex = this.tasks.findIndex(task => task.taskId === taskId);
     if (taskIndex === -1) return undefined;
 

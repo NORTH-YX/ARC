@@ -61,12 +61,14 @@ public class TaskController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateTask(@PathVariable int id, @RequestBody Task task) {
+    public ResponseEntity<Task> updateTask(@PathVariable int id, @RequestBody Task task) {
         try {
             Task updatedTask = taskService.updateTask(id, task);
-            return ResponseEntity.ok(String.format("Task with ID %d was successfully updated.", updatedTask.getTaskId()));
+            return ResponseEntity.ok(updatedTask); // Return the updated task as JSON
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).build(); // Return 404 if the task is not found
         } catch (Exception e) {
-            return ResponseEntity.status(404).body(String.format("Task with ID %d not found.", id));
+            return ResponseEntity.status(500).build(); // Return 500 for unexpected errors
         }
     }
 
