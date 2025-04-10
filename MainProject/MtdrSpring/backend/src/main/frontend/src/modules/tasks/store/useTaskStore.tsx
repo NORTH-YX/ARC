@@ -27,6 +27,7 @@ interface TaskStoreState {
   setSelectedUserId: (userId: number | null) => void;
   setSelectedStatus: (status: string | null) => void;
   _updateBook: () => void;
+  updateTaskInState: (task: Task) => void;
 
   // These will be injected from TaskBook
   createTask?: (taskData: any) => Promise<Task>;
@@ -51,6 +52,7 @@ export default create<TaskStoreState>((set, get) => ({
   selectedStatus: null,
 
   setTaskBook: (taskBook) => {
+    console.log('Setting task book:', taskBook);
     if (!taskBook) return;
 
     // Prepare all the injectable functions first
@@ -59,15 +61,33 @@ export default create<TaskStoreState>((set, get) => ({
     
     injectableFunctions.forEach((funct) => {
       injectedMethods[funct.name] = async (...args: any[]) => {
-        const { taskBook, _updateBook } = get();
+        const { taskBook, updateTaskInState } = get();
         const prevState = _.cloneDeep(taskBook);
-        
+        console.log('Previous state:', prevState);
+
         try {
+          // For updateTask, apply optimistic update first
+          if (funct.name === 'updateTask') {
+            const [taskId, updates] = args;
+            const currentTask = taskBook.getTaskById(taskId);
+            if (currentTask) {
+              // Apply optimistic update
+              const optimisticTask = {
+                ...currentTask,
+                ...updates
+              };
+              updateTaskInState(optimisticTask);
+            }
+          }
+
           // Call the domain method
           const result = await funct.bind(taskBook)(...args);
+          console.log('Result:', result);
           
-          // Update store state using the helper method
-          _updateBook();
+          // For non-update operations, update the whole book
+          if (funct.name !== 'updateTask') {
+            get()._updateBook();
+          }
           
           // Handle specific cases (like updating selected item)
           if (funct.name === 'updateTask' && result) {
@@ -77,6 +97,7 @@ export default create<TaskStoreState>((set, get) => ({
         } catch (error) {
           // Rollback on error
           set({ taskBook: prevState });
+          get()._updateBook(); // Make sure UI reflects the rollback
           throw error;
         }
       };
@@ -100,7 +121,6 @@ export default create<TaskStoreState>((set, get) => ({
     // Update filtered tasks
     const updatedFilteredTasks = filteredTasks.map(task => {
       const updated = updatedTaskBook.tasks.find((t: any) => t.taskId === task.taskId);
-
       return updated || task;
     });
     
@@ -114,6 +134,29 @@ export default create<TaskStoreState>((set, get) => ({
       filteredTasks: updatedFilteredTasks,
       selectedTask: updatedSelectedTask
     });
+  },
+
+  updateTaskInState: (task: Task) => {
+    const { taskBook, filteredTasks } = get();
+    
+    if (!taskBook) return;
+
+    // Update in TaskBook's tasks array
+    const taskIndex = taskBook.tasks.findIndex((t: Task) => t.taskId === task.taskId);
+    if (taskIndex !== -1) {
+      taskBook.tasks[taskIndex] = task;
+    }
+
+    // Update in filteredTasks if present
+    const filteredIndex = filteredTasks.findIndex(t => t.taskId === task.taskId);
+    if (filteredIndex !== -1) {
+      const updatedFilteredTasks = [...filteredTasks];
+      updatedFilteredTasks[filteredIndex] = task;
+      set({ filteredTasks: updatedFilteredTasks });
+    }
+
+    // Update taskBook reference
+    set({ taskBook: { ...taskBook } });
   },
 
   setSelectedTask: (task) => {

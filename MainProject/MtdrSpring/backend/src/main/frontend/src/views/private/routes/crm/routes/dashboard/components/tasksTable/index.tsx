@@ -1,10 +1,13 @@
-import { Button, Space } from 'antd';
+import { Button, Space, Select } from 'antd';
 import { format } from 'date-fns';
 import { PlusOutlined } from '@ant-design/icons';
 import type { SorterResult } from 'antd/es/table/interface';
 import useTaskStore from '../../../../../../../../modules/tasks/store/useTaskStore.tsx';
 import { getStatusTag } from '../../../utils.tsx';
 import { StyledTable } from './styles.ts';
+import { Task } from '../../../../../../../../interfaces/task/index';
+
+const TASK_STATUSES = ['To Do', 'In Progress', 'Completed'];
 
 const TasksTable: React.FC = () => {
   const store = useTaskStore();
@@ -22,6 +25,14 @@ const TasksTable: React.FC = () => {
       await store.deleteTask?.(taskId);
     } catch (error) {
       console.error('Error deleting task:', error);
+    }
+  };
+
+  const handleStatusChange = async (newStatus: string, task: Task) => {
+    try {
+      await store.updateTask?.(task.taskId, { status: newStatus });
+    } catch (error) {
+      console.error('Error updating task status:', error);
     }
   };
 
@@ -83,7 +94,19 @@ const TasksTable: React.FC = () => {
           title="Status"
           dataIndex="status"
           key="status"
-          render={(status: string) => getStatusTag(status)}
+          render={(status: string, record: Task) => (
+            <Select
+              value={status}
+              style={{ width: 130 }}
+              onChange={(newStatus) => handleStatusChange(newStatus, record)}
+            >
+              {TASK_STATUSES.map((statusOption) => (
+                <Select.Option key={statusOption} value={statusOption}>
+                  {getStatusTag(statusOption)}
+                </Select.Option>
+              ))}
+            </Select>
+          )}
         />
         <StyledTable.Column 
           title="Sprint" 
