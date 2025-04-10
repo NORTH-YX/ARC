@@ -65,8 +65,10 @@ public class TaskController {
         try {
             Task updatedTask = taskService.updateTask(id, task);
             return ResponseEntity.ok(String.format("Task with ID %d was successfully updated.", updatedTask.getTaskId()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(404).body(String.format("Task with ID %d not found.", id));
+            return ResponseEntity.status(500).body("An unexpected error occurred.");
         }
     }
 
