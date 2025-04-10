@@ -125,40 +125,67 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 			return; // Salir para evitar procesar comandos generales
 		}
 	
-    // Check if the message starts with "/ai"
+    // if message starts with "/ai"
     if (messageText.toLowerCase().startsWith("/ai")) {
-        // Strip /ai prefix and trim whitespace
         String aiInstruction = messageText.replaceFirst("(?i)/ai", "").trim();
         
-        // Get current date/time for context
+        // date/time for ai context
         OffsetDateTime now = OffsetDateTime.now();
         String currentDateTime = now.toString();
         
-        // Build the AI prompt and obtain an Action from the AI service
+        // AI prompt, -> extracts Action from AI service
         String fullPrompt = buildAiPrompt(aiInstruction, currentDateTime);
         Action aiAction = aiService.obtainAiAction(fullPrompt);
         if (aiAction == null) {
             sendMessage(chatId, "⚠️ There was an error processing your AI command. Please try again.");
             return;
         }
+
+		if (messageText.equals("❌ Cancel Task Creation")) {
+			clearUserCreationState(chatId);
+			sendMessage(chatId, "Task creation cancelled.");
+			showMainMenu(chatId);
+			return;
+		}
         
-        // Validate the AI action
+        // validate action
         List<String> validationErrors = ValidatorService.validateAction(aiAction);
         if (!validationErrors.isEmpty()) {
-            // Get more details on missing/invalid fields
+            // get which fields are missing/invalid 
             List<MissingParamResolver.MissingFieldInfo> issues = MissingParamResolver.getMissingOrInvalidFields(aiAction);
             // Convert AI action values into a Task using the existing manual creation state
             Task task = new Task();
             // Pre-fill fields that exist in the AI output
-            if (aiAction.getParams().get("TASK_NAME") != null) {
-                task.setTaskName(aiAction.getParams().get("TASK_NAME").toString());
+            if (aiAction.getParams().get("task_name") != null) {
+                task.setTaskName(aiAction.getParams().get("task_name").toString());
             }
-            if (aiAction.getParams().get("DESCRIPTION") != null) {
-                task.setDescription(aiAction.getParams().get("DESCRIPTION").toString());
+            if (aiAction.getParams().get("description") != null) {
+                task.setDescription(aiAction.getParams().get("description").toString());
             }
-            if (aiAction.getParams().get("PRIORITY") != null) {
+            if (aiAction.getParams().get("priority") != null) {
                 try {
-                    task.setPriority(Integer.parseInt(aiAction.getParams().get("PRIORITY").toString()));
+                    task.setPriority(Integer.parseInt(aiAction.getParams().get("priority").toString()));
+                } catch (NumberFormatException e) {
+                    // leave empty for manual input
+                }
+            }
+			if (aiAction.getParams().get("estimated_finish_date") != null) {
+                try {
+                    task.setPriority(Integer.parseInt(aiAction.getParams().get("estimated_finish_date").toString()));
+                } catch (NumberFormatException e) {
+                    // leave empty for manual input
+                }
+            }
+			if (aiAction.getParams().get("sprint_id") != null) {
+                try {
+                    task.setPriority(Integer.parseInt(aiAction.getParams().get("sprint_id").toString()));
+                } catch (NumberFormatException e) {
+                    // leave empty for manual input
+                }
+            }
+			if (aiAction.getParams().get("user_id") != null) {
+                try {
+                    task.setPriority(Integer.parseInt(aiAction.getParams().get("user_id").toString()));
                 } catch (NumberFormatException e) {
                     // leave empty for manual input
                 }
@@ -173,9 +200,9 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
             userTaskCreationStep.put(chatId, nextIssue.getFieldName());
             
             // Use the same manual flow for prompting:
-            if ("USER_ID".equalsIgnoreCase(nextIssue.getFieldName())) {
+            if ("user_id".equalsIgnoreCase(nextIssue.getFieldName())) {
                 showUsers(chatId);  // This will present inline keyboard options
-            } else if ("SPRINT_ID".equalsIgnoreCase(nextIssue.getFieldName())) {
+            } else if ("sprint_id".equalsIgnoreCase(nextIssue.getFieldName())) {
                 showSprints(chatId); // Inline keyboard for sprint selection
             } else {
                 // For other fields, send a plain text prompt using your existing method

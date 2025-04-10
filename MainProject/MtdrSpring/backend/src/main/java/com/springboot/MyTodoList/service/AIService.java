@@ -82,8 +82,8 @@ public class AIService {
         String currentDateTime = now.toString(); // ISO 8601 format including time zone
 
         String actionSchema = "Action Schema:\n"
-                + "- create_task: Required fields: TASK_NAME, DESCRIPTION, PRIORITY, ESTIMATED_FINISH_DATE, SPRINT_ID, USER_ID\n"
-                + "- update_task_status: Required fields: TASK_ID, STATUS; Optional fields: REAL_HOURS, REAL_FINISH_DATE\n";
+                + "- create_task: Required fields: task_name, description, priority, estimated_finish_date, sprint_id, user_id\n"
+                + "- update_task_status: Required fields: task_id, status; Optional fields: real_hours, real_finish_date\n";
         return String.format(
                 "You are a backend system for a Telegram task management bot. "
               + "Your task is to convert the following user instruction into a valid JSON action "
