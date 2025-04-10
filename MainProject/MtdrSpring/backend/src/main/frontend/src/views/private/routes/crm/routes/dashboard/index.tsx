@@ -224,7 +224,7 @@ const Dashboard: React.FC<DashProps> = ({ user }) => {
       {/* Metrics Overview Section */}
       <Row gutter={[24, 24]} style={{ marginBottom: "24px" }}>
         <Col xs={24} sm={8}>
-          <Card bodyStyle={{ padding: "24px", height: "160px" }}>
+          <Card styles={{ body: { padding: "24px", height: "160px" } }}>
             <Text type="secondary" style={{ fontSize: '14px' }}>Average Compliance Rate</Text>
             <Title level={2} style={{ margin: "12px 0", display: 'flex', alignItems: 'center' }}>
               {Math.round(projectStats.avgCompliance)}%
@@ -238,14 +238,14 @@ const Dashboard: React.FC<DashProps> = ({ user }) => {
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card bodyStyle={{ padding: "24px", height: "160px" }}>
+          <Card styles={{ body: { padding: "24px", height: "160px" } }}>
             <Text type="secondary" style={{ fontSize: '14px' }}>Tasks Completed</Text>
             <Title level={2} style={{ margin: "12px 0" }}>{completedTasks}</Title>
             <Text type="secondary" style={{ fontSize: '14px' }}>Total completed tasks</Text>
           </Card>
         </Col>
         <Col xs={24} sm={8}>
-          <Card bodyStyle={{ padding: "24px", height: "160px" }}>
+          <Card styles={{ body: { padding: "24px", height: "160px" } }}>
             <Text type="secondary" style={{ fontSize: '14px' }}>Average Time Deviation</Text>
             <Title level={2} style={{ margin: "12px 0", display: 'flex', alignItems: 'center' }}>
               {Math.abs(projectStats.avgDeviation.hours).toFixed(1)}h
@@ -264,7 +264,7 @@ const Dashboard: React.FC<DashProps> = ({ user }) => {
       <Row gutter={[24, 24]} style={{ marginBottom: "24px" }}>
         <Col xs={24} lg={14}>
           <Card 
-            bodyStyle={{ padding: "24px", height: "400px" }}
+            styles={{ body: { padding: "24px", height: "400px" } }}
             title={
               <div style={{ 
                 display: 'flex', 
@@ -295,7 +295,7 @@ const Dashboard: React.FC<DashProps> = ({ user }) => {
         </Col>
         <Col xs={24} lg={10}>
           <Card
-            bodyStyle={{ padding: "24px", height: "400px" }}
+            styles={{ body: { padding: "24px", height: "400px" } }}
             title={
               <div style={{ padding: '8px 0' }}>
                 <Title level={4} style={{ margin: 0, fontSize: '18px' }}>Task Progress</Title>
@@ -320,7 +320,7 @@ const Dashboard: React.FC<DashProps> = ({ user }) => {
                     <div style={{ fontSize: '14px', color: '#8c8c8c' }}>OUT OF {totalTasks}</div>
                   </div>
                 )}
-                width={180}
+                size={180}
                 strokeWidth={8}
                 strokeColor="#1890ff"
               />

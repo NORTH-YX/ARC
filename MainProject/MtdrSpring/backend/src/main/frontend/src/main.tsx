@@ -7,7 +7,13 @@ import "./App.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <Router basename="/">
+    <Router 
+      basename="/" 
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true
+      }}
+    >
       <ConfigProvider
         theme={{
           token: {
