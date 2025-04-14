@@ -2,6 +2,7 @@ package com.springboot.MyTodoList.controller;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -170,36 +171,49 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
                 }
             }
 			if (aiAction.getParams().get("estimated_finish_date") != null) {
-                try {
-                    task.setPriority(Integer.parseInt(aiAction.getParams().get("estimated_finish_date").toString()));
-                } catch (NumberFormatException e) {
-                    // leave empty for manual input
-                }
-            }
+				try {
+					String dateString = aiAction.getParams().get("estimated_finish_date").toString();
+					OffsetDateTime finishDate = OffsetDateTime.parse(dateString);
+					task.setEstimatedFinishDate(finishDate);
+				} catch (DateTimeParseException e) {
+					logger.warn("Could not parse estimated finish date: " + aiAction.getParams().get("estimated_finish_date"));
+					// leave empty for manual input
+				}
+			}
 			if (aiAction.getParams().get("sprint_id") != null) {
-                try {
-                    task.setPriority(Integer.parseInt(aiAction.getParams().get("sprint_id").toString()));
-                } catch (NumberFormatException e) {
-                    // leave empty for manual input
-                }
-            }
+				try {
+					int sprintIdValue = Integer.parseInt(aiAction.getParams().get("sprint_id").toString());
+					Optional<Sprint> sprintOptional = sprintService.findById(sprintIdValue);
+					if (sprintOptional.isPresent()) {
+						task.setSprint(sprintOptional.get());
+					} else {
+						logger.warn("Sprint not found for id: " + sprintIdValue);
+					}
+				} catch (NumberFormatException e) {
+					logger.warn("Could not parse sprint id: " + aiAction.getParams().get("sprint_id"));
+				}
+			}
+			
 			if (aiAction.getParams().get("user_id") != null) {
-                try {
-                    task.setPriority(Integer.parseInt(aiAction.getParams().get("user_id").toString()));
-                } catch (NumberFormatException e) {
-                    // leave empty for manual input
-                }
-            }
-            // Similarly, set other fields if they exist:
-            // ESTIMATED_FINISH_DATE, SPRINT_ID, USER_ID, etc.
-            
-            // Cache this task for AI-based creation:
+				try {
+					int userIdValue = Integer.parseInt(aiAction.getParams().get("user_id").toString());
+					Optional<User> userOptional = userService.findById(userIdValue);
+					if (userOptional.isPresent()) {
+						task.setUser(userOptional.get());
+					} else {
+						logger.warn("User not found for id: " + userIdValue);
+					}
+				} catch (NumberFormatException e) {
+					logger.warn("Could not parse user id: " + aiAction.getParams().get("user_id"));
+				}
+			}
+            // Cache task for AI-based creation:
             userTaskCreationState.put(chatId, task);
-            // Now determine which missing field to ask for:
+            // determine which missing field to ask for:
             MissingParamResolver.MissingFieldInfo nextIssue = issues.get(0); // take first missing field
             userTaskCreationStep.put(chatId, nextIssue.getFieldName());
             
-            // Use the same manual flow for prompting:
+            // back to same manual flow for prompting:
             if ("user_id".equalsIgnoreCase(nextIssue.getFieldName())) {
                 showUsers(chatId);  // This will present inline keyboard options
             } else if ("sprint_id".equalsIgnoreCase(nextIssue.getFieldName())) {

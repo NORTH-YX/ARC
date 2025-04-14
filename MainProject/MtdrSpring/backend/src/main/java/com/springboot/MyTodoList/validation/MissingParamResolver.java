@@ -63,7 +63,7 @@ public class MissingParamResolver {
                     missingFields.add(new MissingFieldInfo(field, requiresInline, "Field '" + field + "' is missing."));
                 } else {
                     // Example validation for PRIORITY
-                    if ("PRIORITY".equals(field)) {
+                    if ("priority".equals(field)) {
                         try {
                             int prio = Integer.parseInt(val.toString());
                             if (prio < 1 || prio > 3) {
