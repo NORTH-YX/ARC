@@ -83,6 +83,7 @@ const TaskComponent: React.FC<TaskComponentProps> = ({
           content={content}
           arrow={false}
           trigger="click"
+          overlayInnerStyle={{ padding: "0px", margin: "0px" }}
         >
           <Button
             style={{

@@ -6,24 +6,23 @@ export function useDataInitialization(
   data: ProjectsResponse | undefined,
   store: any
 ) {
-  const isInitialized = useRef(false);
   const projectsRef = useRef<Project[]>([]);
 
   useEffect(() => {
     if (!data || !data.projects) return;
 
-    const projects = data.projects;
-
-    // Only initialize if projects have changed or haven't been initialized yet
+    // Si los proyectos son iguales a los anteriores, no se actualiza
     if (
-      !isInitialized.current ||
-      JSON.stringify(projectsRef.current) !== JSON.stringify(projects)
+      JSON.stringify(projectsRef.current) === JSON.stringify(data?.projects)
     ) {
-      const projectBookInstance = new ProjectBook(projects);
-      store.setProjectBook(projectBookInstance);
-      store.setFilteredProjects(projects);
-      isInitialized.current = true;
-      projectsRef.current = projects;
+      console.log("Los proyectos son iguales, no se actualiza");
+      return;
     }
+
+    projectsRef.current = data?.projects;
+    const projectBookInstance = new ProjectBook(data?.projects);
+    store.setProjectBook(projectBookInstance);
+    store.setFilteredProjects(data?.projects);
+    console.log("Proyectos actualizados: ");
   }, [data, store]);
 }
