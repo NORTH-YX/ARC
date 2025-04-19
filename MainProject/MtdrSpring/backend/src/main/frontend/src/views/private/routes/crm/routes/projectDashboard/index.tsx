@@ -12,6 +12,7 @@ import { PlusOutlined } from "@ant-design/icons";
 import ProjectDetail from "./components/projectDetail";
 import SprintComponent from "./components/sprintComponent";
 import Indicators from "./components/indicators";
+import { Link } from "react-router-dom";
 
 interface TaskComponentProps {
   title: string;
@@ -65,7 +66,17 @@ const ProjectDashboard: React.FC = () => {
   return (
     <Container>
       <Row>
-        <a href="projects"> Go Back</a>
+        <Link to="/projects">
+          <p
+            style={{
+              color: "#C74634",
+              textDecoration: "underline",
+              fontSize: "1.1rem",
+            }}
+          >
+            Go Back
+          </p>
+        </Link>
       </Row>
       <StyledRow>
         <TitleContainer>
