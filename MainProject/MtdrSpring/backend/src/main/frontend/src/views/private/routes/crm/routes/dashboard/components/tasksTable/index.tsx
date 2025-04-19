@@ -2,20 +2,12 @@ import { Button, Space } from 'antd';
 import { format } from 'date-fns';
 import { PlusOutlined } from '@ant-design/icons';
 import type { SorterResult } from 'antd/es/table/interface';
-import { useTaskBook } from '../../../../../../../../modules/tasks/hooks/useTaskBook';
-import { useDataInitialization } from '../../../../../../../../modules/tasks/hooks/useDataInitialization';
 import useTaskStore from '../../../../../../../../modules/tasks/store/useTaskStore.tsx';
 import { getStatusTag } from '../../../utils.tsx';
 import { StyledTable } from './styles.ts';
 
 const TasksTable: React.FC = () => {
-  const { data, error, isLoading, mutate } = useTaskBook();
   const store = useTaskStore();
-  
-  useDataInitialization(data, store);
-
-  if (error) return <div>Failed to load tasks</div>;
-  if (isLoading) return <div>Loading...</div>;
 
   const handleEdit = (taskId: number) => { 
     const task = store.getTaskById?.(taskId);
@@ -28,7 +20,6 @@ const TasksTable: React.FC = () => {
   const handleDelete = async (taskId: number) => {
     try {
       await store.deleteTask?.(taskId);
-      mutate(); // Refresh the data
     } catch (error) {
       console.error('Error deleting task:', error);
     }
@@ -54,7 +45,6 @@ const TasksTable: React.FC = () => {
   return (
     <StyledTable 
       dataSource={store.filteredTasks || []}
-      loading={isLoading}
       rowKey="taskId"
       onChange={handleTableChange}
     >
