@@ -90,7 +90,13 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
       }}
     >
       <Link to={`/projectDashboard/${record.projectId}`}>
-        <StyledButton type="text" icon={<EyeOutlined />}>
+        <StyledButton
+          type="text"
+          icon={<EyeOutlined />}
+          onClick={() => {
+            setSelectedProject(record);
+          }}
+        >
           See Details
         </StyledButton>
       </Link>
@@ -177,6 +183,9 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
                     display: "flex",
                     alignItems: "center",
                     gap: "10px",
+                  }}
+                  onClick={() => {
+                    setSelectedProject(record);
                   }}
                 >
                   <IconWrapper bgColor="#DBEAFE">
