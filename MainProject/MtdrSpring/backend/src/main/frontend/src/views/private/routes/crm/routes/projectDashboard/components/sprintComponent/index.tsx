@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Container,
   Header,
@@ -11,6 +11,9 @@ import {
 import { Col, Row, Button, Popover, Divider, Checkbox, Tooltip } from "antd";
 import { MoreOutlined } from "@ant-design/icons";
 import { getStatusTag, shortenText } from "../../../utils";
+import { Sprint } from "../../../../../../../../interfaces/sprint";
+import { Task } from "../../../../../../../../interfaces/task";
+import { getTasks } from "../../../../../../../../api/tasks";
 
 const isMobile = window.innerWidth <= 600;
 
@@ -55,28 +58,20 @@ const getTaskCategory = (category: string) => {
   );
 };
 
-interface TaskComponentProps {
-  title: string;
-  category: string;
-  picture?: string;
-}
-
-const TaskComponent: React.FC<TaskComponentProps> = ({
-  title,
-  category,
-  picture,
-}) => {
+const TaskComponent: React.FC<{ task: Task }> = ({ task }) => {
   return (
     <TaskRow>
       <Row style={{ display: "flex", gap: "10px" }}>
         <Checkbox />
-        <Tooltip title={title} placement="topLeft">
-          <h4 style={{ margin: 0 }}>{shortenText(title, isMobile ? 3 : 9)}</h4>
+        <Tooltip title={task?.taskName} placement="topLeft">
+          <h4 style={{ margin: 0 }}>
+            {shortenText(task?.taskName, isMobile ? 3 : 9)}
+          </h4>
         </Tooltip>
       </Row>
       <Row style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-        {getTaskCategory(category)}
-        {picture ? <ProfileImage src={picture} /> : <ProfileImage />}
+        {getTaskCategory(task?.status)}
+        {task?.taskId ? <ProfileImage src={task?.taskId} /> : <ProfileImage />}
         <Popover
           placement="right"
           title={null}
@@ -99,27 +94,35 @@ const TaskComponent: React.FC<TaskComponentProps> = ({
   );
 };
 
-interface SprintComponentProps {
-  sprint: SprintData;
-}
-interface SprintData {
-  name: string;
-  dateRange: string;
-  status: string;
-  tasks: TaskComponentProps[];
-}
+const SprintComponent: React.FC<{ sprint: Sprint }> = ({ sprint }) => {
+  const [tasks, setTasks] = useState<Task[]>([]);
 
-const SprintComponent: React.FC<SprintComponentProps> = ({ sprint }) => {
+  useEffect(() => {
+    if (sprint && sprint.sprintId) {
+      // getTasks.bySprint devuelve una promesa, por eso se usa async/await
+      const fetchTasks = async () => {
+        try {
+          const response = await getTasks.bySprint(sprint.sprintId);
+          // Suponiendo que response contiene una propiedad tasks de tipo Task[]
+          setTasks(response.tasks);
+        } catch (error) {
+          console.error("Error fetching tasks:", error);
+        }
+      };
+      fetchTasks();
+    }
+  }, [sprint]);
+
   return (
     <Container>
       <Header>
         <Col>
-          <h3 style={{ margin: 0 }}>{sprint.name}</h3>
-          <SprintDateDesktop>{sprint.dateRange}</SprintDateDesktop>
+          <h3 style={{ margin: 0 }}>{sprint?.sprintName}</h3>
+          <SprintDateDesktop>{sprint?.estimatedFinishDate}</SprintDateDesktop>
         </Col>
         <Row style={{ display: "flex", justifyContent: "space-between" }}>
-          <SprintDateMobile>{sprint.dateRange}</SprintDateMobile>
-          {getStatusTag("In Progress")}
+          <SprintDateMobile>{sprint?.estimatedFinishDate}</SprintDateMobile>
+          {getStatusTag(sprint?.status)}
           <Popover
             placement="right"
             title={null}
@@ -136,13 +139,8 @@ const SprintComponent: React.FC<SprintComponentProps> = ({ sprint }) => {
         </Row>
       </Header>
       <Divider style={{ margin: "15px 0" }} />
-      {sprint.tasks.map((task, index) => (
-        <TaskComponent
-          key={index}
-          title={task.title}
-          category={task.category}
-          picture={task.picture}
-        />
+      {tasks.map((task, index) => (
+        <TaskComponent key={index} task={task} />
       ))}
     </Container>
   );

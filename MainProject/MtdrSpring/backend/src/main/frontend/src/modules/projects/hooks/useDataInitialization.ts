@@ -15,7 +15,6 @@ export function useDataInitialization(
     if (
       JSON.stringify(projectsRef.current) === JSON.stringify(data?.projects)
     ) {
-      console.log("Los proyectos son iguales, no se actualiza");
       return;
     }
 
@@ -23,6 +22,5 @@ export function useDataInitialization(
     const projectBookInstance = new ProjectBook(data?.projects);
     store.setProjectBook(projectBookInstance);
     store.setFilteredProjects(data?.projects);
-    console.log("Proyectos actualizados: ");
   }, [data, store]);
 }

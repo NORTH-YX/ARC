@@ -139,8 +139,7 @@ export default create<ProjectStoreState>((set, get) => ({
   },
 
   _updateBook: () => {
-    const { projectBook, selectedProject, searchQuery, filteredProjects } =
-      get();
+    const { projectBook, selectedProject, searchQuery } = get();
 
     if (!projectBook) return;
 
