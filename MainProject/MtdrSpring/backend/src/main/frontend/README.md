@@ -107,3 +107,56 @@ export default tseslint.config({
   },
 })
 ```
+
+## Development Setup
+
+### Prerequisites
+- Node.js (version 20 or higher)
+- npm
+
+### Installation
+```bash
+# Install dependencies
+npm install
+```
+
+### Running the application
+```bash
+# Start development server
+npm run dev
+```
+
+### Building for production
+```bash
+# Build the application
+npm run build
+```
+
+## Code Quality
+
+### Pre-commit Hooks
+
+This project uses pre-commit hooks to ensure code quality and consistency. When you try to commit changes, ESLint and Prettier will automatically run on the staged files to check for issues and format your code.
+
+To set up the pre-commit hooks:
+
+```bash
+# Quick setup
+bash setup-hooks.sh
+
+# Manual setup
+npm install
+npm run prepare
+chmod +x .husky/pre-commit
+```
+
+### Linting
+
+To manually run the linter:
+
+```bash
+# Run ESLint with auto-fix
+npm run lint
+```
+
+For more details on linting, see [LINTING.md](./LINTING.md).
