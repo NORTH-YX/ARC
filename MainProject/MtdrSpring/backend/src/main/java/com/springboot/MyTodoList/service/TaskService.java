@@ -69,15 +69,19 @@ public class TaskService {
         Optional<Task> taskData = taskRepository.findById(id);
         if (taskData.isPresent()) {
             Task _task = taskData.get();
-            _task.setTaskName(task.getTaskName());
-            _task.setUser(task.getUser());
-            _task.setSprint(task.getSprint());
-            _task.setPriority(task.getPriority());
-            _task.setStatus(task.getStatus());
-            _task.setRealHours(task.getRealHours());
+    
+            // Update only non-null fields to avoid overwriting existing data
+            if (task.getTaskName() != null) _task.setTaskName(task.getTaskName());
+            if (task.getUser() != null) _task.setUser(task.getUser());
+            if (task.getSprint() != null) _task.setSprint(task.getSprint());
+            if (task.getPriority() != null) _task.setPriority(task.getPriority());
+            if (task.getStatus() != null) _task.setStatus(task.getStatus());
+            if (task.getRealFinishDate() != null) _task.setRealFinishDate(task.getRealFinishDate());
+            if (task.getRealHours() != null) _task.setRealHours(task.getRealHours());
+    
             return taskRepository.save(_task);
         } else {
-            return null;
+            throw new RuntimeException("Task with ID " + id + " not found.");
         }
     }
 

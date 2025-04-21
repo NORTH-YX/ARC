@@ -1,7 +1,6 @@
 import React from "react";
-import { Tag } from "antd";
 
-export const getStatusTag = (status: string): React.ReactNode => {
+export const getStatusTag = (status: string): { label: React.ReactNode; color: string; bgcolor: string } => {
   let bgcolor;
   let textColor = "black";
   let text;
@@ -22,18 +21,19 @@ export const getStatusTag = (status: string): React.ReactNode => {
       textColor = "#065F46";
       text = "Completed";
       break;
+    case "Blocked":
+      bgcolor = "#FEE2E2";
+      textColor = "#991B1B";
+      break;
     default:
       bgcolor = "gray";
   }
 
-  return (
-    <Tag
-      style={{ borderRadius: "15px", border: "none", padding: "7px 15px" }}
-      color={bgcolor}
-    >
-      <p style={{ color: textColor, fontSize: "14px", margin: 0 }}>{text}</p>
-    </Tag>
-  );
+  return {
+    label: <span style={{ color: textColor }}>{status}</span>,
+    color: textColor,
+    bgcolor: bgcolor
+  };
 };
 
 export const shortenText = (text: string, maxWords: number): string => {
