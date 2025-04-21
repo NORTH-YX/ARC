@@ -3,6 +3,9 @@ name: Pull Request Labeler
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    paths:
+      - 'MainProject/MtdrSpring/backend/src/main/java/com/springboot/MyTodoList/**'
+      - 'MainProject/MtdrSpring/backend/src/main/frontend/**'
 
 jobs:
   label:
