@@ -1,6 +1,7 @@
 package com.springboot.MyTodoList.controller;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -39,16 +40,17 @@ import com.springboot.MyTodoList.util.BotMessages;
 
 public class ToDoItemBotController extends TelegramLongPollingBot {
 
-    private static final Logger logger = LoggerFactory.getLogger(ToDoItemBotController.class);
-    private final TaskService taskService;
-    private final UserService userService;
-    private final SprintService sprintService;
-    private final String botName;
-    private final Map<Long, Boolean> userWelcomeState = new HashMap<>();
-    private final Map<Long, Integer> userTaskCompletionState = new HashMap<>();
-	private final Map<Long, Task> userTaskCreationState = new HashMap<>();
-	private final Map<Long, String> userTaskCreationStep = new HashMap<>();
-    private AIService aiService = new AIService("https://api.openai.com/v1/chat/completions", "apikey");
+  private static final Logger logger = LoggerFactory.getLogger(ToDoItemBotController.class);
+  private final TaskService taskService;
+  private final UserService userService;
+  private final SprintService sprintService;
+  private final String botName;
+  private final Map<Long, Boolean> userWelcomeState = new HashMap<>();
+  private final Map<Long, Integer> userTaskCompletionState = new HashMap<>();
+  private final Map<Long, Task> userTaskCreationState = new HashMap<>();
+  private final Map<Long, String> userTaskCreationStep = new HashMap<>();
+  private final Map<Long, String> userTaskCompletionStep = new HashMap<>();
+  private AIService aiService = new AIService("https://api.openai.com/v1/chat/completions", "apikey");
 
 	// Map to store AI corrections waiting for user input (keyed by chat id)
 	private Map<Long, AiActionCorrection> aiCorrectionMap = new HashMap<>();
@@ -387,19 +389,30 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 						return;
 					}
 					task.setEstimatedHours(estimatedHours);
-					task.setStatus("To Do");
+					userTaskCreationStep.put(chatId, "estimatedFinishDate");
 	
+					sendKeyboard(chatId, "📅 Please enter the estimated finish date and time in the format `YYYY/MM/DD HH:mm`:", cancelKeyboard());
+				} catch (Exception e) {
+					logger.error("Error processing estimated hours: " + e.getMessage(), e);
+					sendKeyboard(chatId, "⚠️ An error occurred. Please try again:", cancelKeyboard());
+				}
+				break;
+	
+			case "estimatedFinishDate":
+				try {
+					OffsetDateTime estimatedFinishDate = parseDateTimeInput(messageText);
+					task.setEstimatedFinishDate(estimatedFinishDate);
+	
+					task.setStatus("To Do");
 					taskService.addTask(task);
 	
 					clearUserCreationState(chatId);
 					sendMessage(chatId, "✅ Task created successfully! 🎉");
-					//mostrar la tarea creada
-					String taskDetails = formatTaskDetails(task);
-					sendMessage(chatId, taskDetails);
+					sendMessage(chatId, formatTaskDetails(task));
 					showMainMenu(chatId);
 				} catch (Exception e) {
-					logger.error("Error saving task: " + e.getMessage(), e);
-					sendKeyboard(chatId, "⚠️ An error occurred while saving the task. Please try again:", cancelKeyboard());
+					logger.error("Error processing estimated finish date: " + e.getMessage(), e);
+					sendKeyboard(chatId, "⚠️ Invalid date and time format. Please use `YYYY/MM/DD HH:mm`:", cancelKeyboard());
 				}
 				break;
 	
@@ -673,7 +686,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 		}
 	}
 
-    private void handleTaskCompletion(long chatId, String messageText) {
+	private void handleTaskCompletion(long chatId, String messageText) {
 		try {
 			// Obtener el ID de la tarea desde el estado del usuario
 			Integer taskId = userTaskCompletionState.get(chatId);
@@ -681,31 +694,69 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 				sendMessage(chatId, "No task selected for completion.");
 				return;
 			}
-	
-			// Validar que el mensaje sea un número válido
-			Integer realHours = Integer.valueOf(messageText);
-	
+
 			Task task = getTaskById(taskId).getBody();
 			if (task == null) {
 				sendMessage(chatId, "Task not found.");
 				return;
 			}
-	
-			// Actualizar el estado y las horas reales de la tarea
-			task.setStatus("Completed");
-			task.setRealHours(realHours);
-			updateTask(task, taskId);
-	
-			sendMessage(chatId, "Task marked as completed with " + realHours + " real hours. ✅");
-	
-			// Limpiar el estado del usuario
-			userTaskCompletionState.remove(chatId);
-			showTaskDetails(chatId, task);
-		} catch (NumberFormatException e) {
-			sendMessage(chatId, "Invalid input. Please enter a valid number for real hours:");
+
+			// Verificar el paso actual del flujo
+			String currentStep = userTaskCompletionStep.getOrDefault(chatId, "realHours");
+
+			if ("realHours".equals(currentStep)) {
+				// Primera etapa: ingresar las horas reales
+				try {
+					Integer realHours = Integer.valueOf(messageText);
+					task.setRealHours(realHours);
+
+					// Solicitar la fecha y hora real de finalización
+					sendMessage(chatId, "📅 Please enter the real finish date and time in the format `YYYY/MM/DD HH:mm`:");
+					userTaskCompletionStep.put(chatId, "realFinishDate"); // Cambiar al siguiente paso
+					return;
+				} catch (NumberFormatException e) {
+					sendMessage(chatId, "Invalid input. Please enter a valid number for real hours:");
+					return;
+				}
+			}
+
+			if ("realFinishDate".equals(currentStep)) {
+				// Segunda etapa: ingresar la fecha y hora real de finalización
+				try {
+					OffsetDateTime realFinishDate = parseDateTimeInput(messageText);
+					task.setRealFinishDate(realFinishDate);
+			
+					// Actualizar el estado de la tarea a completada
+					task.setStatus("Completed");
+					updateTask(task, taskId);
+			
+					sendMessage(chatId, "✅ Task marked as completed with real finish date: " + realFinishDate.toString());
+					userTaskCompletionState.remove(chatId); // Limpiar el estado del usuario
+					userTaskCompletionStep.remove(chatId); // Limpiar el paso actual
+					showTaskDetails(chatId, task);
+				} catch (Exception e) {
+					sendMessage(chatId, "⚠️ Invalid date and time format. Please use `YYYY/MM/DDTHH:mmZ`:");
+					logger.error("Error parsing date: " + messageText, e);
+				}
+			}
 		} catch (Exception e) {
 			logger.error("Error completing task: " + e.getMessage(), e);
 			sendMessage(chatId, "An error occurred while completing the task. Please try again.");
+		}
+	}
+
+	private OffsetDateTime parseDateTimeInput(String input) throws Exception {
+		try {
+			// Reemplazar "/" con "-" para que coincida con el formato esperado
+			String formattedInput = input.replace("/", "-");
+	
+			// Reemplazar el espacio con "T" y agregar "Z" al final
+			formattedInput = formattedInput.replace(" ", "T") + "Z";
+	
+			// Parsear la fecha al formato OffsetDateTime
+			return OffsetDateTime.parse(formattedInput);
+		} catch (Exception e) {
+			throw new Exception("Invalid date and time format. Please use `YYYY/MM/DD HH:mm`.");
 		}
 	}
 
@@ -714,11 +765,15 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
         String creationDate = task.getCreationDate().format(formatter);
         String realHours = task.getRealHours() != null ? task.getRealHours().toString() : "Not Finished";
 
-        return String.format(
-            "🆔 %d\n📄 %s\n📌 %s\n🚀 Sprint: %s\n🕰️ Created: %s\n⏳ Estimated Hours: %d\n🔑 Priority: %d\n👤 User: %s\n🏁 Real Hours: %s\n\n",
-            task.getTaskId(), task.getDescription(), task.getStatus(), task.getSprint().getSprintName(),
-            creationDate, task.getEstimatedHours(), task.getPriority(), task.getUser().getName(), realHours
-        );
+		String estimatedFinishDate = task.getEstimatedFinishDate() != null ? task.getEstimatedFinishDate().format(formatter) : "Not Set";
+		String realFinishDate = task.getRealFinishDate() != null ? task.getRealFinishDate().format(formatter) : "Not Finished";
+
+		return String.format(
+			"🆔 %d\n📄 %s\n📌 %s\n🚀 Sprint: %s\n🕰️ Created: %s\n⏳ Estimated Hours: %d\n🔑 Priority: %d\n👤 User: %s\n🏁 Real Hours: %s\n📅 Estimated Finish Date: %s\n📅 Real Finish Date: %s\n\n",
+			task.getTaskId(), task.getDescription(), task.getStatus(), task.getSprint().getSprintName(),
+			creationDate, task.getEstimatedHours(), task.getPriority(), task.getUser().getName(), realHours,
+			estimatedFinishDate, realFinishDate
+		);
     }
 
     private void sendMessage(long chatId, String text) {
