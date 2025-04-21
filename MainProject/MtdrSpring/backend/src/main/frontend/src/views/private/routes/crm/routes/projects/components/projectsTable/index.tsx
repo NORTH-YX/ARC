@@ -21,7 +21,7 @@ import {
   ProjectCreate,
   ProjectUpdate,
 } from "../../../../../../../../interfaces/project";
-import { getStatusTag } from "../../../utils";
+import { getProjectStatus } from "../../../utils";
 import { Link } from "react-router-dom";
 import DeleteProjectModal from "../deleteModal";
 import EditProjectModal from "../editModal";
@@ -266,7 +266,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
             key="status"
             render={(status: string, record: any) => (
               <span key={`status-${record.projectId}`}>
-                {getStatusTag(status)}
+                {getProjectStatus(status)}
               </span>
             )}
           />
