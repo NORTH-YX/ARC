@@ -6,6 +6,8 @@ import { Row, Col, Typography, Button, Space } from "antd";
 import { FilterFilled, PlusOutlined } from "@ant-design/icons";
 import { employeeTestData } from "./testData.ts";
 import { Container, MembersContainer, TitleContainer, CardsContainer } from "./styles.ts";
+import { MemberModal } from "./components/memberModal/index.tsx";
+import { useState } from "react";
 
 const { Title } = Typography;
 
@@ -15,6 +17,12 @@ interface TeamsProps {
 }
 
 const Teams: React.FC<TeamsProps> = ({ user }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+
   return (
     <Container>
       <Title level={2} style={{ marginBottom: "5px" }}>Team Leaderboard</Title>
@@ -33,25 +41,32 @@ const Teams: React.FC<TeamsProps> = ({ user }) => {
           </p>
             
         </TitleContainer>
+        {user?.role !== 'admin' && (
           <Space size="middle" direction="horizontal">
-            <Button icon={<FilterFilled />} style={{ height: "42px" }}>Filter</Button>
-            <Button icon={<PlusOutlined />} type="primary" style={{ height: "40px" }} >New Member</Button>
+            <Button icon={<FilterFilled />} style={{ height: "42px" }}>Filter</Button> 
+            <Button
+              icon={<PlusOutlined />}
+              type="primary"
+              style={{ height: "40px" }}
+              onClick={showModal}
+            >
+              New Member
+            </Button>
           </Space>
+        )}
        </MembersContainer>
       <CardsContainer>
         <Row gutter={[28, 28]}>
           {employeeTestData.map((employee, index) => (
             <Col xs={24} sm={12} md={8} lg={8} xl={8} key={index}>
               <MemberCard
-                name={employee.name}
-                jobTitle={employee.jobTitle}
-                workHours={employee.workHours}
-              />
+                user={employee} />
             </Col>
           ))}
         </Row>
       </CardsContainer>
       </div>
+      <MemberModal user={undefined} isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
     </Container>
   );
 };

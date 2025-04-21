@@ -3,16 +3,17 @@ import { StyledCard, StyledButton } from './elements';
 import { Avatar, Typography, Space } from 'antd';
 import { getInitials } from '../../../utils';
 import { ClockCircleOutlined, EditOutlined, MailOutlined } from "@ant-design/icons";
+import { User } from '../../../../../../../../interfaces/user';
 
 const { Text } = Typography;
 
 interface Props {
-    name: string;
-    jobTitle: string;
-    workHours: string;
+    user: User;
 }
 
-export const MemberCard: React.FC<Props> = ({ name, jobTitle, workHours }) => {
+export const MemberCard: React.FC<Props> = ({ user }) => {
+    if (!user) return null;
+
     return (
         <StyledCard>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -24,20 +25,20 @@ export const MemberCard: React.FC<Props> = ({ name, jobTitle, workHours }) => {
                         height: '64px',
                         width: '64px'
                         
-                    }}>{getInitials(name)}
+                    }}>{getInitials(user.name)}
                     </Avatar>
                     <Space size="small" >
                         <StyledButton icon={<EditOutlined />} size='large'></StyledButton>
-                        <StyledButton icon={<MailOutlined />} size='large'></StyledButton>
+                        <StyledButton icon={<MailOutlined />} size='large' ></StyledButton>
                     </Space>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "3px" }}>
-                    <Text style={{ fontSize: "medium" }}>{name}</Text> 
-                    <Text style={{ color: "#C74634"}}>{jobTitle}</Text>
+                    <Text style={{ fontSize: "medium" }}>{user.name}</Text> 
+                    <Text style={{ color: "#C74634"}}>{user.role}</Text>
                 </div>
                 <div style={{ display: "flex", flexDirection: "row", gap: "3px", marginTop: "12px" }}>
                     <ClockCircleOutlined />
-                    <Text>{workHours}</Text>
+                    <Text>{user.workModality}</Text>
                 </div>
         </StyledCard>
     );
