@@ -3,7 +3,6 @@ import { format } from 'date-fns';
 import { PlusOutlined } from '@ant-design/icons';
 import type { SorterResult } from 'antd/es/table/interface';
 import useTaskStore from '../../../../../../../../modules/tasks/store/useTaskStore.tsx';
-import { getStatusTag } from '../../../utils.tsx';
 import { StyledTable } from './styles.ts';
 import { Task } from '../../../../../../../../interfaces/task/index';
 
@@ -122,17 +121,15 @@ const TasksTable: React.FC = () => {
           dataIndex="status"
           key="status"
           render={(status: string, record: Task) => {
-            const statusInfo = getStatusTag(status);
             return (
               <Select
                 value={status}
                 style={{ width: 120 }}
                 onChange={(newStatus) => handleStatusChange(newStatus, record)}
                 options={TASK_STATUSES.map((statusOption) => {
-                  const optionInfo = getStatusTag(statusOption);
                   return {
                     value: statusOption,
-                    label: optionInfo.label
+                    label: statusOption
                   };
                 })}
                 className="status-select"

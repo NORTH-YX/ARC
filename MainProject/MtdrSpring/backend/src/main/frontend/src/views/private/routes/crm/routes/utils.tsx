@@ -1,39 +1,43 @@
-import React from "react";
 
-export const getStatusTag = (status: string): { label: React.ReactNode; color: string; bgcolor: string } => {
-  let bgcolor;
-  let textColor = "black";
-  let text;
+export const getStatusTag = (status: string) => {
+  let color = "";
+  let bgcolor = "";
 
   switch (status) {
-    case "on-hold":
-      bgcolor = "#DBEAFE";
-      textColor = "#2563EB";
-      text = "On Hold";
-      break;
-    case "Active":
-      bgcolor = "#FEF3C7";
-      textColor = "#92400E";
-      text = "In Progress";
-      break;
     case "Completed":
+      color = "#10B981";
       bgcolor = "#D1FAE5";
-      textColor = "#065F46";
-      text = "Completed";
       break;
-    case "Blocked":
+    case "In Progress":
+      color = "#3B82F6";
+      bgcolor = "#DBEAFE";
+      break;
+    case "Pending":
+      color = "#F59E0B";
+      bgcolor = "#FEF3C7";
+      break;
+    case "Canceled":
+      color = "#EF4444";
       bgcolor = "#FEE2E2";
-      textColor = "#991B1B";
       break;
     default:
-      bgcolor = "gray";
+      color = "#6B7280";
+      bgcolor = "#F3F4F6";
   }
 
-  return {
-    label: <span style={{ color: textColor }}>{status}</span>,
-    color: textColor,
-    bgcolor: bgcolor
-  };
+  // Return a React element instead of an object
+  return (
+    <span style={{ 
+      backgroundColor: bgcolor, 
+      color: color, 
+      padding: '4px 8px', 
+      borderRadius: '4px',
+      fontSize: '12px',
+      fontWeight: 'medium'
+    }}>
+      {status}
+    </span>
+  );
 };
 
 export const shortenText = (text: string, maxWords: number): string => {
