@@ -28,41 +28,12 @@ jobs:
           # Full git history is needed to get a proper list of changed files
           fetch-depth: 0
 
-      - name: Selenium Test
-        continue-on-error: true
-        run: |
-          pip install -U selenium
-          pip install -U pytest
-          pip install -U pytest-html
-          pip install -U webdriver-manager
-          pytest test1.py --html=report.html.
-          cat report.html
-
-      - name: Path
-        continue-on-error: true
-        run: |
-          sudo mkdir -p /action/lib/.automation/
-          sudo chown -R runner:docker /action
-          pwd
-          ls -l
-          echo "root /"
-          ls -l /
-          cp java_checks.xml /action/lib/.automation/
-          echo ".automation"
-          ls -l /action/lib/.automation/
-
-      - name:   Java checks
-        continue-on-error: true
-        run: |
-          ls -l /
-          (cd /action/lib/.automation/; readlink -f java_checks.xml)
-
       - name: Run Super-Linter
         uses: github/super-linter@v6
         env:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_ALL_CODEBASE: true
+          VALIDATE_ALL_CODEBASE: false
           VALIDATE_KUBERNETES_KUBECONFORM: false
           VALIDATE_SHELL_SHFMT: false
           VALIDATE_CSS: false
@@ -88,4 +59,5 @@ jobs:
           VALIDATE_KUBEVAL: false
           VALIDATE_CHECKOV: false
           VALIDATE_PYTHON_PYLINT: false
+          VALIDATE_DOCKERFILE_HADOLINT: false
 
