@@ -7,12 +7,12 @@ export const getStatusTag = (status: string) => {
   let text;
 
   switch (status) {
-    case "on-hold":
+    case "To Do":
       bgcolor = "#DBEAFE";
       textColor = "#2563EB";
-      text = "On Hold";
+      text = "To Do";
       break;
-    case "Active":
+    case "In Progress":
       bgcolor = "#FEF3C7";
       textColor = "#92400E";
       text = "In Progress";
@@ -25,16 +25,53 @@ export const getStatusTag = (status: string) => {
     case "Blocked":
       bgcolor = "#FEE2E2";
       textColor = "#991B1B";
+      text = "Blocked";
       break;
     default:
       bgcolor = "gray";
   }
 
   return {
-    label: <span style={{ color: textColor }}>{status}</span>,
+    label: <span style={{ color: textColor }}>{text}</span>,
     color: textColor,
-    bgcolor: bgcolor
+    bgcolor: bgcolor,
   };
+};
+
+export const getProjectStatus = (status: string) => {
+  let bgcolor;
+  let textColor = "black";
+  let text;
+
+  switch (status) {
+    case "Active":
+      bgcolor = "#FEF3C7";
+      textColor = "#92400E";
+      text = "In Progress";
+      break;
+    case "on-hold":
+      bgcolor = "#E0F2FE";
+      textColor = "#0C4A6E";
+      text = "On Hold";
+      break;
+    case "Completed":
+      bgcolor = "#BBF7D0";
+      textColor = "#065F46";
+      text = "Completed";
+      break;
+      break;
+    default:
+      bgcolor = "gray";
+  }
+
+  return (
+    <Tag
+      style={{ borderRadius: "15px", border: "none", padding: "7px 15px" }}
+      color={bgcolor}
+    >
+      <p style={{ color: textColor, fontSize: "14px", margin: 0 }}>{text}</p>
+    </Tag>
+  );
 };
 
 export const getTaskStatus = (category: string) => {

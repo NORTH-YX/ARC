@@ -1,15 +1,15 @@
-import { Button, Space, Select } from 'antd';
-import { format } from 'date-fns';
-import { PlusOutlined } from '@ant-design/icons';
-import type { SorterResult } from 'antd/es/table/interface';
-import useTaskStore from '../../../../../../../../modules/tasks/store/useTaskStore.tsx';
-import { getStatusTag } from '../../../utils.tsx';
-import { StyledTable } from './styles.ts';
-import { Task } from '../../../../../../../../interfaces/task/index';
+import { Button, Space, Select } from "antd";
+import { format } from "date-fns";
+import { PlusOutlined } from "@ant-design/icons";
+import type { SorterResult } from "antd/es/table/interface";
+import useTaskStore from "../../../../../../../../modules/tasks/store/useTaskStore.tsx";
+import { getStatusTag } from "../../../utils.tsx";
+import { StyledTable } from "./styles.ts";
+import { Task } from "../../../../../../../../interfaces/task/index";
 
-const TASK_STATUSES = ['To Do', 'In Progress', 'Completed', 'Blocked'];
+const TASK_STATUSES = ["To Do", "In Progress", "Completed", "Blocked"];
 
-const styleSheet = document.createElement('style');
+const styleSheet = document.createElement("style");
 styleSheet.textContent = `
   .status-select .ant-select-selector {
     border: none !important;
@@ -39,7 +39,7 @@ document.head.appendChild(styleSheet);
 const TasksTable: React.FC = () => {
   const store = useTaskStore();
 
-  const handleEdit = (taskId: number) => { 
+  const handleEdit = (taskId: number) => {
     const task = store.getTaskById?.(taskId);
     if (task) {
       store.setSelectedTask(task);
@@ -51,7 +51,7 @@ const TasksTable: React.FC = () => {
     try {
       await store.deleteTask?.(taskId);
     } catch (error) {
-      console.error('Error deleting task:', error);
+      console.error("Error deleting task:", error);
     }
   };
 
@@ -59,7 +59,7 @@ const TasksTable: React.FC = () => {
     try {
       await store.updateTask?.(task.taskId, { status: newStatus });
     } catch (error) {
-      console.error('Error updating task status:', error);
+      console.error("Error updating task status:", error);
     }
   };
 
@@ -68,8 +68,12 @@ const TasksTable: React.FC = () => {
     store.openTaskModal(); // Open modal for creating a new task
   };
 
-  const handleTableChange = (_: any, __: any, sorter: SorterResult<any> | SorterResult<any>[]) => {
-    console.log('Sort change:', sorter);
+  const handleTableChange = (
+    _: any,
+    __: any,
+    sorter: SorterResult<any> | SorterResult<any>[]
+  ) => {
+    console.log("Sort change:", sorter);
   };
 
   // Custom date comparison for sorting
@@ -81,7 +85,7 @@ const TasksTable: React.FC = () => {
   };
 
   return (
-    <StyledTable 
+    <StyledTable
       dataSource={store.filteredTasks || []}
       rowKey="taskId"
       onChange={handleTableChange}
@@ -102,8 +106,8 @@ const TasksTable: React.FC = () => {
             }}
           >
             <h2 style={{ margin: 0 }}>Recent Tasks</h2>
-            <Button 
-              type="primary" 
+            <Button
+              type="primary"
               icon={<PlusOutlined />}
               onClick={handleCreateTask}
             >
@@ -122,7 +126,7 @@ const TasksTable: React.FC = () => {
           dataIndex="status"
           key="status"
           render={(status: string, record: Task) => {
-            const statusInfo = getStatusTag(status);
+            //const statusInfo = getStatusTag(status);
             return (
               <Select
                 value={status}
@@ -132,44 +136,52 @@ const TasksTable: React.FC = () => {
                   const optionInfo = getStatusTag(statusOption);
                   return {
                     value: statusOption,
-                    label: optionInfo.label
+                    label: optionInfo.label,
                   };
                 })}
                 className="status-select"
-                rootClassName={`status-select-${status.toLowerCase().replace(' ', '-')}`}
+                rootClassName={`status-select-${status
+                  .toLowerCase()
+                  .replace(" ", "-")}`}
                 popupClassName="status-select-dropdown"
               />
             );
           }}
         />
-        <StyledTable.Column 
-          title="Sprint" 
+        <StyledTable.Column
+          title="Sprint"
           dataIndex={["sprint", "sprintName"]}
           key="sprint"
           sorter={{
             compare: (a: any, b: any) => {
-              const sprintA = a.sprint?.sprintName || '';
-              const sprintB = b.sprint?.sprintName || '';
+              const sprintA = a.sprint?.sprintName || "";
+              const sprintB = b.sprint?.sprintName || "";
               return sprintA.localeCompare(sprintB);
-            }
+            },
           }}
         />
         <StyledTable.Column
           title="Creation Date"
           dataIndex="creationDate"
           key="creationDate"
-          render={(date: string) => format(new Date(date), "yyyy-MM-dd HH:mm:ss")}
+          render={(date: string) =>
+            format(new Date(date), "yyyy-MM-dd HH:mm:ss")
+          }
           sorter={{
-            compare: (a: any, b: any) => compareDates(a.creationDate, b.creationDate)
+            compare: (a: any, b: any) =>
+              compareDates(a.creationDate, b.creationDate),
           }}
         />
         <StyledTable.Column
           title="Estimated Finish"
           dataIndex="estimatedFinishDate"
           key="estimatedFinishDate"
-          render={(date: string) => date ? format(new Date(date), "yyyy-MM-dd HH:mm:ss") : "Not Set"}
+          render={(date: string) =>
+            date ? format(new Date(date), "yyyy-MM-dd HH:mm:ss") : "Not Set"
+          }
           sorter={{
-            compare: (a: any, b: any) => compareDates(a.estimatedFinishDate, b.estimatedFinishDate)
+            compare: (a: any, b: any) =>
+              compareDates(a.estimatedFinishDate, b.estimatedFinishDate),
           }}
         />
         <StyledTable.Column
@@ -177,20 +189,23 @@ const TasksTable: React.FC = () => {
           dataIndex="priority"
           key="priority"
         />
-        <StyledTable.Column 
-          title="User" 
+        <StyledTable.Column
+          title="User"
           dataIndex={["user", "name"]}
-          key="user" 
+          key="user"
         />
         <StyledTable.Column
           title="Real Finish"
           dataIndex="realFinishDate"
           key="realFinishDate"
           render={(date: string | null) =>
-            date ? format(new Date(date), "yyyy-MM-dd HH:mm:ss") : "Not Finished"
+            date
+              ? format(new Date(date), "yyyy-MM-dd HH:mm:ss")
+              : "Not Finished"
           }
           sorter={{
-            compare: (a: any, b: any) => compareDates(a.realFinishDate, b.realFinishDate)
+            compare: (a: any, b: any) =>
+              compareDates(a.realFinishDate, b.realFinishDate),
           }}
         />
         <StyledTable.Column
@@ -198,16 +213,10 @@ const TasksTable: React.FC = () => {
           key="action"
           render={(_: any, record: any) => (
             <Space size="middle">
-              <Button 
-                type="primary"
-                onClick={() => handleEdit(record.taskId)}
-              >
+              <Button type="primary" onClick={() => handleEdit(record.taskId)}>
                 Edit
               </Button>
-              <Button 
-                danger
-                onClick={() => handleDelete(record.taskId)}
-              >
+              <Button danger onClick={() => handleDelete(record.taskId)}>
                 Delete
               </Button>
             </Space>
