@@ -18,12 +18,25 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Setup Node.js for Frontend Linting
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: MainProject/MtdrSpring/backend/src/main/frontend/package-lock.json
+
+      - name: Frontend Lint
+        working-directory: MainProject/MtdrSpring/backend/src/main/frontend
+        run: |
+          npm ci
+          npm run lint -- --max-warnings=100
+
       - name: Run Super-Linter
         uses: github/super-linter@v6
         env:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: false
-          FILTER_REGEX_INCLUDE: .*MainProject/MtdrSpring/backend/src/main/(java/com/springboot/MyTodoList|frontend)/.*
+          FILTER_REGEX_INCLUDE: .*MainProject/MtdrSpring/backend/src/main/(java/com/springboot/MyTodoList)/.*
           JAVA_FILE_NAME: google_checks.xml
 
