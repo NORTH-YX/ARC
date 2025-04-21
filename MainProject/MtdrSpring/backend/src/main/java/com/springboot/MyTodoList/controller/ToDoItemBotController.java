@@ -3,6 +3,7 @@ package com.springboot.MyTodoList.controller;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,9 +26,13 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import com.springboot.MyTodoList.model.Task;
 import com.springboot.MyTodoList.model.User;
 import com.springboot.MyTodoList.model.Sprint;
+import com.springboot.MyTodoList.model.Action;
 import com.springboot.MyTodoList.service.TaskService;
 import com.springboot.MyTodoList.service.UserService;
 import com.springboot.MyTodoList.service.SprintService;
+import com.springboot.MyTodoList.service.AIService;
+import com.springboot.MyTodoList.service.ValidatorService;
+import com.springboot.MyTodoList.validation.MissingParamResolver;
 import com.springboot.MyTodoList.util.BotCommands;
 import com.springboot.MyTodoList.util.BotHelper;
 import com.springboot.MyTodoList.util.BotLabels;
@@ -35,16 +40,29 @@ import com.springboot.MyTodoList.util.BotMessages;
 
 public class ToDoItemBotController extends TelegramLongPollingBot {
 
-    private static final Logger logger = LoggerFactory.getLogger(ToDoItemBotController.class);
-    private final TaskService taskService;
-    private final UserService userService;
-    private final SprintService sprintService;
-    private final String botName;
-    private final Map<Long, Boolean> userWelcomeState = new HashMap<>();
-    private final Map<Long, Integer> userTaskCompletionState = new HashMap<>();
-	private final Map<Long, Task> userTaskCreationState = new HashMap<>();
-	private final Map<Long, String> userTaskCreationStep = new HashMap<>();
-	private final Map<Long, String> userTaskCompletionStep = new HashMap<>();
+  private static final Logger logger = LoggerFactory.getLogger(ToDoItemBotController.class);
+  private final TaskService taskService;
+  private final UserService userService;
+  private final SprintService sprintService;
+  private final String botName;
+  private final Map<Long, Boolean> userWelcomeState = new HashMap<>();
+  private final Map<Long, Integer> userTaskCompletionState = new HashMap<>();
+  private final Map<Long, Task> userTaskCreationState = new HashMap<>();
+  private final Map<Long, String> userTaskCreationStep = new HashMap<>();
+  private final Map<Long, String> userTaskCompletionStep = new HashMap<>();
+  private AIService aiService = new AIService("https://api.openai.com/v1/chat/completions", "apikey");
+
+	// Map to store AI corrections waiting for user input (keyed by chat id)
+	private Map<Long, AiActionCorrection> aiCorrectionMap = new HashMap<>();
+
+	private static class AiActionCorrection {
+        Action action;
+        List<String> errors;
+        public AiActionCorrection(Action action, List<String> errors) {
+            this.action = action;
+            this.errors = errors;
+        }
+    }
 
     public ToDoItemBotController(String botToken, String botName, TaskService taskService, UserService userService, SprintService sprintService) {
         super(botToken);
@@ -110,8 +128,111 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 			return; // Salir para evitar procesar comandos generales
 		}
 	
+    // if message starts with "/ai"
+    if (messageText.toLowerCase().startsWith("/ai")) {
+        String aiInstruction = messageText.replaceFirst("(?i)/ai", "").trim();
+        
+        // date/time for ai context
+        OffsetDateTime now = OffsetDateTime.now();
+        String currentDateTime = now.toString();
+        
+        // AI prompt, -> extracts Action from AI service
+        String fullPrompt = buildAiPrompt(aiInstruction, currentDateTime);
+        Action aiAction = aiService.obtainAiAction(fullPrompt);
+        if (aiAction == null) {
+            sendMessage(chatId, "⚠️ There was an error processing your AI command. Please try again.");
+            return;
+        }
+
+		if (messageText.equals("❌ Cancel Task Creation")) {
+			clearUserCreationState(chatId);
+			sendMessage(chatId, "Task creation cancelled.");
+			showMainMenu(chatId);
+			return;
+		}
+        
+        // validate action
+        List<String> validationErrors = ValidatorService.validateAction(aiAction);
+        if (!validationErrors.isEmpty()) {
+            // get which fields are missing/invalid 
+            List<MissingParamResolver.MissingFieldInfo> issues = MissingParamResolver.getMissingOrInvalidFields(aiAction);
+            // Convert AI action values into a Task using the existing manual creation state
+            Task task = new Task();
+            // Pre-fill fields that exist in the AI output
+            if (aiAction.getParams().get("task_name") != null) {
+                task.setTaskName(aiAction.getParams().get("task_name").toString());
+            }
+            if (aiAction.getParams().get("description") != null) {
+                task.setDescription(aiAction.getParams().get("description").toString());
+            }
+            if (aiAction.getParams().get("priority") != null) {
+                try {
+                    task.setPriority(Integer.parseInt(aiAction.getParams().get("priority").toString()));
+                } catch (NumberFormatException e) {
+                    // leave empty for manual input
+                }
+            }
+			if (aiAction.getParams().get("estimated_finish_date") != null) {
+				try {
+					String dateString = aiAction.getParams().get("estimated_finish_date").toString();
+					OffsetDateTime finishDate = OffsetDateTime.parse(dateString);
+					task.setEstimatedFinishDate(finishDate);
+				} catch (DateTimeParseException e) {
+					logger.warn("Could not parse estimated finish date: " + aiAction.getParams().get("estimated_finish_date"));
+					// leave empty for manual input
+				}
+			}
+			if (aiAction.getParams().get("sprint_id") != null) {
+				try {
+					int sprintIdValue = Integer.parseInt(aiAction.getParams().get("sprint_id").toString());
+					Optional<Sprint> sprintOptional = sprintService.findById(sprintIdValue);
+					if (sprintOptional.isPresent()) {
+						task.setSprint(sprintOptional.get());
+					} else {
+						logger.warn("Sprint not found for id: " + sprintIdValue);
+					}
+				} catch (NumberFormatException e) {
+					logger.warn("Could not parse sprint id: " + aiAction.getParams().get("sprint_id"));
+				}
+			}
+			
+			if (aiAction.getParams().get("user_id") != null) {
+				try {
+					int userIdValue = Integer.parseInt(aiAction.getParams().get("user_id").toString());
+					Optional<User> userOptional = userService.findById(userIdValue);
+					if (userOptional.isPresent()) {
+						task.setUser(userOptional.get());
+					} else {
+						logger.warn("User not found for id: " + userIdValue);
+					}
+				} catch (NumberFormatException e) {
+					logger.warn("Could not parse user id: " + aiAction.getParams().get("user_id"));
+				}
+			}
+            // Cache task for AI-based creation:
+            userTaskCreationState.put(chatId, task);
+            // determine which missing field to ask for:
+            MissingParamResolver.MissingFieldInfo nextIssue = issues.get(0); // take first missing field
+            userTaskCreationStep.put(chatId, nextIssue.getFieldName());
+            
+            // back to same manual flow for prompting:
+            if ("user_id".equalsIgnoreCase(nextIssue.getFieldName())) {
+                showUsers(chatId);  // This will present inline keyboard options
+            } else if ("sprint_id".equalsIgnoreCase(nextIssue.getFieldName())) {
+                showSprints(chatId); // Inline keyboard for sprint selection
+            } else {
+                // For other fields, send a plain text prompt using your existing method
+                sendKeyboard(chatId, "Please provide a value for " + nextIssue.getFieldName() + ":", cancelKeyboard());
+            }
+            // At this point the creation flow continues in handleTaskCreationStep as the user supplies the missing values.
+        } else {
+            // If no fields are missing/invalid, continue with execution
+            processValidAction(aiAction, chatId);
+        }
+        return; // End /ai command processing.
+
 		// Procesar comandos generales
-		if (messageText.equals("Main Menu")) {
+		} else if (messageText.equals("Main Menu")) {
 			showMainMenu(chatId); // Mostrar el menú principal
 		} else if (messageText.equals(BotCommands.START_COMMAND.getCommand()) || messageText.equals(BotLabels.SHOW_MAIN_SCREEN.getLabel())) {
 			showMainMenu(chatId);
@@ -785,4 +906,52 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 	}
 
 
+    /**
+     * Combines the action schema, current date/time, and the user instruction into a prompt.
+     */
+    private String buildAiPrompt(String userInstruction, String currentDateTime) {
+        String actionSchema = "Action Schema:\n"
+                + "- create_task: Required fields: TASK_NAME, DESCRIPTION, PRIORITY, ESTIMATED_FINISH_DATE, SPRINT_ID, USER_ID\n"
+                + "- update_task_status: Required fields: TASK_ID, STATUS; Optional fields: REAL_HOURS, REAL_FINISH_DATE\n";
+        return String.format(
+                "You are a backend system for a Telegram task management bot. "
+              + "Your task is to convert the following user instruction into a valid JSON action "
+              + "that strictly adheres to the defined action schema. "
+              + "Context: The current system date and time is %s. "
+              + "Any natural language date/time expressions should be parsed into ISO 8601 format.\n\n"
+              + "%s\n\n"
+              + "User instruction: \"%s\"\n\n"
+              + "Your output must be strictly valid JSON with no additional text.",
+              currentDateTime, actionSchema, userInstruction);
+    }
+
+    /**
+     * Caches the AI action along with its validation errors so that later user input
+     * can be used to correct the action.
+     */
+    private void cacheAiActionForCorrection(long chatId, Action aiAction, List<String> validationErrors) {
+        aiCorrectionMap.put(chatId, new AiActionCorrection(aiAction, validationErrors));
+        // Optionally, log or send additional info to the user.
+    }
+
+    /**
+     * Processes a valid AI-generated action by converting it into a task (if create_task)
+     * and calling the existing domain execution routines.
+     */
+	private void processValidAction(Action aiAction, long chatId) {
+		if ("create_task".equalsIgnoreCase(aiAction.getAction())) {
+			Task task = new Task();
+			// Populate fields from the AI action
+			task.setTaskName(aiAction.getParams().get("TASK_NAME").toString());
+			task.setDescription(aiAction.getParams().get("DESCRIPTION").toString());
+			task.setPriority(Integer.parseInt(aiAction.getParams().get("PRIORITY").toString()));
+			// Similarly set estimated finish date, sprint id, user id, etc.
+			taskService.addTask(task);
+			clearUserCreationState(chatId);
+			sendMessage(chatId, "✅ Task created successfully via AI command!");
+			showMainMenu(chatId);
+		} else {
+			sendMessage(chatId, "⚠️ Action type '" + aiAction.getAction() + "' not supported.");
+		}
+	}
 }

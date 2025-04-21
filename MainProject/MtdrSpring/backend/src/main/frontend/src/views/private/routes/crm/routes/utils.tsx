@@ -3,19 +3,23 @@ import React from "react";
 export const getStatusTag = (status: string): { label: React.ReactNode; color: string; bgcolor: string } => {
   let bgcolor;
   let textColor = "black";
+  let text;
 
   switch (status) {
-    case "To Do":
+    case "on-hold":
       bgcolor = "#DBEAFE";
       textColor = "#2563EB";
+      text = "On Hold";
       break;
-    case "In Progress":
+    case "Active":
       bgcolor = "#FEF3C7";
       textColor = "#92400E";
+      text = "In Progress";
       break;
     case "Completed":
       bgcolor = "#D1FAE5";
       textColor = "#065F46";
+      text = "Completed";
       break;
     case "Blocked":
       bgcolor = "#FEE2E2";

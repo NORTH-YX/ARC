@@ -15,6 +15,9 @@ import {
   Value,
 } from "./elements";
 import { User } from "../../../../../../interfaces/user";
+import { useProjectBook } from "../../../../../../modules/projects/hooks/useProjectBook";
+import useProjectStore from "../../../../../../modules/projects/store/useProjectStore";
+import { useDataInitialization } from "../../../../../../modules/projects/hooks/useDataInitialization";
 
 const { Text } = Typography;
 
@@ -24,6 +27,14 @@ interface ProjectsProps {
 
 const Projects: React.FC<ProjectsProps> = ({ user }) => {
   const isAdmin = user?.role === "admin";
+
+  const { data, error, isLoading } = useProjectBook();
+  const store = useProjectStore();
+
+  // Initialize the store with data
+  useDataInitialization(data, store);
+  if (error) return <div>Failed to load projects</div>;
+  if (isLoading) return <div>Loading...</div>;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", padding: "5px" }}>
@@ -57,7 +68,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
               </IconWrapper>
               <ColumnContainer>
                 <Text type="secondary">Total Projects</Text>
-                <Value color="#C74634">24</Value>
+                <Value color="#C74634">{data?.count}</Value>
               </ColumnContainer>
             </RowContainer>
           </StyledCard>
@@ -103,7 +114,25 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
           </StyledCard>
         </IndicatorsContainer>
       </div>
-      <ProjectsTable />
+      <ProjectsTable
+        filteredProjects={store?.filteredProjects}
+        searchQuery={store?.searchQuery}
+        setSearchQuery={store?.setSearchQuery}
+        selectedStatus={store?.selectedStatus}
+        setSelectedStatus={store?.setSelectedStatus}
+        selectedProject={store?.selectedProject}
+        setSelectedProject={store?.setSelectedProject}
+        openDeleteModal={store?.openDeleteModal}
+        closeDeleteModal={store?.closeDeleteModal}
+        isDeleteModalOpen={store?.isDeleteModalOpen}
+        openEditModal={store?.openEditModal}
+        closeEditModal={store?.closeEditModal}
+        isEditModalOpen={store?.isEditModalOpen}
+        createProject={store?.createProject}
+        editProject={store?.updateProject}
+        confirmLoading={store?.confirmLoading}
+        deleteProject={store?.deleteProject}
+      />
     </div>
   );
 };
