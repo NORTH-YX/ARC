@@ -1,88 +1,94 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Container,
   Header,
   ProfileImage,
   TaskRow,
-  ResponsiveTag,
   SprintDateDesktop,
   SprintDateMobile,
+  TaskTitle,
+  StyledButton,
 } from "./elements";
 import { Col, Row, Button, Popover, Divider, Checkbox, Tooltip } from "antd";
-import { MoreOutlined } from "@ant-design/icons";
-import { getStatusTag, shortenText } from "../../../utils";
+import {
+  MoreOutlined,
+  EditOutlined,
+  EyeOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
+import {
+  shortenText,
+  getTaskStatus,
+  getSprintStatus,
+  getTimeLineFormat,
+  getInitials,
+} from "../../../utils";
+import { Sprint } from "../../../../../../../../interfaces/sprint";
+import { Task } from "../../../../../../../../interfaces/task";
+import useTaskStore from "../../../../../../../../modules/tasks/store/useTaskStore";
 
 const isMobile = window.innerWidth <= 600;
 
-const content = (
-  <div>
-    <p>Content</p>
-    <p>Content</p>
-  </div>
-);
-
-const getTaskCategory = (category: string) => {
-  let bgcolor;
-  let textColor = "black";
-
-  switch (category) {
-    case "Design":
-      bgcolor = "#DBEAFE";
-      textColor = "#1E40AF";
-      break;
-    case "Development":
-      bgcolor = "#EDE9FE";
-      textColor = "#5B21B6";
-      break;
-    case "Backend":
-      bgcolor = "#D1FAE5";
-      textColor = "#065F46";
-      break;
-    case "Database":
-      bgcolor = "#FFEDD5";
-      textColor = "#9A3412";
-      break;
-    default:
-      bgcolor = "gray";
-  }
-
-  return (
-    <ResponsiveTag color={bgcolor}>
-      <p style={{ color: textColor, fontSize: "12px", margin: 0 }}>
-        {category}
-      </p>
-    </ResponsiveTag>
+const TaskComponent: React.FC<{ task: Task }> = ({ task }) => {
+  const content = (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+      }}
+    >
+      <StyledButton
+        type="text"
+        icon={<EyeOutlined />}
+        onClick={() => {
+          // Handle view task details
+        }}
+      >
+        See Details
+      </StyledButton>
+      <StyledButton
+        type="text"
+        icon={<EditOutlined />}
+        onClick={() => {
+          // Handle edit task
+        }}
+      >
+        Edit
+      </StyledButton>
+      <StyledButton
+        type="text"
+        icon={<DeleteOutlined />}
+        onClick={() => {
+          // Handle delete task
+        }}
+      >
+        Delete
+      </StyledButton>
+    </div>
   );
-};
-
-interface TaskComponentProps {
-  title: string;
-  category: string;
-  picture?: string;
-}
-
-const TaskComponent: React.FC<TaskComponentProps> = ({
-  title,
-  category,
-  picture,
-}) => {
   return (
     <TaskRow>
       <Row style={{ display: "flex", gap: "10px" }}>
-        <Checkbox />
-        <Tooltip title={title} placement="topLeft">
-          <h4 style={{ margin: 0 }}>{shortenText(title, isMobile ? 3 : 9)}</h4>
+        <Checkbox checked={task?.status === "Completed" ? true : false} />
+        <Tooltip title={task?.taskName} placement="topLeft">
+          <TaskTitle completed={task?.status === "Completed"}>
+            {shortenText(task?.taskName, isMobile ? 3 : 9)}
+          </TaskTitle>
         </Tooltip>
       </Row>
       <Row style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-        {getTaskCategory(category)}
-        {picture ? <ProfileImage src={picture} /> : <ProfileImage />}
+        {getTaskStatus(task?.status)}
+        <Tooltip title={task?.user?.name} placement="topLeft">
+          <ProfileImage> {getInitials(task?.user?.name)} </ProfileImage>
+        </Tooltip>
         <Popover
           placement="right"
           title={null}
           content={content}
           arrow={false}
           trigger="click"
+          overlayInnerStyle={{ padding: "5px 0px" }}
         >
           <Button
             style={{
@@ -99,32 +105,71 @@ const TaskComponent: React.FC<TaskComponentProps> = ({
 };
 
 interface SprintComponentProps {
-  sprint: SprintData;
-}
-interface SprintData {
-  name: string;
-  dateRange: string;
-  status: string;
-  tasks: TaskComponentProps[];
+  sprint: Sprint;
 }
 
 const SprintComponent: React.FC<SprintComponentProps> = ({ sprint }) => {
+  const getActions = (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "flex-start",
+      }}
+    >
+      <StyledButton type="text" icon={<EyeOutlined />} onClick={() => {}}>
+        See Details
+      </StyledButton>
+      <StyledButton type="text" icon={<EditOutlined />} onClick={() => {}}>
+        Edit
+      </StyledButton>
+      <StyledButton type="text" icon={<DeleteOutlined />} onClick={() => {}}>
+        Delete
+      </StyledButton>
+    </div>
+  );
+
+  const taskStore = useTaskStore();
+
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  useEffect(() => {
+    const fetchTasks = async () => {
+      const fetchedTasks = await taskStore.getTasksBySprint(sprint?.sprintId);
+      setTasks(fetchedTasks);
+    };
+    fetchTasks();
+  }, [sprint?.sprintId]);
+
+  console.log("Tasks:", tasks);
+
   return (
     <Container>
       <Header>
         <Col>
-          <h3 style={{ margin: 0 }}>{sprint.name}</h3>
-          <SprintDateDesktop>{sprint.dateRange}</SprintDateDesktop>
+          <h3 style={{ margin: 0 }}>{sprint?.sprintName}</h3>
+          <SprintDateDesktop>
+            {getTimeLineFormat(
+              sprint?.creationDate,
+              sprint?.estimatedFinishDate
+            )}
+          </SprintDateDesktop>
         </Col>
         <Row style={{ display: "flex", justifyContent: "space-between" }}>
-          <SprintDateMobile>{sprint.dateRange}</SprintDateMobile>
-          {getStatusTag("In Progress")}
+          <SprintDateMobile>
+            {getTimeLineFormat(
+              sprint?.creationDate,
+              sprint?.estimatedFinishDate
+            )}
+          </SprintDateMobile>
+          {getSprintStatus(sprint?.status)}
           <Popover
             placement="right"
             title={null}
-            content={content}
+            content={getActions}
             arrow={false}
             trigger="click"
+            overlayInnerStyle={{ padding: "5px 0px" }}
           >
             <Button
               style={{ fontSize: "24px", color: "#9CA3AF" }}
@@ -135,13 +180,9 @@ const SprintComponent: React.FC<SprintComponentProps> = ({ sprint }) => {
         </Row>
       </Header>
       <Divider style={{ margin: "15px 0" }} />
-      {sprint.tasks.map((task, index) => (
-        <TaskComponent
-          key={index}
-          title={task.title}
-          category={task.category}
-          picture={task.picture}
-        />
+
+      {tasks.map((task, index) => (
+        <TaskComponent key={index} task={task} />
       ))}
     </Container>
   );

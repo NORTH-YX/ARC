@@ -19,7 +19,7 @@ const Indicators: React.FC = () => {
     <IndicatorsContainer>
       <StyledCard>
         <RowContainer>
-          <IconWrapper bgColor="#ffe5e5">
+          <IconWrapper $bgColor="#ffe5e5">
             <FireFilled style={{ color: "#C74634", fontSize: "20px" }} />
           </IconWrapper>
           <ColumnContainer>
@@ -31,7 +31,7 @@ const Indicators: React.FC = () => {
 
       <StyledCard>
         <RowContainer>
-          <IconWrapper bgColor="#EDE9FE">
+          <IconWrapper $bgColor="#EDE9FE">
             <FolderOpenFilled style={{ color: "#7C3AED", fontSize: "20px" }} />
           </IconWrapper>
           <ColumnContainer>
@@ -43,7 +43,7 @@ const Indicators: React.FC = () => {
 
       <StyledCard>
         <RowContainer>
-          <IconWrapper bgColor="#D1FAE5">
+          <IconWrapper $bgColor="#D1FAE5">
             <CheckOutlined style={{ color: "#059669", fontSize: "20px" }} />
           </IconWrapper>
           <ColumnContainer>
@@ -55,7 +55,7 @@ const Indicators: React.FC = () => {
 
       <StyledCard>
         <RowContainer>
-          <IconWrapper bgColor="#FEF3C7">
+          <IconWrapper $bgColor="#FEF3C7">
             <ClockCircleFilled style={{ color: "#D97706", fontSize: "20px" }} />
           </IconWrapper>
           <ColumnContainer>
