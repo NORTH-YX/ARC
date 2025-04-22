@@ -60,12 +60,9 @@ jobs:
           VALIDATE_ALL_CODEBASE: false
           FILTER_REGEX_INCLUDE: .*MainProject/MtdrSpring/backend/src/main/(java/com/springboot/MyTodoList)/.*
           JAVA_FILE_NAME: google_checks.xml
-          # Disable problematic linters
-          VALIDATE_TERRAFORM: false
-          VALIDATE_DOCKERFILE_HADOLINT: false
-          VALIDATE_CHECKOV: false
-          VALIDATE_JSCPD: false  # Disable JSCPD (duplicate code detector)
-          # Focus on Java validation
+          # Only validate these languages - don't use mixed enable/disable approach
           VALIDATE_JAVA: true
           VALIDATE_GOOGLE_JAVA_FORMAT: true
+          # Disable validation of all other linters by setting VALIDATE_ALL to false
+          VALIDATE_ALL: false
 
