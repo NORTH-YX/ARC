@@ -1,6 +1,6 @@
-import { Button, Select, Tooltip, Dropdown } from "antd";
+import { Button, Space, Select, Tooltip, Dropdown, DatePicker, Input } from "antd";
 import { format } from "date-fns";
-import { PlusOutlined, EllipsisOutlined } from "@ant-design/icons";
+import { PlusOutlined, EllipsisOutlined, SearchOutlined, CalendarOutlined } from "@ant-design/icons";
 import type { SorterResult } from "antd/es/table/interface";
 import type { MenuProps } from "antd";
 import useTaskStore from "../../../../../../../../modules/tasks/store/useTaskStore.tsx";
@@ -8,7 +8,30 @@ import { getStatusTag } from "../../../utils.tsx";
 import { StyledTable } from "./styles.ts";
 import { Task } from "../../../../../../../../interfaces/task/index";
 
+const { RangePicker } = DatePicker;
+
 const TASK_STATUSES = ["To Do", "In Progress", "Completed", "Blocked"];
+
+// Add custom CSS for date picker styling
+const datePickerStyle = document.createElement("style");
+datePickerStyle.textContent = `
+  .custom-date-picker .ant-picker-input > input::placeholder {
+    color: #bbb;
+  }
+  .custom-date-picker .ant-picker-separator {
+    color: #aaa;
+  }
+  .custom-date-picker {
+    border-color: #e0e0e0;
+  }
+  .custom-date-picker:hover {
+    border-color: #4096ff;
+  }
+  .custom-date-picker .ant-picker-suffix {
+    color: #aaa;
+  }
+`;
+document.head.appendChild(datePickerStyle);
 
 const styleSheet = document.createElement("style");
 styleSheet.textContent = `
@@ -39,6 +62,15 @@ document.head.appendChild(styleSheet);
 
 const TasksTable: React.FC = () => {
   const store = useTaskStore();
+  
+  // Using the store instead of local state
+  const { 
+    dateRange, 
+    searchText, 
+    setDateRange, 
+    setSearchText, 
+    getFilteredTasks 
+  } = store;
 
   const handleEdit = (taskId: number) => {
     const task = store.getTaskById?.(taskId);
@@ -85,6 +117,14 @@ const TasksTable: React.FC = () => {
     return new Date(a).getTime() - new Date(b).getTime();
   };
 
+  const handleDateRangeChange = (dates: any, dateStrings: [string, string]) => {
+    if (dates) {
+      setDateRange([dates[0]?.toDate() || null, dates[1]?.toDate() || null]);
+    } else {
+      setDateRange([null, null]);
+    }
+  };
+
   // Format date in a more readable way: "Apr 13, 6:01 p.m."
   const formatReadableDate = (dateString: string | null) => {
     if (!dateString) return null;
@@ -108,17 +148,58 @@ const TasksTable: React.FC = () => {
         }}
       >
         <h2 style={{ margin: 0 }}>Recent Tasks</h2>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleCreateTask}
-        >
-          Create Task
-        </Button>
+        <Space>
+          <div style={{ marginRight: "16px" }}>
+            <RangePicker 
+              onChange={handleDateRangeChange}
+              placeholder={["Start date", "End date"]}
+              style={{ 
+                width: 320,
+                borderRadius: "4px",
+              }}
+              allowClear
+              separator="→"
+              suffixIcon={<CalendarOutlined />}
+              format="MMM D, YYYY"
+              bordered={true}
+              className="custom-date-picker"
+            />
+          </div>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleCreateTask}
+          >
+            Create Task
+          </Button>
+        </Space>
+      </div>
+      
+      <div 
+        style={{ 
+          padding: "10px 16px", 
+          backgroundColor: "white", 
+          borderTop: "1px solid #f0f0f0",
+          display: "flex",
+          alignItems: "center",
+          gap: "16px",
+          flexWrap: "wrap"
+        }}
+      >
+        <Space>
+          <Input 
+            placeholder="Search tasks" 
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            prefix={<SearchOutlined />}
+            style={{ width: 200 }}
+            allowClear
+          />
+        </Space>
       </div>
       
       <StyledTable
-        dataSource={store.filteredTasks || []}
+        dataSource={getFilteredTasks()}
         rowKey="taskId"
         onChange={handleTableChange}
         pagination={{ pageSize: 10 }}
