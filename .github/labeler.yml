@@ -3,35 +3,42 @@
 
 # Frontend changes
 frontend:
-  - MainProject/MtdrSpring/backend/src/main/frontend/**/*
-  - MainProject/MtdrSpring/backend/src/main/frontend/package.json
-  - MainProject/MtdrSpring/backend/src/main/frontend/package-lock.json
+  - 'MainProject/MtdrSpring/backend/src/main/frontend/**/*'
 
 # Backend changes
 backend:
-  - MainProject/MtdrSpring/backend/src/main/java/**/*
-  - MainProject/MtdrSpring/backend/pom.xml
-  - MainProject/MtdrSpring/backend/Dockerfile
+  - 'MainProject/MtdrSpring/backend/src/main/java/com/springboot/MyTodoList/**/*'
 
-# Infrastructure changes
-infrastructure:
-  - MainProject/MtdrSpring/docker-compose.yml
-  - MainProject/MtdrSpring/terraform/**/*
-  - MainProject/MtdrSpring/setup.sh
-  - MainProject/MtdrSpring/destroy.sh
-  - MainProject/MtdrSpring/env.sh
+# Configuration changes
+config:
+  - 'MainProject/MtdrSpring/backend/src/main/resources/**/*.yml'
+  - 'MainProject/MtdrSpring/backend/src/main/resources/**/*.properties'
+  - '.github/workflows/**/*.yml'
 
 # Documentation changes
 documentation:
-  - MainProject/README.md
-  - MainProject/CONTRIBUTING.md
-  - MainProject/SECURITY.md
-  - MainProject/LICENSE.txt
-  - MainProject/THIRD_PARTY_LICENSES.txt
-  - MainProject/.github/**/*.md
+  - '**/*.md'
+  - 'docs/**/*'
 
 # Dependencies updates
 dependencies:
-  - MainProject/MtdrSpring/backend/pom.xml
-  - MainProject/MtdrSpring/backend/src/main/frontend/package.json
-  - MainProject/MtdrSpring/backend/src/main/frontend/package-lock.json 
+  - 'MainProject/MtdrSpring/backend/pom.xml'
+  - 'MainProject/MtdrSpring/backend/src/main/frontend/package.json'
+  - 'MainProject/MtdrSpring/backend/src/main/frontend/package-lock.json'
+
+# Infrastructure changes
+infrastructure:
+  - 'MainProject/MtdrSpring/docker-compose.yml'
+  - 'MainProject/MtdrSpring/terraform/**/*'
+  - 'MainProject/MtdrSpring/setup.sh'
+  - 'MainProject/MtdrSpring/destroy.sh'
+  - 'MainProject/MtdrSpring/env.sh'
+
+# Additional changes
+additional:
+  - 'MainProject/README.md'
+  - 'MainProject/CONTRIBUTING.md'
+  - 'MainProject/SECURITY.md'
+  - 'MainProject/LICENSE.txt'
+  - 'MainProject/THIRD_PARTY_LICENSES.txt'
+  - 'MainProject/.github/**/*.md' 
