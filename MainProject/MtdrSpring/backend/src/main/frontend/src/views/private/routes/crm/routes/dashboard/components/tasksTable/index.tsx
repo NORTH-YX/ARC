@@ -1,15 +1,16 @@
 import { Button, Space, Select, Tooltip, Dropdown, DatePicker, Input, Typography, Popover } from "antd";
 import { format } from "date-fns";
-import { PlusOutlined, EllipsisOutlined, SearchOutlined, CalendarOutlined, EditOutlined } from "@ant-design/icons";
+import { PlusOutlined, EllipsisOutlined, SearchOutlined, CalendarOutlined, EditOutlined, UserOutlined } from "@ant-design/icons";
 import type { SorterResult } from "antd/es/table/interface";
 import type { MenuProps } from "antd";
 import useTaskStore from "../../../../../../../../modules/tasks/store/useTaskStore.tsx";
 import { getStatusTag } from "../../../utils.tsx";
 import { StyledTable } from "./styles.ts";
 import { Task } from "../../../../../../../../interfaces/task/index";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
+import { User } from "../../../../../../../../interfaces/user/index";
 
 const { RangePicker } = DatePicker;
 const { Text } = Typography;
@@ -94,6 +95,26 @@ styleSheet.textContent = `
 `;
 document.head.appendChild(styleSheet);
 
+// Add custom CSS for user select
+const userSelectStyle = document.createElement("style");
+userSelectStyle.textContent = `
+  .user-select .ant-select-selector {
+    border: none !important;
+    box-shadow: none !important;
+    background-color: #f0f0f0 !important;
+  }
+  .user-select:hover .ant-select-selector {
+    background-color: #e6e6e6 !important;
+  }
+  .user-select-dropdown .ant-select-item-option-selected {
+    background-color: #F3F4F6 !important;
+  }
+  .user-select-dropdown .ant-select-item-option:hover {
+    background-color: #F9FAFB !important;
+  }
+`;
+document.head.appendChild(userSelectStyle);
+
 const TasksTable: React.FC = () => {
   const store = useTaskStore();
   
@@ -113,7 +134,22 @@ const TasksTable: React.FC = () => {
     field: string | null;
   }>({ taskId: null, field: null });
 
-  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+
+  // Extract unique users from tasks
+  useEffect(() => {
+    if (store.taskBook?.tasks) {
+      const uniqueUsers = Array.from(
+        new Map(
+          store.taskBook.tasks
+            .filter((task: Task) => task.user)
+            .map((task: Task) => [task.user.userId, task.user])
+        ).values()
+      ) as User[];
+      
+      setUsers(uniqueUsers);
+    }
+  }, [store.taskBook]);
 
   const handleEdit = (taskId: number) => {
     const task = store.getTaskById?.(taskId);
@@ -188,7 +224,6 @@ const TasksTable: React.FC = () => {
       
       // Close the date picker
       setEditingCell({ taskId: null, field: null });
-      setDatePickerOpen(false);
     } catch (error) {
       console.error(`Error updating ${field}:`, error);
     }
@@ -235,6 +270,18 @@ const TasksTable: React.FC = () => {
         </div>
       </Popover>
     );
+  };
+
+  const handleUserChange = async (newUserId: number, task: Task) => {
+    try {
+      // Find the user object
+      const selectedUser = users.find(user => user.userId === newUserId);
+      if (!selectedUser) return;
+      
+      await store.updateTask?.(task.taskId, { user: selectedUser });
+    } catch (error) {
+      console.error("Error updating task user:", error);
+    }
   };
 
   return (
@@ -395,8 +442,28 @@ const TasksTable: React.FC = () => {
           title="User"
           dataIndex={["user", "name"]}
           key="user"
-          width={120}
-          ellipsis={true}
+          width={150}
+          ellipsis={false}
+          render={(_, record: Task) => (
+            <div style={{ width: '130px' }}>
+              <Select
+                value={record.user?.userId}
+                style={{ width: '100%' }}
+                onChange={(newUserId) => handleUserChange(newUserId, record)}
+                options={users.map((user) => ({
+                  value: user.userId,
+                  label: user.name,
+                }))}
+                className="user-select"
+                popupClassName="user-select-dropdown"
+                dropdownStyle={{ zIndex: 1100 }}
+                placeholder="Assign user"
+                suffixIcon={<UserOutlined />}
+                showSearch
+                optionFilterProp="label"
+              />
+            </div>
+          )}
         />
         <StyledTable.Column
           title="Real Finish"
