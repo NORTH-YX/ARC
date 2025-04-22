@@ -14,6 +14,13 @@ on:
   # Allow manual triggers for testing
   workflow_dispatch:
 
+# Set specific permissions instead of implicit write-all
+permissions:
+  contents: read
+  checks: write
+  statuses: write
+  id-token: write # Needed for potential future cloud deployment
+
 jobs:
   deploy:
     name: Build and Deploy
