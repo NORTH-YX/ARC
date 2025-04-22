@@ -28,17 +28,17 @@ dependencies:
 
 # Infrastructure changes
 infrastructure:
-  - MainProject/MtdrSpring/docker-compose.yml
-  - MainProject/MtdrSpring/terraform/**/*
-  - MainProject/MtdrSpring/setup.sh
-  - MainProject/MtdrSpring/destroy.sh
-  - MainProject/MtdrSpring/env.sh
+  - 'MainProject/MtdrSpring/docker-compose.yml'
+  - 'MainProject/MtdrSpring/terraform/**/*'
+  - 'MainProject/MtdrSpring/setup.sh'
+  - 'MainProject/MtdrSpring/destroy.sh'
+  - 'MainProject/MtdrSpring/env.sh'
 
 # Additional changes
 additional:
-  - MainProject/README.md
-  - MainProject/CONTRIBUTING.md
-  - MainProject/SECURITY.md
-  - MainProject/LICENSE.txt
-  - MainProject/THIRD_PARTY_LICENSES.txt
-  - MainProject/.github/**/*.md 
+  - 'MainProject/README.md'
+  - 'MainProject/CONTRIBUTING.md'
+  - 'MainProject/SECURITY.md'
+  - 'MainProject/LICENSE.txt'
+  - 'MainProject/THIRD_PARTY_LICENSES.txt'
+  - 'MainProject/.github/**/*.md' 
