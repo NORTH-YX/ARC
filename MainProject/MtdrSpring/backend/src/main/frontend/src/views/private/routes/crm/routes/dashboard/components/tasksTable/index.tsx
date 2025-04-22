@@ -1,7 +1,8 @@
-import { Button, Space, Select } from "antd";
+import { Button, Select, Tooltip, Dropdown } from "antd";
 import { format } from "date-fns";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, EllipsisOutlined } from "@ant-design/icons";
 import type { SorterResult } from "antd/es/table/interface";
+import type { MenuProps } from "antd";
 import useTaskStore from "../../../../../../../../modules/tasks/store/useTaskStore.tsx";
 import { getStatusTag } from "../../../utils.tsx";
 import { StyledTable } from "./styles.ts";
@@ -84,47 +85,57 @@ const TasksTable: React.FC = () => {
     return new Date(a).getTime() - new Date(b).getTime();
   };
 
+  // Format date in a more readable way: "Apr 13, 6:01 p.m."
+  const formatReadableDate = (dateString: string | null) => {
+    if (!dateString) return null;
+    
+    const date = new Date(dateString);
+    return format(date, "MMM d, h:mm a");
+  };
+
   return (
-    <StyledTable
-      dataSource={store.filteredTasks || []}
-      rowKey="taskId"
-      onChange={handleTableChange}
-    >
-      <StyledTable.ColumnGroup
-        title={
-          <div
-            style={{
-              marginTop: "-10px",
-              marginLeft: "-13px",
-              padding: "10px",
-              borderRadius: "8px 8px 0 0",
-              backgroundColor: "white",
-              width: "101%",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <h2 style={{ margin: 0 }}>Recent Tasks</h2>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleCreateTask}
-            >
-              Create Task
-            </Button>
-          </div>
-        }
+    <div style={{ width: '100%' }}>
+      <div
+        style={{
+          padding: "16px",
+          borderRadius: "8px 8px 0 0",
+          backgroundColor: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          width: '100%',
+          marginBottom: "-1px", // Eliminate gap between header and table
+        }}
+      >
+        <h2 style={{ margin: 0 }}>Recent Tasks</h2>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={handleCreateTask}
+        >
+          Create Task
+        </Button>
+      </div>
+      
+      <StyledTable
+        dataSource={store.filteredTasks || []}
+        rowKey="taskId"
+        onChange={handleTableChange}
+        pagination={{ pageSize: 10 }}
       >
         <StyledTable.Column
           title="Task Name"
           dataIndex="taskName"
           key="taskName"
+          ellipsis={false}
+          width="20%"
         />
         <StyledTable.Column
           title="Status"
           dataIndex="status"
           key="status"
+          width={130}
+          ellipsis={true}
           render={(status: string, record: Task) => {
             //const statusInfo = getStatusTag(status);
             return (
@@ -152,6 +163,8 @@ const TasksTable: React.FC = () => {
           title="Sprint"
           dataIndex={["sprint", "sprintName"]}
           key="sprint"
+          width={100}
+          ellipsis={true}
           sorter={{
             compare: (a: any, b: any) => {
               const sprintA = a.sprint?.sprintName || "";
@@ -164,8 +177,10 @@ const TasksTable: React.FC = () => {
           title="Creation Date"
           dataIndex="creationDate"
           key="creationDate"
+          width={140}
+          ellipsis={true}
           render={(date: string) =>
-            format(new Date(date), "yyyy-MM-dd HH:mm:ss")
+            formatReadableDate(date)
           }
           sorter={{
             compare: (a: any, b: any) =>
@@ -176,8 +191,10 @@ const TasksTable: React.FC = () => {
           title="Estimated Finish"
           dataIndex="estimatedFinishDate"
           key="estimatedFinishDate"
+          width={140}
+          ellipsis={true}
           render={(date: string) =>
-            date ? format(new Date(date), "yyyy-MM-dd HH:mm:ss") : "Not Set"
+            date ? formatReadableDate(date) : "Not Set"
           }
           sorter={{
             compare: (a: any, b: any) =>
@@ -188,19 +205,25 @@ const TasksTable: React.FC = () => {
           title="Priority"
           dataIndex="priority"
           key="priority"
+          width={80}
+          ellipsis={true}
         />
         <StyledTable.Column
           title="User"
           dataIndex={["user", "name"]}
           key="user"
+          width={120}
+          ellipsis={true}
         />
         <StyledTable.Column
           title="Real Finish"
           dataIndex="realFinishDate"
           key="realFinishDate"
+          width={140}
+          ellipsis={true}
           render={(date: string | null) =>
             date
-              ? format(new Date(date), "yyyy-MM-dd HH:mm:ss")
+              ? formatReadableDate(date)
               : "Not Finished"
           }
           sorter={{
@@ -211,19 +234,38 @@ const TasksTable: React.FC = () => {
         <StyledTable.Column
           title="Action"
           key="action"
-          render={(_: any, record: any) => (
-            <Space size="middle">
-              <Button type="primary" onClick={() => handleEdit(record.taskId)}>
-                Edit
-              </Button>
-              <Button danger onClick={() => handleDelete(record.taskId)}>
-                Delete
-              </Button>
-            </Space>
-          )}
+          width={80}
+          ellipsis={true}
+          render={(_: any, record: any) => {
+            const items: MenuProps['items'] = [
+              {
+                key: 'edit',
+                label: 'Edit',
+                onClick: () => handleEdit(record.taskId),
+              },
+              {
+                key: 'delete',
+                label: 'Delete',
+                danger: true,
+                onClick: () => handleDelete(record.taskId),
+              },
+            ];
+            
+            return (
+              <Tooltip title="Task Actions">
+                <Dropdown menu={{ items }} placement="bottomRight" trigger={['click']}>
+                  <Button 
+                    type="text" 
+                    icon={<EllipsisOutlined style={{ fontSize: '20px' }} />} 
+                    onClick={(e) => e.preventDefault()}
+                  />
+                </Dropdown>
+              </Tooltip>
+            );
+          }}
         />
-      </StyledTable.ColumnGroup>
-    </StyledTable>
+      </StyledTable>
+    </div>
   );
 };
 

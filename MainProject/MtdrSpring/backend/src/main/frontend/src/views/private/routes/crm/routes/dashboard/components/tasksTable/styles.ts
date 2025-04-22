@@ -2,6 +2,8 @@ import styled from 'styled-components';
 import { Table } from 'antd';
 
 export const StyledTable = styled(Table)`
+  width: 100%;
+  
   .ant-table {
     background: white;
     border-radius: 8px;
@@ -20,5 +22,10 @@ export const StyledTable = styled(Table)`
   .ant-table-column-group-title {
     background: white;
     padding: 16px;
+    width: 100%;
+  }
+  
+  .ant-table-column-group {
+    width: 100%;
   }
 `; 
