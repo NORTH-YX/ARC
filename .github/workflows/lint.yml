@@ -58,7 +58,7 @@ jobs:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           VALIDATE_ALL_CODEBASE: false
-          FILTER_REGEX_INCLUDE: .*MainProject/MtdrSpring/backend/src/main/(java/com/springboot/MyTodoList)/.*
+          FILTER_REGEX_INCLUDE: .*MainProject/MtdrSpring/backend/src/main/java/com/springboot/MyTodoList/.*
           JAVA_FILE_NAME: google_checks.xml
           # Only validate these languages - don't use mixed enable/disable approach
           VALIDATE_JAVA: true
