@@ -1,73 +1,35 @@
 name: Deployment Workflow
 
+# This workflow is currently disabled
+# It will be used for deployment to production in the future
+
 on:
-  push:
-    branches: [ main, stage ]
+  # Disabled - will be enabled when deployment flow is ready
+  # push:
+  #   branches: [ main ]
+  #   paths:
+  #     - 'MainProject/MtdrSpring/backend/src/main/java/com/springboot/MyTodoList/**'
+  #     - 'MainProject/MtdrSpring/backend/src/main/frontend/**'
+  
+  # Allow manual triggers for testing
+  workflow_dispatch:
+
+# Set specific permissions instead of implicit write-all
+permissions:
+  contents: read
+  checks: write
+  statuses: write
+  id-token: write # Needed for potential future cloud deployment
 
 jobs:
-  build-and-test:
-    name: Build and Test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: Build Backend
-        working-directory: MainProject/MtdrSpring/backend
-        run: |
-          chmod +x mvnw
-          ./mvnw clean install
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: MainProject/MtdrSpring/backend/src/main/frontend/package-lock.json
-
-      - name: Install Frontend Dependencies
-        working-directory: MainProject/MtdrSpring/backend/src/main/frontend
-        run: npm ci
-
-      - name: Build Frontend
-        working-directory: MainProject/MtdrSpring/backend/src/main/frontend
-        run: npm run build
-
   deploy:
-    name: Deploy
-    needs: build-and-test
+    name: Build and Deploy
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/stage'
-    environment: 
-      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Build and Push Docker Images
-        working-directory: MainProject/MtdrSpring
-        run: |
-          docker build -t backend:${{ github.sha }} ./backend
-          docker build -t frontend:${{ github.sha }} ./backend/src/main/frontend
-          # Add your Docker registry push commands here
-          # docker push backend:${{ github.sha }}
-          # docker push frontend:${{ github.sha }}
-
-      - name: Deploy to Environment
-        if: github.ref == 'refs/heads/stage'
-        run: |
-          # Add your staging deployment commands here
-          echo "Deploying to staging environment"
-
-      - name: Deploy to Production
-        if: github.ref == 'refs/heads/main'
-        run: |
-          # Add your production deployment commands here
-          echo "Deploying to production environment" 
+        with:
+          fetch-depth: 0  # Fetch all history for tools that need it
+        
+      - name: Placeholder for future deployment steps
+        run: echo "Deployment workflow is currently disabled. This is a placeholder for future implementation." 

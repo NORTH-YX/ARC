@@ -1,0 +1,33 @@
+# Use a specific version tag instead of latest
+FROM selenium/standalone-firefox:4.21.0
+
+# Set working directory
+WORKDIR /app
+
+# Copy test files
+COPY test1.py /app/test.py
+
+# Install dependencies
+RUN pip install -U selenium pytest pytest-html webdriver-manager
+
+# Create a non-root user (if not already available)
+RUN if ! id -u seluser > /dev/null 2>&1; then \
+    groupadd -r seluser && useradd -r -g seluser seluser; \
+    fi && \
+    chown -R seluser:seluser /app
+
+# Expose port
+EXPOSE 8080
+
+# Add healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/ || exit 1
+
+# Switch to non-root user
+USER seluser
+
+# Run tests and generate report
+RUN pytest /app/test.py --html=/app/report.html
+
+# Set entrypoint
+ENTRYPOINT ["cat", "/app/report.html"] 
