@@ -1,14 +1,18 @@
-import { Button, Space, Select, Tooltip, Dropdown, DatePicker, Input } from "antd";
+import { Button, Space, Select, Tooltip, Dropdown, DatePicker, Input, Typography, Popover } from "antd";
 import { format } from "date-fns";
-import { PlusOutlined, EllipsisOutlined, SearchOutlined, CalendarOutlined } from "@ant-design/icons";
+import { PlusOutlined, EllipsisOutlined, SearchOutlined, CalendarOutlined, EditOutlined } from "@ant-design/icons";
 import type { SorterResult } from "antd/es/table/interface";
 import type { MenuProps } from "antd";
 import useTaskStore from "../../../../../../../../modules/tasks/store/useTaskStore.tsx";
 import { getStatusTag } from "../../../utils.tsx";
 import { StyledTable } from "./styles.ts";
 import { Task } from "../../../../../../../../interfaces/task/index";
+import { useState } from "react";
+import dayjs from 'dayjs';
+import type { Dayjs } from 'dayjs';
 
 const { RangePicker } = DatePicker;
+const { Text } = Typography;
 
 const TASK_STATUSES = ["To Do", "In Progress", "Completed", "Blocked"];
 
@@ -29,6 +33,36 @@ datePickerStyle.textContent = `
   }
   .custom-date-picker .ant-picker-suffix {
     color: #aaa;
+  }
+  .editable-cell {
+    padding: 0 !important;
+  }
+  .date-cell-content {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s;
+  }
+  .date-cell-content:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+    cursor: pointer;
+  }
+  .date-cell-content .edit-icon {
+    margin-left: 8px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .date-cell-content:hover .edit-icon {
+    opacity: 0.6;
+  }
+  .date-picker-popover .ant-picker {
+    margin-bottom: 0;
+  }
+  .date-picker-popover .ant-popover-inner-content {
+    padding: 0;
+  }
+  .ant-picker-dropdown {
+    z-index: 1100 !important;
   }
 `;
 document.head.appendChild(datePickerStyle);
@@ -69,8 +103,17 @@ const TasksTable: React.FC = () => {
     searchText, 
     setDateRange, 
     setSearchText, 
-    getFilteredTasks 
+    getFilteredTasks,
+    updateTask
   } = store;
+
+  // State for tracking which date cell is being edited
+  const [editingCell, setEditingCell] = useState<{
+    taskId: number | null;
+    field: string | null;
+  }>({ taskId: null, field: null });
+
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   const handleEdit = (taskId: number) => {
     const task = store.getTaskById?.(taskId);
@@ -131,6 +174,67 @@ const TasksTable: React.FC = () => {
     
     const date = new Date(dateString);
     return format(date, "MMM d, h:mm a");
+  };
+
+  // Handle the date picker change for editable cells
+  const handleDateChange = async (date: Dayjs | null, field: string, taskId: number) => {
+    if (!date) return;
+
+    const dateValue = date.toDate().toISOString();
+    
+    try {
+      // Update the task with the new date
+      await updateTask?.(taskId, { [field]: dateValue });
+      
+      // Close the date picker
+      setEditingCell({ taskId: null, field: null });
+      setDatePickerOpen(false);
+    } catch (error) {
+      console.error(`Error updating ${field}:`, error);
+    }
+  };
+
+  // Render an editable date cell
+  const renderEditableDate = (value: string | null, record: Task, field: string) => {
+    const isEditing = editingCell.taskId === record.taskId && editingCell.field === field;
+    
+    const datePicker = (
+      <DatePicker
+        showTime
+        format="MMM D, YYYY h:mm a"
+        defaultValue={value ? dayjs(value) : null}
+        style={{ width: '240px' }}
+        onOk={(date) => handleDateChange(date, field, record.taskId)}
+        open={true}
+        autoFocus
+      />
+    );
+
+    return (
+      <Popover
+        content={datePicker}
+        trigger="click"
+        open={isEditing}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingCell({ taskId: null, field: null });
+          }
+        }}
+        overlayClassName="date-picker-popover"
+        overlayStyle={{ zIndex: 1100 }}
+        destroyTooltipOnHide
+      >
+        <div 
+          className="date-cell-content"
+          onClick={() => {
+            setEditingCell({ taskId: record.taskId, field });
+          }}
+        >
+          <Text>{value ? formatReadableDate(value) : field === "realFinishDate" ? "Not Finished" : "Not Set"}</Text>
+          <EditOutlined className="edit-icon" style={{ fontSize: '12px' }} />
+        </div>
+      </Popover>
+    );
   };
 
   return (
@@ -260,9 +364,8 @@ const TasksTable: React.FC = () => {
           key="creationDate"
           width={140}
           ellipsis={true}
-          render={(date: string) =>
-            formatReadableDate(date)
-          }
+          className="editable-cell"
+          render={(date: string, record: Task) => renderEditableDate(date, record, "creationDate")}
           sorter={{
             compare: (a: any, b: any) =>
               compareDates(a.creationDate, b.creationDate),
@@ -274,9 +377,8 @@ const TasksTable: React.FC = () => {
           key="estimatedFinishDate"
           width={140}
           ellipsis={true}
-          render={(date: string) =>
-            date ? formatReadableDate(date) : "Not Set"
-          }
+          className="editable-cell"
+          render={(date: string, record: Task) => renderEditableDate(date, record, "estimatedFinishDate")}
           sorter={{
             compare: (a: any, b: any) =>
               compareDates(a.estimatedFinishDate, b.estimatedFinishDate),
@@ -302,11 +404,8 @@ const TasksTable: React.FC = () => {
           key="realFinishDate"
           width={140}
           ellipsis={true}
-          render={(date: string | null) =>
-            date
-              ? formatReadableDate(date)
-              : "Not Finished"
-          }
+          className="editable-cell"
+          render={(date: string | null, record: Task) => renderEditableDate(date, record, "realFinishDate")}
           sorter={{
             compare: (a: any, b: any) =>
               compareDates(a.realFinishDate, b.realFinishDate),
