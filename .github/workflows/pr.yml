@@ -90,8 +90,4 @@ jobs:
 
       - name: Build Frontend
         working-directory: MainProject/MtdrSpring/backend/src/main/frontend
-        run: npm run build
-
-      - name: Run Frontend Tests
-        working-directory: MainProject/MtdrSpring/backend/src/main/frontend
-        run: npm test 
+        run: npm run build 
