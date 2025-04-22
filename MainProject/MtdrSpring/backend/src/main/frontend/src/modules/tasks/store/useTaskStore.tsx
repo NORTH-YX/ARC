@@ -13,6 +13,7 @@ interface TaskStoreState {
   selectedSprintId: number | null;
   selectedUserId: number | null;
   selectedStatus: string | null;
+  OldTaskName: string | null;
 
   // Actions
   setTaskBook: (taskBook: TaskBook) => void;
@@ -29,6 +30,7 @@ interface TaskStoreState {
   getTasksBySprint: (sprintId: number) => Promise<Task[]>;
   _updateBook: () => void;
   updateTaskInState: (task: Task) => void;
+  setOldTaskName: (taskName: string | null) => void;
 
   // These will be injected from TaskBook
   createTask?: (taskData: any) => Promise<Task>;
@@ -50,9 +52,10 @@ export default create<TaskStoreState>((set, get) => ({
   selectedSprintId: null,
   selectedUserId: null,
   selectedStatus: null,
+  OldTaskName: null,
 
   setTaskBook: (taskBook) => {
-    console.log('Setting task book:', taskBook);
+    console.log("Setting task book:", taskBook);
     if (!taskBook) return;
 
     // Prepare all the injectable functions first
@@ -63,18 +66,18 @@ export default create<TaskStoreState>((set, get) => ({
       injectedMethods[funct.name] = async (...args: any[]) => {
         const { taskBook, updateTaskInState } = get();
         const prevState = _.cloneDeep(taskBook);
-        console.log('Previous state:', prevState);
+        console.log("Previous state:", prevState);
 
         try {
           // For updateTask, apply optimistic update first
-          if (funct.name === 'updateTask') {
+          if (funct.name === "updateTask") {
             const [taskId, updates] = args;
             const currentTask = taskBook.getTaskById(taskId);
             if (currentTask) {
               // Apply optimistic update
               const optimisticTask = {
                 ...currentTask,
-                ...updates
+                ...updates,
               };
               updateTaskInState(optimisticTask);
             }
@@ -83,13 +86,13 @@ export default create<TaskStoreState>((set, get) => ({
           // Call the domain method
           const result = await funct.bind(taskBook)(...args);
 
-          console.log('Result:', result);
-          
+          console.log("Result:", result);
+
           // For non-update operations, update the whole book
-          if (funct.name !== 'updateTask') {
+          if (funct.name !== "updateTask") {
             get()._updateBook();
           }
-          
+
           // Handle specific cases (like updating selected item)
           if (funct.name === "updateTask" && result) {
             set({ selectedTask: result });
@@ -142,17 +145,21 @@ export default create<TaskStoreState>((set, get) => ({
 
   updateTaskInState: (task: Task) => {
     const { taskBook, filteredTasks } = get();
-    
+
     if (!taskBook) return;
 
     // Update in TaskBook's tasks array
-    const taskIndex = taskBook.tasks.findIndex((t: Task) => t.taskId === task.taskId);
+    const taskIndex = taskBook.tasks.findIndex(
+      (t: Task) => t.taskId === task.taskId
+    );
     if (taskIndex !== -1) {
       taskBook.tasks[taskIndex] = task;
     }
 
     // Update in filteredTasks if present
-    const filteredIndex = filteredTasks.findIndex(t => t.taskId === task.taskId);
+    const filteredIndex = filteredTasks.findIndex(
+      (t) => t.taskId === task.taskId
+    );
     if (filteredIndex !== -1) {
       const updatedFilteredTasks = [...filteredTasks];
       updatedFilteredTasks[filteredIndex] = task;
@@ -246,4 +253,5 @@ export default create<TaskStoreState>((set, get) => ({
       return [];
     }
   },
+  setOldTaskName: (taskName) => set({ OldTaskName: taskName }),
 }));

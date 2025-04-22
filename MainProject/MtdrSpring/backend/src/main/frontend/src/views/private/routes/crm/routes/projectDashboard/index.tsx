@@ -1,5 +1,5 @@
 import React from "react";
-import { Row, Button } from "antd";
+import { Row, Button, Spin, Result } from "antd";
 import {
   Container,
   StyledRow,
@@ -8,7 +8,7 @@ import {
   IndicatorsContainer,
   SprintsContainer,
 } from "./styles";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, LoadingOutlined } from "@ant-design/icons";
 import ProjectDetail from "./components/projectDetail";
 import SprintComponent from "./components/sprintComponent";
 import Indicators from "./components/indicators";
@@ -17,6 +17,7 @@ import useProjectStore from "../../../../../../modules/projects/store/useProject
 import { useSprintBook } from "../../../../../../modules/sprints/hooks/useSprintBook";
 import useSprintStore from "../../../../../../modules/sprints/store/useSprintStore";
 import { useDataInitialization } from "../../../../../../modules/sprints/hooks/useDataInitialization";
+import NewSprintModal from "./components/newSprintModal";
 
 const ProjectDashboard: React.FC = () => {
   const projectStore = useProjectStore();
@@ -26,8 +27,33 @@ const ProjectDashboard: React.FC = () => {
   const sprintStore = useSprintStore();
 
   useDataInitialization(data, sprintStore);
-  if (error) return <div>Failed to load sprints</div>;
-  if (isLoading) return <div>Loading...</div>;
+  if (error) {
+    return (
+      <Result
+        status="500"
+        title="500"
+        subTitle="Failed to load sprints."
+        extra={
+          <Link to="/projects">
+            <Button type="primary">Go Back</Button>
+          </Link>
+        }
+      />
+    );
+  }
+  if (isLoading)
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
+      </div>
+    );
 
   console.log("Sprints Data:", sprintStore?.filteredSprints);
   return (
@@ -51,7 +77,11 @@ const ProjectDashboard: React.FC = () => {
           <p>{project?.description}</p>
         </TitleContainer>
         <ButtonsContainer>
-          <Button icon={<PlusOutlined />} type="primary">
+          <Button
+            icon={<PlusOutlined />}
+            type="primary"
+            onClick={sprintStore?.openSprintModal}
+          >
             New Sprint
           </Button>
           <Button icon={<PlusOutlined />} type="primary">
@@ -65,11 +95,36 @@ const ProjectDashboard: React.FC = () => {
       <StyledRow>
         <SprintsContainer>
           {sprintStore?.filteredSprints.map((sprint, index) => (
-            <SprintComponent key={index} sprint={sprint} />
+            <SprintComponent
+              key={index}
+              sprint={sprint}
+              openSprintModal={() => {
+                sprintStore.openSprintModal();
+                sprintStore.setSelectedSprint(sprint);
+              }}
+            />
           ))}
         </SprintsContainer>
         <ProjectDetail />
       </StyledRow>
+      <NewSprintModal
+        visible={sprintStore?.isSprintModalOpen}
+        onCancel={sprintStore?.closeSprintModal}
+        onCreate={(sprintData) => {
+          sprintStore.createSprint(sprintData);
+          sprintStore.closeSprintModal;
+        }}
+        onEdit={(sprintData) => {
+          if (sprintStore?.selectedSprint) {
+            sprintStore.updateSprint(
+              sprintStore?.selectedSprint?.sprintId,
+              sprintData
+            );
+            sprintStore.closeSprintModal;
+          }
+        }}
+        sprint={sprintStore?.selectedSprint}
+      />
     </Container>
   );
 };

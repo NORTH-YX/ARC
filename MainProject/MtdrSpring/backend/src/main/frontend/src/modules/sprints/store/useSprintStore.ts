@@ -130,6 +130,7 @@ export default create<SprintStoreState>((set, get) => ({
   },
   closeSprintModal: () => {
     set({ isSprintModalOpen: false });
+    set({ selectedSprint: null });
   },
   openDeleteModal: () => {
     set({ isDeleteModalOpen: true });
