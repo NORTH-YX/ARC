@@ -135,13 +135,12 @@ const TasksTable: React.FC = () => {
           dataIndex="status"
           key="status"
           width={130}
-          ellipsis={true}
-          render={(status: string, record: Task) => {
-            //const statusInfo = getStatusTag(status);
-            return (
+          ellipsis={false}
+          render={(status: string, record: Task) => (
+            <div style={{ width: '120px' }}>
               <Select
                 value={status}
-                style={{ width: 120 }}
+                style={{ width: '100%' }}
                 onChange={(newStatus) => handleStatusChange(newStatus, record)}
                 options={TASK_STATUSES.map((statusOption) => {
                   const optionInfo = getStatusTag(statusOption);
@@ -155,9 +154,10 @@ const TasksTable: React.FC = () => {
                   .toLowerCase()
                   .replace(" ", "-")}`}
                 popupClassName="status-select-dropdown"
+                dropdownStyle={{ zIndex: 1100 }}
               />
-            );
-          }}
+            </div>
+          )}
         />
         <StyledTable.Column
           title="Sprint"
