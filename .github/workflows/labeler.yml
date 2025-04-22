@@ -7,6 +7,11 @@ on:
       - 'MainProject/MtdrSpring/backend/src/main/java/com/springboot/MyTodoList/**'
       - 'MainProject/MtdrSpring/backend/src/main/frontend/**'
 
+# Permissions needed for the labeler to function properly
+permissions:
+  pull-requests: write
+  contents: read
+
 jobs:
   label:
     runs-on: ubuntu-latest
