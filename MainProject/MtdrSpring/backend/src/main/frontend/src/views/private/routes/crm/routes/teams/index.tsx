@@ -3,21 +3,32 @@ import { User } from "../../../../../../interfaces/user";
 import { MemberCard } from "./components/memberCard/index.tsx";
 import { TeamTable } from "./components/teamTable/index.tsx";
 import { Row, Col, Typography, Button, Space } from "antd";
-import { FilterFilled, PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined } from "@ant-design/icons";
 import { employeeTestData } from "./testData.ts";
 import { Container, MembersContainer, TitleContainer, CardsContainer } from "./styles.ts";
 import { MemberModal } from "./components/memberModal/index.tsx";
+import { FilterButton } from "./components/filterButton/index.tsx";
+import { useUserBook } from "../../../../../../modules/users/hooks/useUserBook.ts";
+import useUserStore from "../../../../../../modules/users/store/useUserStore.ts";
+import { useDataInitialization } from "../../../../../../modules/users/hooks/useDataInitialization.ts";
 import { useState } from "react";
 
 const { Title } = Typography;
-
 
 interface TeamsProps {
   user: User;
 }
 
+
 const Teams: React.FC<TeamsProps> = ({ user }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { data, error, isLoading } = useUserBook();
+  const store = useUserStore();
+
+  useDataInitialization(data, store)
+  console.log(store.filteredUsers)
+
 
   const showModal = () => {
     setIsModalOpen(true);
@@ -29,7 +40,7 @@ const Teams: React.FC<TeamsProps> = ({ user }) => {
       <p style={{ color: "#6B7280", marginBottom: "40PX" }}>
         Performance metrics and rankings for team members
       </p>
-      <TeamTable />
+      <TeamTable teamMembers={store.filteredUsers}/>
       <div style={{ marginTop: "30px" }}>
        <MembersContainer>
        <TitleContainer>
@@ -43,7 +54,7 @@ const Teams: React.FC<TeamsProps> = ({ user }) => {
         </TitleContainer>
         {user?.role !== 'admin' && (
           <Space size="middle" direction="horizontal">
-            <Button icon={<FilterFilled />} style={{ height: "42px" }}>Filter</Button> 
+            <FilterButton></FilterButton>
             <Button
               icon={<PlusOutlined />}
               type="primary"

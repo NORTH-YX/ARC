@@ -1,6 +1,6 @@
 import { Progress, Tooltip, Avatar } from "antd";
 import { StyledTable, StyledSegmented } from "./elements"
-import { employeeTestData } from "./testData"
+import { User } from "../../../../../../../../interfaces/user";
 
   
   const getColorByPercent = (percent: number): string => {
@@ -9,11 +9,15 @@ import { employeeTestData } from "./testData"
     return '#52c41a';                         // Green
   };
 
+  interface TeamTableProps {
+    teamMembers?: User[];
+  }
 
-export const TeamTable = () => {
+
+export const TeamTable: React.FC<TeamTableProps> = ({ teamMembers }) => {
   return (
     <StyledTable
-    dataSource={employeeTestData}
+    dataSource={teamMembers}
     title={() => (
         <div>
             <StyledSegmented 
