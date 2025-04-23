@@ -211,7 +211,13 @@ export default create<TaskStoreState>((set, get) => ({
   setSelectedSprintId: (sprintId) => {
     set({ selectedSprintId: sprintId });
     const taskBook = get().taskBook;
-    if (!taskBook || !sprintId) return;
+    if (!taskBook) return;
+
+    // If sprintId is null, reset to all tasks
+    if (sprintId === null) {
+      set({ filteredTasks: taskBook.getTasks() });
+      return;
+    }
 
     const tasks = taskBook.getTasksBySprint(sprintId);
     set({ filteredTasks: tasks });

@@ -1,8 +1,9 @@
 import { Button, Space, Select, Tooltip, Dropdown, DatePicker, Input, Typography, Popover } from "antd";
 import { format } from "date-fns";
-import { PlusOutlined, EllipsisOutlined, SearchOutlined, CalendarOutlined, EditOutlined, UserOutlined } from "@ant-design/icons";
+import { PlusOutlined, EllipsisOutlined, SearchOutlined, CalendarOutlined, EditOutlined, UserOutlined, FilterOutlined } from "@ant-design/icons";
 import type { SorterResult } from "antd/es/table/interface";
 import type { MenuProps } from "antd";
+import type { ColumnFilterItem } from "antd/es/table/interface";
 import useTaskStore from "../../../../../../../../modules/tasks/store/useTaskStore.tsx";
 import { getStatusTag } from "../../../utils.tsx";
 import { StyledTable } from "./styles.ts";
@@ -11,6 +12,7 @@ import { useEffect, useState } from "react";
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import { User } from "../../../../../../../../interfaces/user/index";
+import { Sprint } from "../../../../../../../../interfaces/sprint/index";
 
 const { RangePicker } = DatePicker;
 const { Text } = Typography;
@@ -125,7 +127,10 @@ const TasksTable: React.FC = () => {
     setDateRange, 
     setSearchText, 
     getFilteredTasks,
-    updateTask
+    updateTask,
+    setSelectedSprintId,
+    getTasksBySprint,
+    taskBook
   } = store;
 
   // State for tracking which date cell is being edited
@@ -135,6 +140,52 @@ const TasksTable: React.FC = () => {
   }>({ taskId: null, field: null });
 
   const [users, setUsers] = useState<User[]>([]);
+  const [sprints, setSprints] = useState<Sprint[]>([]);
+  const [currentSprintId, setCurrentSprintId] = useState<number | null>(null);
+  const [sprintFilters, setSprintFilters] = useState<ColumnFilterItem[]>([]);
+  
+  // Get unique sprints and identify the active (current) sprint
+  useEffect(() => {
+    if (taskBook?.tasks) {
+      // Extract unique sprints from tasks
+      const uniqueSprints = Array.from(
+        new Map(
+          taskBook.tasks
+            .filter((task: Task) => task.sprint)
+            .map((task: Task) => [task.sprint.sprintId, task.sprint])
+        ).values()
+      ) as Sprint[];
+      
+      setSprints(uniqueSprints);
+      
+      // Create filters for sprints
+      const sprintFilterOptions = uniqueSprints.map(sprint => ({
+        text: sprint.sprintName,
+        value: sprint.sprintId
+      }));
+      setSprintFilters(sprintFilterOptions);
+      
+      // Find the current sprint (Active or latest by creation date)
+      const activeSprint = uniqueSprints.find(sprint => sprint.status === "Active");
+      
+      if (activeSprint) {
+        setCurrentSprintId(activeSprint.sprintId);
+      } else if (uniqueSprints.length > 0) {
+        // If no active sprint, use the latest sprint by creation date
+        const latestSprint = uniqueSprints.reduce((latest, sprint) => {
+          return new Date(sprint.creationDate) > new Date(latest.creationDate) ? sprint : latest;
+        });
+        setCurrentSprintId(latestSprint.sprintId);
+      }
+    }
+  }, [taskBook?.tasks]);
+  
+  // Set default filter to current sprint when determined
+  useEffect(() => {
+    if (currentSprintId) {
+      setSelectedSprintId(currentSprintId);
+    }
+  }, [currentSprintId, setSelectedSprintId]);
 
   // Extract unique users from tasks
   useEffect(() => {
@@ -186,6 +237,18 @@ const TasksTable: React.FC = () => {
     sorter: SorterResult<any> | SorterResult<any>[]
   ) => {
     console.log("Sort change:", sorter);
+  };
+
+  // Handle sprint filter change
+  const handleSprintFilterChange = (selectedSprintId: number | null) => {
+    setSelectedSprintId(selectedSprintId);
+  };
+
+  // Clear all filters
+  const handleClearFilters = () => {
+    setSelectedSprintId(null);
+    setDateRange([null, null]);
+    setSearchText('');
   };
 
   // Custom date comparison for sorting
@@ -333,11 +396,11 @@ const TasksTable: React.FC = () => {
           borderTop: "1px solid #f0f0f0",
           display: "flex",
           alignItems: "center",
-          gap: "16px",
+          justifyContent: "space-between",
           flexWrap: "wrap"
         }}
       >
-        <Space>
+        <Space size="middle">
           <Input 
             placeholder="Search tasks" 
             value={searchText}
@@ -346,14 +409,36 @@ const TasksTable: React.FC = () => {
             style={{ width: 200 }}
             allowClear
           />
+          <Select
+            placeholder="Sprint"
+            style={{ width: 130 }}
+            value={store.selectedSprintId}
+            onChange={(value) => handleSprintFilterChange(value)}
+            options={sprints.map(sprint => ({
+              value: sprint.sprintId,
+              label: sprint.sprintName
+            }))}
+            suffixIcon={<FilterOutlined style={{ color: store.selectedSprintId ? '#1890ff' : undefined }} />}
+            bordered
+          />
         </Space>
+        
+        {(store.selectedSprintId !== null || dateRange[0] !== null || searchText) && (
+          <Button 
+            onClick={handleClearFilters}
+            type="link"
+            style={{ color: '#1890ff', fontWeight: 500 }}
+          >
+            Clear Filters
+          </Button>
+        )}
       </div>
       
       <StyledTable
         dataSource={getFilteredTasks()}
         rowKey="taskId"
         onChange={handleTableChange}
-        pagination={{ pageSize: 10 }}
+        pagination={{ pageSize: 35 }}
       >
         <StyledTable.Column
           title="Task Name"
@@ -395,7 +480,7 @@ const TasksTable: React.FC = () => {
           title="Sprint"
           dataIndex={["sprint", "sprintName"]}
           key="sprint"
-          width={100}
+          width={130}
           ellipsis={true}
           sorter={{
             compare: (a: any, b: any) => {
