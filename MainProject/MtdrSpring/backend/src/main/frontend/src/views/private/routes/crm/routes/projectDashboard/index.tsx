@@ -94,37 +94,42 @@ const ProjectDashboard: React.FC = () => {
       </IndicatorsContainer>
       <StyledRow>
         <SprintsContainer>
-          {sprintStore?.filteredSprints.map((sprint, index) => (
-            <SprintComponent
-              key={index}
-              sprint={sprint}
-              openSprintModal={() => {
-                sprintStore.openSprintModal();
-                sprintStore.setSelectedSprint(sprint);
+          {sprintStore?.isSprintModalOpen && (
+            <NewSprintModal
+              visible={sprintStore?.isSprintModalOpen}
+              onCancel={sprintStore?.closeSprintModal}
+              onCreate={(sprintData) => {
+                sprintStore.createSprint(sprintData);
+                sprintStore.closeSprintModal;
               }}
+              onEdit={(sprintData) => {
+                if (sprintStore?.selectedSprint) {
+                  sprintStore.updateSprint(
+                    sprintStore?.selectedSprint?.sprintId,
+                    sprintData
+                  );
+                  sprintStore.closeSprintModal;
+                }
+              }}
+              sprint={sprintStore?.selectedSprint}
             />
-          ))}
+          )}
+          {sprintStore?.filteredSprints
+            .slice()
+            .reverse()
+            .map((sprint, index) => (
+              <SprintComponent
+                key={index}
+                sprint={sprint}
+                openSprintModal={() => {
+                  sprintStore.openSprintModal();
+                  sprintStore.setSelectedSprint(sprint);
+                }}
+              />
+            ))}
         </SprintsContainer>
         <ProjectDetail />
       </StyledRow>
-      <NewSprintModal
-        visible={sprintStore?.isSprintModalOpen}
-        onCancel={sprintStore?.closeSprintModal}
-        onCreate={(sprintData) => {
-          sprintStore.createSprint(sprintData);
-          sprintStore.closeSprintModal;
-        }}
-        onEdit={(sprintData) => {
-          if (sprintStore?.selectedSprint) {
-            sprintStore.updateSprint(
-              sprintStore?.selectedSprint?.sprintId,
-              sprintData
-            );
-            sprintStore.closeSprintModal;
-          }
-        }}
-        sprint={sprintStore?.selectedSprint}
-      />
     </Container>
   );
 };
