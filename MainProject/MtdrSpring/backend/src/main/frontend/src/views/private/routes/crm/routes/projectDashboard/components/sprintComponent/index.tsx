@@ -17,6 +17,8 @@ import { getSprintStatus, getTimeLineFormat } from "../../../utils";
 import { Sprint } from "../../../../../../../../interfaces/sprint";
 import { Task } from "../../../../../../../../interfaces/task";
 import TaskComponent from "../taskComponent";
+import NewTaskModal from "../newTaskModal";
+import useTaskStore from "../../../../../../../../modules/tasks/store/useTaskStore";
 
 interface SprintComponentProps {
   sprint: Sprint;
@@ -27,6 +29,8 @@ const SprintComponent: React.FC<SprintComponentProps> = ({
   sprint,
   openSprintModal,
 }) => {
+  const taskStore = useTaskStore();
+
   const getActions = (
     <div
       style={{
@@ -35,7 +39,13 @@ const SprintComponent: React.FC<SprintComponentProps> = ({
         alignItems: "flex-start",
       }}
     >
-      <StyledButton type="text" icon={<PlusOutlined />} onClick={() => {}}>
+      <StyledButton
+        type="text"
+        icon={<PlusOutlined />}
+        onClick={() => {
+          taskStore.openTaskModal();
+        }}
+      >
         Add Task
       </StyledButton>
       <StyledButton
@@ -97,12 +107,15 @@ const SprintComponent: React.FC<SprintComponentProps> = ({
         </Row>
       </Header>
       <Divider style={{ margin: "15px 0" }} />
-
-      {sprint?.tasks?.map((task: Task, index: number) => (
-        <TaskComponent
-          key={index}
-          task={task}
+      {taskStore?.isTaskModalOpen && (
+        <NewTaskModal
+          onCancel={taskStore.closeTaskModal}
+          onCreate={taskStore.closeTaskModal}
+          sprintId={sprint?.sprintId}
         />
+      )}
+      {sprint?.tasks?.map((task: Task, index: number) => (
+        <TaskComponent key={index} task={task} />
       ))}
     </Container>
   );

@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Avatar, Tag, Button, Input, Select } from "antd";
+import { Avatar, Tag, Button, Input, Select, InputNumber } from "antd";
 
 const { TextArea } = Input;
 
@@ -68,6 +68,57 @@ export const TaskInput = styled(TextArea).attrs({
 
   @media (min-width: 600px) {
     width: 300px;
+`;
+export const TaskInputNumber = styled(InputNumber).attrs({
+  variant: "borderless",
+  controls: false, // Elimina las flechas para ahorrar espacio
+  maxLength: 2, // Limita a 2 caracteres
+})<{}>`
+  margin: 0;
+  width: 40px; // Ancho fijo pequeño
+  min-width: 40px; // Min-width igual al width para consistencia
+  text-align: center;
+  padding: 0 2px;
+
+  &:focus {
+    text-decoration: none;
+    color: #000000;
+  }
+
+  &:focus-within {
+    border: 1px solid #d9d9d9;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+
+  &.ant-input-focused {
+    border: 1px solid #d9d9d9;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+
+  /* Este CSS oculta las flechas de incremento/decremento en navegadores */
+  .ant-input-number-handler-wrap {
+    display: none;
+  }
+
+  /* Para webkit browsers como Chrome y Safari */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Para Firefox */
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  @media (min-width: 600px) {
+    width: 40px; // Mantener el mismo tamaño en pantallas más grandes
+  }
 `;
 
 export const StyledButton = styled(Button)`

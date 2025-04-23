@@ -3,6 +3,7 @@ import {
   ProfileImage,
   TaskRow,
   TaskInput,
+  TaskInputNumber,
   StyledButton,
   StyledSelect,
   SelectWrapper,
@@ -27,12 +28,12 @@ interface TaskComponentProps {
   task: Task;
 }
 
-const TaskComponent: React.FC<TaskComponentProps> = ({
-  task,
-}) => {
+const TaskComponent: React.FC<TaskComponentProps> = ({ task }) => {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [taskNameValue, setTaskNameValue] = useState(task?.taskName || "");
-  const [originalTaskName, setOriginalTaskName] = useState(task?.taskName || "");
+  const [originalTaskName, setOriginalTaskName] = useState(
+    task?.taskName || ""
+  );
   const taskStore = useTaskStore();
 
   const handleFocus = () => {
@@ -113,12 +114,12 @@ const TaskComponent: React.FC<TaskComponentProps> = ({
           gap: "10px",
         }}
       >
-        <Checkbox 
-          checked={task.status === "Completed"} 
+        <Checkbox
+          checked={task.status === "Completed"}
           onChange={(e) => {
             if (task.taskId) {
-              taskStore.updateTask?.(task.taskId, { 
-                status: e.target.checked ? "Completed" : "To Do" 
+              taskStore.updateTask?.(task.taskId, {
+                status: e.target.checked ? "Completed" : "To Do",
               });
             }
           }}
@@ -156,14 +157,58 @@ const TaskComponent: React.FC<TaskComponentProps> = ({
         )}
       </Row>
       <Row style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+        <span
+          style={{ fontSize: "12px", color: "#6B7280", marginRight: "4px" }}
+        >
+          Est:
+        </span>
+        <Tooltip title="Estimated hours">
+          <TaskInputNumber
+            size="small"
+            min={1}
+            max={100000}
+            value={task?.estimatedHours || ""}
+            onChange={(e) => {
+              if (task?.taskId) {
+                const value = e ? Number(e) : null;
+                taskStore.updateTask?.(task.taskId, {
+                  estimatedHours: value,
+                });
+              }
+            }}
+          />
+        </Tooltip>
+
+        <span
+          style={{ fontSize: "12px", color: "#6B7280", marginRight: "4px" }}
+        >
+          Real:
+        </span>
+        <Tooltip title="Actual hours spent">
+          <TaskInputNumber
+            size="small"
+            min={1}
+            max={99}
+            value={task?.realHours || ""}
+            onChange={(e) => {
+              if (task?.taskId) {
+                const value = e ? Number(e) : null;
+                taskStore.updateTask?.(task.taskId, {
+                  realHours: value,
+                });
+              }
+            }}
+          />
+        </Tooltip>
+
         <SelectWrapper>
           {task.taskId && (
             <StyledSelect
               className="status-select"
-              rootClassName={`status-select-${task.status
+              rootClassName={`status-${task?.status
                 .toLowerCase()
                 .replace(" ", "-")}`}
-              value={task.status}
+              value={task?.status}
               onChange={handleStatusChange}
               getPopupContainer={(triggerNode) =>
                 triggerNode.parentNode as HTMLElement

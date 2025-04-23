@@ -19,34 +19,34 @@ import NewSprintModal from "./components/newSprintModal";
 const ProjectDashboard: React.FC = () => {
   const { projectId } = useParams();
   const projectStore = useProjectStore();
-  const { 
-    selectedProject: project, 
+  const {
+    selectedProject: project,
     projectSprints: sprints,
     projectTasks: tasks,
     isLoadingProjectDetails,
-    setProjectWithDetails 
+    setProjectWithDetails,
   } = projectStore;
 
   // State for the sprint modal
   const [isSprintModalOpen, setIsSprintModalOpen] = useState(false);
   const [selectedSprint, setSelectedSprint] = useState<any>(null);
-  
+
   // Re-add initialization effect
   useEffect(() => {
     if (projectId) {
       const currentProjectId = parseInt(projectId);
-      
+
       // If project is not loaded or different from URL, load it with details
       if (!project || project.projectId !== currentProjectId) {
         setProjectWithDetails(currentProjectId);
       }
     }
   }, [projectId, project, setProjectWithDetails]);
-  
+
   console.log("Project Sprints:", sprints);
   console.log("Project:", project);
   console.log("Project Tasks:", tasks);
-  
+
   // Handle loading states
   if (isLoadingProjectDetails) {
     return (
@@ -62,7 +62,7 @@ const ProjectDashboard: React.FC = () => {
       </div>
     );
   }
-  
+
   // Handle error state - if we have projectId but no project after loading
   if (projectId && !project) {
     return (
@@ -81,7 +81,7 @@ const ProjectDashboard: React.FC = () => {
 
   // Ensure sprints is always an array
   const sprintsList = Array.isArray(sprints) ? sprints : [];
-  
+
   // Sprint modal handlers
   const openSprintModal = (sprint?: any) => {
     if (sprint) {
@@ -91,43 +91,43 @@ const ProjectDashboard: React.FC = () => {
     }
     setIsSprintModalOpen(true);
   };
-  
+
   const closeSprintModal = () => {
     setIsSprintModalOpen(false);
     setSelectedSprint(null);
   };
-  
+
   // Sprint operations
   const createSprint = async (sprintData: any) => {
     try {
       // Add project ID to sprint data
       sprintData.projectId = project?.projectId;
-      
+
       // Call API to create sprint
       // This would normally be in a sprint store, but we'll mock it for now
       console.log("Creating sprint:", sprintData);
-      
+
       // After creating, refresh project data
       if (project?.projectId) {
         await setProjectWithDetails(project.projectId);
       }
-      
+
       closeSprintModal();
     } catch (error) {
       console.error("Error creating sprint:", error);
     }
   };
-  
+
   const updateSprint = async (sprintId: number, sprintData: any) => {
     try {
       // Call API to update sprint
       console.log("Updating sprint:", sprintId, sprintData);
-      
+
       // After updating, refresh project data
       if (project?.projectId) {
         await setProjectWithDetails(project.projectId);
       }
-      
+
       closeSprintModal();
     } catch (error) {
       console.error("Error updating sprint:", error);
@@ -172,6 +172,21 @@ const ProjectDashboard: React.FC = () => {
       </IndicatorsContainer>
       <StyledRow>
         <SprintsContainer>
+          {isSprintModalOpen && (
+            <NewSprintModal
+              visible={isSprintModalOpen}
+              onCancel={closeSprintModal}
+              onCreate={(sprintData) => {
+                createSprint(sprintData);
+              }}
+              onEdit={(sprintData) => {
+                if (selectedSprint) {
+                  updateSprint(selectedSprint.sprintId, sprintData);
+                }
+              }}
+              sprint={selectedSprint}
+            />
+          )}
           {sprintsList.length > 0 ? (
             sprintsList.map((sprint, index) => (
               <SprintComponent
@@ -188,22 +203,6 @@ const ProjectDashboard: React.FC = () => {
         </SprintsContainer>
         <ProjectDetail />
       </StyledRow>
-      <NewSprintModal
-        visible={isSprintModalOpen}
-        onCancel={closeSprintModal}
-        onCreate={(sprintData) => {
-          createSprint(sprintData);
-        }}
-        onEdit={(sprintData) => {
-          if (selectedSprint) {
-            updateSprint(
-              selectedSprint.sprintId,
-              sprintData
-            );
-          }
-        }}
-        sprint={selectedSprint}
-      />
     </Container>
   );
 };
