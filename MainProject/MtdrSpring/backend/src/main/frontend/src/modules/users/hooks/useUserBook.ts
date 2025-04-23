@@ -1,9 +1,9 @@
 import useSWR from 'swr';
-import { UsersResponse } from '../../../interfaces/user';
+import { User } from '../../../interfaces/user';
 import { getUsers } from '../../../api/users';
 
 export const useUserBook = () => {
-  const { data, error, isLoading, mutate } = useSWR<UsersResponse>(
+  const { data, error, isLoading, mutate } = useSWR<User[]>(
     'users',
     getUsers.all
   );
