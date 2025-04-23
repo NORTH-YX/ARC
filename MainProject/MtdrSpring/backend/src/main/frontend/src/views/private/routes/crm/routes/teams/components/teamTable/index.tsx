@@ -38,7 +38,7 @@ const assignRanks = (members: any[]): any[] => {
     const tasks = member.tasksCompleted ?? 0;
     const deviation = member.hoursDeviation ?? 0;
 
-    const score = (compliance * 1000) + (tasks * 10) - deviation;
+    const score = (compliance * 10) + (tasks * 10) - (deviation * 10);
 
     return {
       ...member,
@@ -62,10 +62,10 @@ export const TeamTable: React.FC<TeamTableProps> = ({ teamMembers, complianceRat
 
     return {
       ...member,
-      hoursWorked: 40, // placeholder or real data
       tasksCompleted: complianceEntry?.tareas_completadas ?? 0,
       hoursDeviation: estimationEntry?.desviacion_promedio_horas ?? 0,
       compliance: complianceEntry?.tasa_cumplimiento ?? 0,
+      hoursWorked: complianceEntry?.horas_reales ?? 0,
     };
   }) ?? [];
 

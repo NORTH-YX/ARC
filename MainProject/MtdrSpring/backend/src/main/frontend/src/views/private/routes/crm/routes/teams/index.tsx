@@ -2,8 +2,8 @@ import React from "react";
 import { User } from "../../../../../../interfaces/user";
 import { MemberCard } from "./components/memberCard/index.tsx";
 import { TeamTable } from "./components/teamTable/index.tsx";
-import { Row, Col, Typography, Button, Space } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Row, Col, Typography, Button, Space, Spin } from "antd";
+import { PlusOutlined, LoadingOutlined } from "@ant-design/icons";
 import { Container, MembersContainer, TitleContainer, CardsContainer } from "./styles.ts";
 import { MemberModal } from "./components/memberModal/index.tsx";
 import { FilterButton } from "./components/filterButton/index.tsx";
@@ -15,7 +15,7 @@ import { useTeamInitialization } from "../../../../../../hooks/useTeamInitializa
 
 
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 
 interface TeamsProps {
   user: User;
@@ -23,8 +23,8 @@ interface TeamsProps {
 
 
 const Teams: React.FC<TeamsProps> = ({ user }) => {
-  const { data: usersData } = useUserBook();
-  const { data: kpisData } = useKpisBook();
+  const { data: usersData, isLoading: usersIsLoading, error: usersError } = useUserBook();
+  const { data: kpisData, isLoading: kpisIsLoading, error: kpisError } = useKpisBook();
 
   const userStore = useUserStore();
   const kpiStore = useKpiStore();
@@ -36,6 +36,35 @@ const Teams: React.FC<TeamsProps> = ({ user }) => {
     userStore.openUserModal();
   };
 
+  const isLoading = usersIsLoading || kpisIsLoading;
+  const hasError = usersError || kpisError;
+
+  if (hasError) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px' }}>
+        <Title level={3} type="danger">Error Loading Team Data</Title>
+        <Text type="secondary">
+          {kpisError && 'Failed to load KPIs. '}
+          {usersError && 'Failed to load Tasks.'}
+        </Text>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div style={{ 
+        height: '100vh', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        flexDirection: 'column',
+        gap: '16px'
+      }}>
+        <Spin size="large" indicator={<LoadingOutlined spin />} />
+      </div>
+    )
+  }
 
   return (
     <Container>
