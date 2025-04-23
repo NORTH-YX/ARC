@@ -1,7 +1,7 @@
 import React from 'react'
 import { StyledCard, StyledButton } from './elements';
 import { Avatar, Typography, Space } from 'antd';
-import { getInitials } from '../../../utils';
+import { getInitials, getRandomAvatarColor } from '../../../utils';
 import { ClockCircleOutlined, EditOutlined, MailOutlined } from "@ant-design/icons";
 import { User } from '../../../../../../../../interfaces/user';
 
@@ -19,7 +19,7 @@ export const MemberCard: React.FC<Props> = ({ user }) => {
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <Avatar 
                     style={{
-                        backgroundColor: '#d9d9d9',
+                        backgroundColor: getRandomAvatarColor(),
                         color: '#111',
                         fontWeight: 500,
                         height: '64px',

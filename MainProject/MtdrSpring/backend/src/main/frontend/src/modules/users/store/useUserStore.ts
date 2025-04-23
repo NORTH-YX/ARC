@@ -10,6 +10,8 @@ interface UserStoreState {
   filteredUsers: User[];
   isUserModalOpen: boolean;
   isDeleteModalOpen: boolean;
+  roleFilter: string[];
+  workModalityFilter: string [];
 
   // Actions
   setUserBook: (userBook: UserBook) => void;
@@ -20,6 +22,8 @@ interface UserStoreState {
   closeUserModal: () => void;
   openDeleteModal: () => void;
   closeDeleteModal: () => void;
+  setRoleFilter: (roleFilters: string[]) => void;
+  setWorkModalityFilter: (workModalityFilters: string[]) => void;
 
   // These will be injected from UserBook
   createUser?: (userData: any) => Promise<User>;
@@ -38,6 +42,8 @@ const useUserStore = create<UserStoreState>((set, get) => ({
   filteredUsers: [],
   isUserModalOpen: false,
   isDeleteModalOpen: false,
+  roleFilter: [],
+  workModalityFilter: [],
 
   setUserBook: (userBook) => {
     // Inject domain methods into the store
@@ -108,6 +114,13 @@ const useUserStore = create<UserStoreState>((set, get) => ({
 
   closeDeleteModal: () => {
     set({ isDeleteModalOpen: false, selectedUser: null });
+  },
+  setRoleFilter: (roleFilters) => {
+    set({ roleFilter: roleFilters });
+  },
+
+  setWorkModalityFilter: (workModalityFilters) => {
+    set({ workModalityFilter: workModalityFilters });
   },
 }));
 

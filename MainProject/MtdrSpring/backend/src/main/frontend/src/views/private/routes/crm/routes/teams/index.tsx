@@ -4,14 +4,16 @@ import { MemberCard } from "./components/memberCard/index.tsx";
 import { TeamTable } from "./components/teamTable/index.tsx";
 import { Row, Col, Typography, Button, Space } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
-import { employeeTestData } from "./testData.ts";
 import { Container, MembersContainer, TitleContainer, CardsContainer } from "./styles.ts";
 import { MemberModal } from "./components/memberModal/index.tsx";
 import { FilterButton } from "./components/filterButton/index.tsx";
 import { useUserBook } from "../../../../../../modules/users/hooks/useUserBook.ts";
 import useUserStore from "../../../../../../modules/users/store/useUserStore.ts";
-import { useDataInitialization } from "../../../../../../modules/users/hooks/useDataInitialization.ts";
-import { useState } from "react";
+import { useKpisBook } from "../../../../../../modules/kpis/hooks/useKpisBook.ts";
+import { useKpiStore } from "../../../../../../modules/kpis/store/useKpiStore.ts";
+import { useTeamInitialization } from "../../../../../../hooks/useTeamInitialization.ts";
+
+
 
 const { Title } = Typography;
 
@@ -21,18 +23,19 @@ interface TeamsProps {
 
 
 const Teams: React.FC<TeamsProps> = ({ user }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data: usersData } = useUserBook();
+  const { data: kpisData } = useKpisBook();
 
-  const { data, error, isLoading } = useUserBook();
-  const store = useUserStore();
+  const userStore = useUserStore();
+  const kpiStore = useKpiStore();
 
-  useDataInitialization(data, store)
-  console.log(store.filteredUsers)
+  useTeamInitialization(usersData, kpisData, userStore, kpiStore);
 
 
   const showModal = () => {
-    setIsModalOpen(true);
+    userStore.openUserModal();
   };
+
 
   return (
     <Container>
@@ -40,7 +43,7 @@ const Teams: React.FC<TeamsProps> = ({ user }) => {
       <p style={{ color: "#6B7280", marginBottom: "40PX" }}>
         Performance metrics and rankings for team members
       </p>
-      <TeamTable teamMembers={store.filteredUsers}/>
+      <TeamTable teamMembers={userStore.filteredUsers} complianceRate={kpiStore.kpis?.compliance_rate.users} estimationPrecision={kpiStore.kpis?.estimation_precision.users}/>
       <div style={{ marginTop: "30px" }}>
        <MembersContainer>
        <TitleContainer>
@@ -54,7 +57,8 @@ const Teams: React.FC<TeamsProps> = ({ user }) => {
         </TitleContainer>
         {user?.role !== 'admin' && (
           <Space size="middle" direction="horizontal">
-            <FilterButton></FilterButton>
+            <FilterButton roleFilter={userStore.roleFilter} workModalityFilter={userStore.workModalityFilter} setRoleFilter={userStore.setRoleFilter}
+               setWorkModalityFilter={userStore.setWorkModalityFilter} />
             <Button
               icon={<PlusOutlined />}
               type="primary"
@@ -67,17 +71,27 @@ const Teams: React.FC<TeamsProps> = ({ user }) => {
         )}
        </MembersContainer>
       <CardsContainer>
-        <Row gutter={[28, 28]}>
-          {employeeTestData.map((employee, index) => (
+      <Row gutter={[28, 28]}>
+        {userStore.filteredUsers
+          .filter((employee) => {
+            const roleMatch =
+              userStore.roleFilter.length === 0 ||
+              userStore.roleFilter.includes(employee.role); // replace with your actual field name
+            const modalityMatch =
+              userStore.workModalityFilter.length === 0 ||
+              userStore.workModalityFilter.includes(employee.workModality); // replace with your actual field name
+            return roleMatch && modalityMatch;
+          })
+          .map((employee, index) => (
             <Col xs={24} sm={12} md={8} lg={8} xl={8} key={index}>
-              <MemberCard
-                user={employee} />
+              <MemberCard user={employee} />
             </Col>
           ))}
-        </Row>
-      </CardsContainer>
+      </Row>
+    </CardsContainer>
+
       </div>
-      <MemberModal user={undefined} isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
+      <MemberModal user={undefined} isModalOpen={userStore.isUserModalOpen} setIsModalOpen={userStore.closeUserModal} />
     </Container>
   );
 };
