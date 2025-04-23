@@ -206,3 +206,22 @@ export const getInitials = (name: string): string => {
     .join("");
   return initials;
 };
+
+const avatarColors = [
+  "#FF9F7F", // soft coral
+  "#6DC6E7", // soft blue
+  "#B5EAD7", // mint green
+  "#FFDAC1", // peach
+  "#C3C3E5", // lavender gray
+  "#FFD6E0", // rose
+  "#A2D2FF", // light sky blue
+  "#E2F0CB", // pale lime
+  "#D1C4E9", // soft purple
+  "#B2EBF2", // cyan
+];
+
+export const getRandomAvatarColor = (): string => {
+  const index = Math.floor(Math.random() * avatarColors.length);
+  return avatarColors[index];
+};
+
