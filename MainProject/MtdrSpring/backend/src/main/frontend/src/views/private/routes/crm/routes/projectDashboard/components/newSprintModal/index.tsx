@@ -1,13 +1,13 @@
 import React, { useEffect } from "react";
-import { Modal, Form, Input, Select, DatePicker } from "antd";
+import { Form, Input, Select, DatePicker, Row, Button, Col } from "antd";
+import { CloseOutlined, CheckOutlined } from "@ant-design/icons";
 import moment from "moment";
 import {
   Sprint,
   SprintCreate,
   SprintUpdate,
 } from "../../../../../../../../interfaces/sprint";
-import ImgArt from "../../../../../../../../assets/OracleArt2.png";
-import ImgArt2 from "../../../../../../../../assets/OracleArt1.avif";
+import { Container } from "./elements";
 
 const { Item } = Form;
 const { RangePicker } = DatePicker;
@@ -21,7 +21,6 @@ interface EditProjectModalProps {
 }
 
 const NewSprintModal: React.FC<EditProjectModalProps> = ({
-  visible,
   onCancel,
   sprint,
   onEdit,
@@ -69,71 +68,57 @@ const NewSprintModal: React.FC<EditProjectModalProps> = ({
   };
 
   return (
-    <Modal
-      title=""
-      visible={visible}
-      onOk={handleOk}
-      okText={sprint ? "Save" : "Create"}
-      onCancel={handleCancel}
-    >
-      {sprint ? null : (
-        <img
-          src={ImgArt2}
-          alt="Project Image"
-          style={{
-            width: "40%",
-            height: "auto",
-            marginTop: "10px",
-            objectFit: "cover",
+    <Col>
+      <Container>
+        <h3 style={{ color: "#6c6e76" }}>Sprint</h3>
+        <Form
+          name="editSprint"
+          variant="underlined"
+          form={form}
+          onFinish={(values) => {
+            if (sprint) {
+              onEdit({ ...sprint, ...values });
+            }
           }}
-        />
-      )}
-      <h2 style={{ textAlign: "center", fontWeight: "500" }}>
-        {sprint ? "Edit " + sprint?.sprintName : "Create New Sprint"}
-      </h2>
-      <Form
-        style={{ marginTop: "20px" }}
-        name="editSprint"
-        variant="filled"
-        form={form}
-        onFinish={(values) => {
-          if (sprint) {
-            onEdit({ ...sprint, ...values });
-          }
-        }}
-      >
-        <Item
-          label="Sprint Name"
-          name="sprintName"
-          rules={[{ required: true, message: "Please input the sprint name!" }]}
         >
-          <Input />
-        </Item>
-        <Item label="Sprint Timeline" name="dates" rules={[{ required: true }]}>
-          <RangePicker format="MMM DD, YYYY" style={{ width: "100%" }} />
-        </Item>
-        <Item label="Status" name="status" rules={[{ required: true }]}>
-          <Select placeholder="Select status">
-            <Select.Option value="Active">In Progress</Select.Option>
-            <Select.Option value="Completed">Completed</Select.Option>
-            <Select.Option value="Planned">Planned</Select.Option>
-            <Select.Option value="on-hold">On Hold</Select.Option>
-          </Select>
-        </Item>
-      </Form>
-      {sprint ? (
-        <img
-          src={ImgArt}
-          alt="Sprint Image"
-          style={{
-            width: "35%",
-            height: "auto",
-            marginTop: "10px",
-            objectFit: "cover",
-          }}
+          <Row style={{ display: "flex", justifyContent: "space-between" }}>
+            <Item
+              name="sprintName"
+              rules={[
+                { required: true, message: "Please input the sprint name!" },
+              ]}
+            >
+              <Input placeholder="Sprint Name" />
+            </Item>
+            <Item name="dates" rules={[{ required: true }]}>
+              <RangePicker format="MMM DD, YYYY" style={{ width: "100%" }} />
+            </Item>
+            <Item name="status" rules={[{ required: true }]}>
+              <Select placeholder="Select status">
+                <Select.Option value="Active">In Progress</Select.Option>
+                <Select.Option value="Completed">Completed</Select.Option>
+                <Select.Option value="Planned">Planned</Select.Option>
+                <Select.Option value="on-hold">On Hold</Select.Option>
+              </Select>
+            </Item>
+          </Row>
+        </Form>
+      </Container>
+      <Row style={{ gap: "5px", padding: "10px" }}>
+        <Button
+          style={{ border: "none", borderRadius: "0px" }}
+          type="default"
+          icon={<CheckOutlined />}
+          onClick={handleOk}
         />
-      ) : null}
-    </Modal>
+        <Button
+          style={{ border: "none", borderRadius: "0px" }}
+          type="default"
+          icon={<CloseOutlined />}
+          onClick={handleCancel}
+        />
+      </Row>
+    </Col>
   );
 };
 
