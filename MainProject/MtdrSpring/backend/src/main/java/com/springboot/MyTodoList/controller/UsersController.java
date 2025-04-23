@@ -20,10 +20,10 @@ public class UsersController {
 
     // Obtener todos los usuarios
     @GetMapping
-    public ResponseEntity<UserResponse> getAllUsers() {
+    public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.findAll();
-        UserResponse response = new UserResponse(users);
-        return ResponseEntity.ok(response);
+       // UserResponse response = new UserResponse(users);
+        return ResponseEntity.ok(users);
     }
 
     // Obtener un usuario por ID usando @RequestParam
