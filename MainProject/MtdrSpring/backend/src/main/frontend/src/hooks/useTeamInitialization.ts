@@ -1,12 +1,11 @@
 import { useEffect, useRef } from "react";
-import { UsersResponse } from "../interfaces/user";
 import { KpisResponse } from "../modules/kpis/domain/types";
 import UserBook from "../modules/users/domain/UserBook";
 import KpiBook from "../modules/kpis/domain/KpiBook";
 import { User } from "../interfaces/user";
 
 export function useTeamInitialization(
-    usersData: UsersResponse | undefined,
+    usersData: User[] | undefined,
     kpisData: KpisResponse | undefined,
     userStore: any,
     kpiStore: any
@@ -21,9 +20,9 @@ export function useTeamInitialization(
     })
 
     useEffect(() => {
-        if (!usersData?.users || !kpisData) return;
+        if (!usersData || !kpisData) return;
 
-        const users = usersData.users;
+        const users = usersData;
         const kpis = kpisData;
       // Only initialize if data has changed or hasn't been initialized yet
         const shouldInitialize = !isInitialized.current || 

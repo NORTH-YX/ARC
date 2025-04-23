@@ -5,7 +5,7 @@ import { DateCellContent } from './styles';
 import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import { Task } from '../../../../../../../../interfaces/task/index';
-import { formatReadableDate } from '../../../../../utils.tsx';
+import { formatReadableDate } from '../../../utils.tsx';
 
 const { Text } = Typography;
 

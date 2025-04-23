@@ -3,7 +3,6 @@ import { format } from "date-fns";
 import { PlusOutlined, EllipsisOutlined, SearchOutlined, CalendarOutlined, EditOutlined, UserOutlined, FilterOutlined } from "@ant-design/icons";
 import type { SorterResult } from "antd/es/table/interface";
 import type { MenuProps } from "antd";
-import type { ColumnFilterItem } from "antd/es/table/interface";
 import useTaskStore from "../../../../../../../../modules/tasks/store/useTaskStore.tsx";
 import { getStatusTag } from "../../../utils.tsx";
 import { StyledTable } from "./styles.ts";
@@ -129,7 +128,6 @@ const TasksTable: React.FC = () => {
     getFilteredTasks,
     updateTask,
     setSelectedSprintId,
-    getTasksBySprint,
     taskBook
   } = store;
 
@@ -142,7 +140,6 @@ const TasksTable: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [sprints, setSprints] = useState<Sprint[]>([]);
   const [currentSprintId, setCurrentSprintId] = useState<number | null>(null);
-  const [sprintFilters, setSprintFilters] = useState<ColumnFilterItem[]>([]);
   
   // Get unique sprints and identify the active (current) sprint
   useEffect(() => {
@@ -157,14 +154,7 @@ const TasksTable: React.FC = () => {
       ) as Sprint[];
       
       setSprints(uniqueSprints);
-      
-      // Create filters for sprints
-      const sprintFilterOptions = uniqueSprints.map(sprint => ({
-        text: sprint.sprintName,
-        value: sprint.sprintId
-      }));
-      setSprintFilters(sprintFilterOptions);
-      
+
       // Find the current sprint (Active or latest by creation date)
       const activeSprint = uniqueSprints.find(sprint => sprint.status === "Active");
       
@@ -259,7 +249,7 @@ const TasksTable: React.FC = () => {
     return new Date(a).getTime() - new Date(b).getTime();
   };
 
-  const handleDateRangeChange = (dates: any, dateStrings: [string, string]) => {
+  const handleDateRangeChange = (dates: any) => {
     if (dates) {
       setDateRange([dates[0]?.toDate() || null, dates[1]?.toDate() || null]);
     } else {
