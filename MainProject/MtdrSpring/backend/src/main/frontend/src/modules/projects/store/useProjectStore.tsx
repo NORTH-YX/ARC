@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import ProjectBook from "../domain/ProjectBook";
-import { Project } from "../../../interfaces/project/index";
+import { Project, ProjectCreate } from "../../../interfaces/project/index";
 import _ from "lodash";
+import { mutate } from "swr";
 
 interface ProjectStoreState {
   projectBook: any;
@@ -10,7 +11,9 @@ interface ProjectStoreState {
   filteredProjects: Project[];
   isProjectModalOpen: boolean;
   isDeleteModalOpen: boolean;
+  isEditModalOpen: boolean;
   selectedStatus: string | null;
+  confirmLoading: boolean;
 
   // Actions
   setProjectBook: (projectBook: ProjectBook) => void;
@@ -21,16 +24,18 @@ interface ProjectStoreState {
   closeProjectModal: () => void;
   openDeleteModal: () => void;
   closeDeleteModal: () => void;
+  openEditModal: () => void;
+  closeEditModal: () => void;
   setSelectedStatus: (status: string | null) => void;
   _updateBook: () => void;
 
   // These will be injected from ProjectBook
-  createProject?: (projectData: any) => Promise<Project>;
-  updateProject?: (
+  createProject: (projectData: ProjectCreate) => Promise<Project>;
+  updateProject: (
     projectId: number,
     projectData: any
   ) => Promise<Project | undefined>;
-  deleteProject?: (projectId: number) => Promise<boolean>;
+  deleteProject: (projectId: number) => Promise<boolean>;
   restoreProject?: (projectId: number) => Promise<boolean>;
   getProjectById?: (projectId: number) => Project | undefined;
 }
@@ -42,7 +47,57 @@ export default create<ProjectStoreState>((set, get) => ({
   filteredProjects: [],
   isProjectModalOpen: false,
   isDeleteModalOpen: false,
+  isEditModalOpen: false,
   selectedStatus: null,
+  confirmLoading: false,
+
+  createProject: async (projectData: ProjectCreate) => {
+    const { projectBook, _updateBook } = get();
+    if (!projectBook) return;
+
+    const prevState = _.cloneDeep(projectBook);
+    try {
+      const result = await projectBook.createProject(projectData);
+      _updateBook();
+      mutate("projects", undefined, { revalidate: true });
+      return result;
+    } catch (error) {
+      set({ projectBook: prevState });
+      throw error;
+    }
+  },
+
+  updateProject: async (projectId: number, projectData: any) => {
+    const { projectBook, _updateBook } = get();
+    if (!projectBook) return;
+
+    const prevState = _.cloneDeep(projectBook);
+    try {
+      const result = await projectBook.updateProject(projectId, projectData);
+      _updateBook();
+      mutate("projects");
+      return result;
+    } catch (error) {
+      set({ projectBook: prevState });
+      throw error;
+    }
+  },
+
+  deleteProject: async (projectId: number) => {
+    const { projectBook, _updateBook } = get();
+    if (!projectBook) return false;
+
+    const prevState = _.cloneDeep(projectBook);
+    try {
+      await projectBook.deleteProject(projectId);
+      _updateBook();
+      mutate("projects");
+      return true;
+    } catch (error) {
+      set({ projectBook: prevState });
+      return false;
+    }
+  },
 
   setProjectBook: (projectBook) => {
     if (!projectBook) return;
@@ -84,30 +139,33 @@ export default create<ProjectStoreState>((set, get) => ({
   },
 
   _updateBook: () => {
-    const { projectBook, selectedProject, filteredProjects } = get();
+    const { projectBook, selectedProject, searchQuery } = get();
 
     if (!projectBook) return;
 
-    // Create new reference for projectBook
-    const updatedProjectBook = _.cloneDeep(projectBook);
+    // Si no hay búsqueda, usar todos los proyectos
+    let updatedFilteredProjects = projectBook.getProjects();
 
-    // Update filtered projects
-    const updatedFilteredProjects = filteredProjects.map((project) => {
-      const updated = updatedProjectBook.projects.find(
-        (p: any) => p.projectId === project.projectId
+    // Si hay un search query, filtrar
+    if (searchQuery.trim() !== "") {
+      updatedFilteredProjects = updatedFilteredProjects.filter(
+        (project: any) =>
+          project.projectName
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          project.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
-      return updated || project;
-    });
+    }
 
-    // Update selected project if exists
+    // Actualiza el proyecto seleccionado, si existe
     const updatedSelectedProject = selectedProject
-      ? updatedProjectBook.projects.find(
+      ? updatedFilteredProjects.find(
           (p: any) => p.projectId === selectedProject.projectId
         )
       : null;
 
     set({
-      projectBook: updatedProjectBook,
+      projectBook: _.cloneDeep(projectBook),
       filteredProjects: updatedFilteredProjects,
       selectedProject: updatedSelectedProject,
     });
@@ -151,12 +209,24 @@ export default create<ProjectStoreState>((set, get) => ({
     set({ isDeleteModalOpen: false, selectedProject: null });
   },
 
+  openEditModal: () => {
+    set({ isEditModalOpen: true });
+  },
+  closeEditModal: () => {
+    set({ isEditModalOpen: false, selectedProject: null });
+  },
+
   setSelectedStatus: (status) => {
-    set({ selectedStatus: status });
     const projectBook = get().projectBook;
     if (!projectBook || !status) return;
-
-    const projects = projectBook.getProjectsByStatus(status);
-    set({ filteredProjects: projects });
+    if (status === "allProjects") {
+      const projects = projectBook.getProjects();
+      set({ filteredProjects: projects });
+      set({ selectedStatus: null });
+    } else {
+      const projects = projectBook.getProjectsByStatus(status);
+      set({ filteredProjects: projects });
+      set({ selectedStatus: status });
+    }
   },
 }));

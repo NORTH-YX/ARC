@@ -12,65 +12,43 @@ import { PlusOutlined } from "@ant-design/icons";
 import ProjectDetail from "./components/projectDetail";
 import SprintComponent from "./components/sprintComponent";
 import Indicators from "./components/indicators";
-
-interface TaskComponentProps {
-  title: string;
-  category: string;
-  picture?: string;
-}
-interface SprintData {
-  name: string;
-  dateRange: string;
-  status: string;
-  tasks: TaskComponentProps[];
-}
-
-const sprintsData: SprintData[] = [
-  {
-    name: "Sprint 1 - UI Implementation",
-    dateRange: "Feb 1 - Feb 14, 2025",
-    status: "In Progress",
-    tasks: [
-      {
-        title:
-          "Design Login Page lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua",
-        category: "Design",
-        picture: "https://via.placeholder.com/32",
-      },
-      {
-        title: "Develop API Endpoints",
-        category: "Backend",
-      },
-    ],
-  },
-  {
-    name: "Sprint 2 - Feature Enhancement",
-    dateRange: "Feb 15 - Mar 1, 2025",
-    status: "To Do",
-    tasks: [
-      {
-        title: "Improve Dashboard UI",
-        category: "Development",
-      },
-      {
-        title: "Database Schema Design",
-        category: "Database",
-        picture: "https://via.placeholder.com/32",
-      },
-    ],
-  },
-];
+import { Link } from "react-router-dom";
+import useProjectStore from "../../../../../../modules/projects/store/useProjectStore";
+import { useSprintBook } from "../../../../../../modules/sprints/hooks/useSprintBook";
+import useSprintStore from "../../../../../../modules/sprints/store/useSprintStore";
+import { useDataInitialization } from "../../../../../../modules/sprints/hooks/useDataInitialization";
 
 const ProjectDashboard: React.FC = () => {
+  const projectStore = useProjectStore();
+  const project = projectStore.selectedProject;
+
+  const { data, error, isLoading } = useSprintBook(project?.projectId || 0);
+  const sprintStore = useSprintStore();
+
+  useDataInitialization(data, sprintStore);
+  if (error) return <div>Failed to load sprints</div>;
+  if (isLoading) return <div>Loading...</div>;
+
+  console.log("Sprints Data:", sprintStore?.filteredSprints);
   return (
     <Container>
       <Row>
-        <a href="projects"> Go Back</a>
+        <Link to="/projects">
+          <p
+            style={{
+              color: "#C74634",
+              textDecoration: "underline",
+              fontSize: "1.1rem",
+            }}
+          >
+            Go Back
+          </p>
+        </Link>
       </Row>
       <StyledRow>
         <TitleContainer>
-          <h1>Project Dashboard</h1>
-          <p>Sprint Planning and Task Management</p>
+          <h1>{project?.projectName}</h1>
+          <p>{project?.description}</p>
         </TitleContainer>
         <ButtonsContainer>
           <Button icon={<PlusOutlined />} type="primary">
@@ -86,7 +64,7 @@ const ProjectDashboard: React.FC = () => {
       </IndicatorsContainer>
       <StyledRow>
         <SprintsContainer>
-          {sprintsData.map((sprint, index) => (
+          {sprintStore?.filteredSprints.map((sprint, index) => (
             <SprintComponent key={index} sprint={sprint} />
           ))}
         </SprintsContainer>

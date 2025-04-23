@@ -1,7 +1,5 @@
 import styled from "styled-components";
-import React from "react";
-import { Avatar, Row, Tag } from "antd";
-import { UserOutlined } from "@ant-design/icons";
+import { Avatar, Row, Tag, Button } from "antd";
 
 export const Container = styled.div`
   width: 100%;
@@ -21,9 +19,7 @@ export const Header = styled(Row)`
   align-items: center;
 `;
 
-export const ProfileImage = styled(Avatar).attrs({
-  icon: React.createElement(UserOutlined),
-})`
+export const ProfileImage = styled(Avatar)`
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -75,4 +71,17 @@ export const SprintDateMobile = styled.p`
   @media (min-width: 601px) {
     display: none;
   }
+`;
+
+export const TaskTitle = styled.h4<{ completed?: boolean }>`
+  margin: 0;
+  text-decoration: ${(props) => (props.completed ? "line-through" : "none")};
+  color: ${(props) => (props.completed ? "#9CA3AF" : "#111827")};
+`;
+
+export const StyledButton = styled(Button)`
+  border-radius: 0px;
+  text-align: left;
+  justify-content: flex-start;
+  width: 100%;
 `;

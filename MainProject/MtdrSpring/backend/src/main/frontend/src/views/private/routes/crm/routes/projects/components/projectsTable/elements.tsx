@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { Table, Button, Progress, Input } from "antd";
+import { Table, Progress, Input, Button } from "antd";
 
 const { Search } = Input;
 
@@ -55,31 +55,35 @@ const StyledTable = styled(Table)`
 `;
 
 const StyledButton = styled(Button)`
-  && {
-    border: none;
-    background-color: transparent;
-    box-shadow: none;
-    color: inherit;
-    padding: 0;
-  }
+  border-radius: 0px;
+  text-align: left;
+  justify-content: flex-start;
+  width: 100%;
+`;
 
-  &&:hover,
-  &&:focus,
-  &&:active {
-    border: none;
-    background-color: transparent;
-    box-shadow: none;
-    color: inherit;
-  }
+interface IconWrapperProps {
+  bgColor?: string;
+}
+
+const IconWrapper = styled.div<IconWrapperProps>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: ${({ bgColor }) => bgColor || "#e6ffed"};
+  border-radius: 8px;
+  width: 35px;
+  height: 35px;
+  padding: 1px;
 `;
 
 const StyledProgress = styled(Progress)``;
 
 export {
   StyledTable,
-  StyledButton,
   StyledProgress,
   Hearder,
   StytledSearchDesktop,
   StytledSearchMobile,
+  StyledButton,
+  IconWrapper,
 };

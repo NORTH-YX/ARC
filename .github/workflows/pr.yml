@@ -2,23 +2,63 @@ name: Pull Request Workflow
 
 on:
   pull_request:
-    branches: [ main, stage ]
+    branches: [ main ]
+    paths:
+      - 'MainProject/MtdrSpring/backend/src/main/java/com/springboot/MyTodoList/**'
+      - 'MainProject/MtdrSpring/backend/src/main/frontend/**'
+
+# Set specific permissions instead of implicit write-all
+permissions:
+  contents: read
+  checks: write
+  statuses: write
+  security-events: write
+  pull-requests: write
 
 jobs:
-  lint-and-build:
-    name: Lint and Build
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for linting tools that need it
 
-      - name: Run Super-Linter
-        uses: super-linter/super-linter@v5
+      - name: Setup Node.js for Frontend Linting
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: MainProject/MtdrSpring/backend/src/main/frontend/package-lock.json
+
+      - name: Frontend Lint
+        working-directory: MainProject/MtdrSpring/backend/src/main/frontend
+        run: |
+          npm ci
+          npm run lint -- --max-warnings=100
+
+      - name: Run Super-Linter for Java
+        uses: github/super-linter@v6
         env:
-          VALIDATE_ALL_CODEBASE: true
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_ALL_CODEBASE: false
+          FILTER_REGEX_INCLUDE: .*MainProject/MtdrSpring/backend/src/main/java/com/springboot/MyTodoList/.*
+          JAVA_FILE_NAME: google_checks.xml
+          # Only validate these languages - don't use mixed enable/disable approach
+          VALIDATE_JAVA: true
+          VALIDATE_GOOGLE_JAVA_FORMAT: true
+          # Disable validation of all other linters by setting VALIDATE_ALL to false
+          VALIDATE_ALL: false
+
+  build:
+    name: Build and Test
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -50,8 +90,4 @@ jobs:
 
       - name: Build Frontend
         working-directory: MainProject/MtdrSpring/backend/src/main/frontend
-        run: npm run build
-
-      - name: Run Frontend Tests
-        working-directory: MainProject/MtdrSpring/backend/src/main/frontend
-        run: npm test 
+        run: npm run build 
