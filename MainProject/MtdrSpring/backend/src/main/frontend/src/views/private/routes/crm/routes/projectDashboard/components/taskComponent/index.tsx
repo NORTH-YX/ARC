@@ -18,41 +18,45 @@ import {
 } from "@ant-design/icons";
 import { shortenText, getInitials, getStatusTag } from "../../../utils";
 import { Task } from "../../../../../../../../interfaces/task";
+import useTaskStore from "../../../../../../../../modules/tasks/store/useTaskStore";
 const isMobile = window.innerWidth <= 600;
 
 const TASK_STATUSES = ["To Do", "In Progress", "Completed", "Blocked"];
 
 interface TaskComponentProps {
   task: Task;
-  handleTaskNameChange: (newName: string | null, task: Task) => void;
-  handleStatusChange: (newStatus: string, task: Task) => void;
-  OldTaskName: string | null;
-  setOldTaskName: (taskName: string | null) => void;
 }
 
 const TaskComponent: React.FC<TaskComponentProps> = ({
   task,
-  handleTaskNameChange,
-  handleStatusChange,
-  OldTaskName,
-  setOldTaskName,
 }) => {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [taskNameValue, setTaskNameValue] = useState(task?.taskName || "");
+  const [originalTaskName, setOriginalTaskName] = useState(task?.taskName || "");
+  const taskStore = useTaskStore();
 
   const handleFocus = () => {
     setIsInputFocused(true);
-    setOldTaskName(task?.taskName);
+    // Save the original name when focusing, to be able to restore it if canceled
+    setOriginalTaskName(task?.taskName || "");
   };
 
   const handleCancel = () => {
-    setTaskNameValue(OldTaskName || task?.taskName);
+    setTaskNameValue(originalTaskName);
     setIsInputFocused(false);
   };
 
   const handleSave = () => {
-    handleTaskNameChange(taskNameValue, task);
+    if (task?.taskId && taskNameValue !== originalTaskName) {
+      taskStore.updateTask?.(task.taskId, { taskName: taskNameValue });
+    }
     setIsInputFocused(false);
+  };
+
+  const handleStatusChange = (value: unknown) => {
+    if (task?.taskId) {
+      taskStore.updateTask?.(task.taskId, { status: value as string });
+    }
   };
 
   const content = (
@@ -76,7 +80,8 @@ const TaskComponent: React.FC<TaskComponentProps> = ({
         type="text"
         icon={<EditOutlined />}
         onClick={() => {
-          // Handle edit task
+          // Set focus to the task name input
+          setIsInputFocused(true);
         }}
       >
         Edit
@@ -86,12 +91,18 @@ const TaskComponent: React.FC<TaskComponentProps> = ({
         icon={<DeleteOutlined />}
         onClick={() => {
           // Handle delete task
+          if (task?.taskId) {
+            taskStore.deleteTask?.(task.taskId);
+          }
         }}
       >
         Delete
       </StyledButton>
     </div>
   );
+
+  // If task is null or undefined, don't render anything
+  if (!task) return null;
 
   return (
     <TaskRow>
@@ -102,18 +113,27 @@ const TaskComponent: React.FC<TaskComponentProps> = ({
           gap: "10px",
         }}
       >
-        <Checkbox checked={task?.status === "Completed" ? true : false} />
+        <Checkbox 
+          checked={task.status === "Completed"} 
+          onChange={(e) => {
+            if (task.taskId) {
+              taskStore.updateTask?.(task.taskId, { 
+                status: e.target.checked ? "Completed" : "To Do" 
+              });
+            }
+          }}
+        />
         <TaskInput
           autoSize
-          completed={task?.status === "Completed"}
+          completed={task.status === "Completed"}
           value={isMobile ? shortenText(taskNameValue, 3) : taskNameValue}
           onChange={(e) => setTaskNameValue(e.target.value)}
           onFocus={handleFocus}
           onBlur={(e) => {
             if (!e.relatedTarget) {
               setIsInputFocused(false);
-              if (taskNameValue !== OldTaskName) {
-                setTaskNameValue(OldTaskName || task?.taskName);
+              if (taskNameValue !== originalTaskName) {
+                setTaskNameValue(originalTaskName);
               }
             }
           }}
@@ -137,28 +157,30 @@ const TaskComponent: React.FC<TaskComponentProps> = ({
       </Row>
       <Row style={{ display: "flex", alignItems: "center", gap: "5px" }}>
         <SelectWrapper>
-          <StyledSelect
-            className="status-select"
-            rootClassName={`status-select-${task?.status
-              .toLowerCase()
-              .replace(" ", "-")}`}
-            value={task?.status}
-            onChange={(value) => handleStatusChange(value as string, task)}
-            getPopupContainer={(triggerNode) =>
-              triggerNode.parentNode as HTMLElement
-            }
-            dropdownClassName="status-select-dropdown"
-            options={TASK_STATUSES.map((statusOption) => {
-              const optionInfo = getStatusTag(statusOption);
-              return {
-                value: statusOption,
-                label: optionInfo.label,
-              };
-            })}
-          />
+          {task.taskId && (
+            <StyledSelect
+              className="status-select"
+              rootClassName={`status-select-${task.status
+                .toLowerCase()
+                .replace(" ", "-")}`}
+              value={task.status}
+              onChange={handleStatusChange}
+              getPopupContainer={(triggerNode) =>
+                triggerNode.parentNode as HTMLElement
+              }
+              dropdownClassName="status-select-dropdown"
+              options={TASK_STATUSES.map((statusOption) => {
+                const optionInfo = getStatusTag(statusOption);
+                return {
+                  value: statusOption,
+                  label: optionInfo.label,
+                };
+              })}
+            />
+          )}
         </SelectWrapper>
-        <Tooltip title={task?.user?.name} placement="topLeft">
-          <ProfileImage> {getInitials(task?.user?.name)} </ProfileImage>
+        <Tooltip title={task.user?.name} placement="topLeft">
+          <ProfileImage> {getInitials(task.user?.name)} </ProfileImage>
         </Tooltip>
         <Popover
           placement="right"

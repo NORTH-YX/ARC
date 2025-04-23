@@ -3,10 +3,14 @@ import ProjectBook from "../domain/ProjectBook";
 import { Project, ProjectCreate } from "../../../interfaces/project/index";
 import _ from "lodash";
 import { mutate } from "swr";
+import { getProjects } from "../../../api/projects";
 
 interface ProjectStoreState {
   projectBook: any;
   selectedProject: Project | null;
+  projectSprints: any[] | null;
+  projectTasks: any[] | null;
+  isLoadingProjectDetails: boolean;
   searchQuery: string;
   filteredProjects: Project[];
   isProjectModalOpen: boolean;
@@ -18,6 +22,7 @@ interface ProjectStoreState {
   // Actions
   setProjectBook: (projectBook: ProjectBook) => void;
   setSelectedProject: (project: Project | null) => void;
+  setProjectWithDetails: (projectId: number) => Promise<void>;
   setSearchQuery: (query: string) => void;
   setFilteredProjects: (projects: Project[]) => void;
   openProjectModal: () => void;
@@ -43,6 +48,9 @@ interface ProjectStoreState {
 export default create<ProjectStoreState>((set, get) => ({
   projectBook: null,
   selectedProject: null,
+  projectSprints: null,
+  projectTasks: null,
+  isLoadingProjectDetails: false,
   searchQuery: "",
   filteredProjects: [],
   isProjectModalOpen: false,
@@ -173,6 +181,47 @@ export default create<ProjectStoreState>((set, get) => ({
 
   setSelectedProject: (project) => {
     set({ selectedProject: project });
+    
+    // If a project is selected, fetch its details (sprints and tasks)
+    if (project && project.projectId) {
+      get().setProjectWithDetails(project.projectId);
+    } else {
+      // Clear sprints and tasks if no project is selected
+      set({ projectSprints: null, projectTasks: null });
+    }
+  },
+  
+  setProjectWithDetails: async (projectId) => {
+    try {
+      // Set loading state
+      set({ isLoadingProjectDetails: true });
+      
+      // Fetch project with sprints and tasks
+      const { project, sprints, tasks } = await getProjects.withSprintsAndTasks(projectId);
+      
+      // Ensure tasks is always an array
+      const tasksList = Array.isArray(tasks) ? tasks : [];
+      
+      // Group tasks by sprint
+      const sprintsWithTasks = sprints.map(sprint => {
+        // Safely filter tasks
+        const sprintTasks = tasksList.filter(task => 
+          task && task.sprint && task.sprint.sprintId === sprint.sprintId
+        );
+        return { ...sprint, tasks: sprintTasks };
+      });
+      
+      // Update store with all the data
+      set({
+        selectedProject: project,
+        projectSprints: sprintsWithTasks,
+        projectTasks: tasksList,
+        isLoadingProjectDetails: false
+      });
+    } catch (error) {
+      console.error("Error fetching project details:", error);
+      set({ isLoadingProjectDetails: false });
+    }
   },
 
   setSearchQuery: (query) => {

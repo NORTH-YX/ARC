@@ -1,3 +1,5 @@
+import { Sprint } from "../sprint";
+
 export interface Project {
   projectId: number;
   projectName: string;
@@ -7,6 +9,7 @@ export interface Project {
   estimatedFinishDate?: string | null;
   realFinishDate?: string | null;
   deletedAt?: string | null;
+  sprints?: Sprint[];
 }
 
 export interface ProjectCreate {
