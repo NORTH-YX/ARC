@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   Container,
   Header,
@@ -16,7 +16,6 @@ import {
 import { getSprintStatus, getTimeLineFormat } from "../../../utils";
 import { Sprint } from "../../../../../../../../interfaces/sprint";
 import { Task } from "../../../../../../../../interfaces/task";
-import useTaskStore from "../../../../../../../../modules/tasks/store/useTaskStore";
 import TaskComponent from "../taskComponent";
 
 interface SprintComponentProps {
@@ -28,25 +27,6 @@ const SprintComponent: React.FC<SprintComponentProps> = ({
   sprint,
   openSprintModal,
 }) => {
-  const taskStore = useTaskStore();
-
-  const [tasks, setTasks] = useState<Task[]>([]);
-
-  const handleTaskNameChange = async (newName: string | null, task: Task) => {
-    try {
-      await taskStore.updateTask?.(task?.taskId, { taskName: newName });
-    } catch (error) {
-      console.error("Error updating task name:", error);
-    }
-  };
-  const handleStatusChange = async (newStatus: string, task: Task) => {
-    try {
-      await taskStore.updateTask?.(task.taskId, { status: newStatus });
-    } catch (error) {
-      console.error("Error updating task status:", error);
-    }
-  };
-
   const getActions = (
     <div
       style={{
@@ -72,16 +52,6 @@ const SprintComponent: React.FC<SprintComponentProps> = ({
       </StyledButton>
     </div>
   );
-
-  useEffect(() => {
-    const fetchTasks = async () => {
-      const fetchedTasks = await taskStore.getTasksBySprint(sprint?.sprintId);
-      setTasks(fetchedTasks);
-    };
-    fetchTasks();
-  }, [sprint?.sprintId]);
-
-  console.log("Tasks:", tasks);
 
   return (
     <Container>
@@ -128,14 +98,10 @@ const SprintComponent: React.FC<SprintComponentProps> = ({
       </Header>
       <Divider style={{ margin: "15px 0" }} />
 
-      {tasks.map((task, index) => (
+      {sprint?.tasks?.map((task: Task, index: number) => (
         <TaskComponent
           key={index}
           task={task}
-          handleTaskNameChange={handleTaskNameChange}
-          handleStatusChange={handleStatusChange}
-          OldTaskName={taskStore?.OldTaskName}
-          setOldTaskName={taskStore.setOldTaskName}
         />
       ))}
     </Container>

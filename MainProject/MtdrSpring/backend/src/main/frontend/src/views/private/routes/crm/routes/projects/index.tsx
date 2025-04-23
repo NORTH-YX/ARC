@@ -131,25 +131,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
           </StyledCard>
         </IndicatorsContainer>
       </div>
-      <ProjectsTable
-        filteredProjects={store?.filteredProjects}
-        searchQuery={store?.searchQuery}
-        setSearchQuery={store?.setSearchQuery}
-        selectedStatus={store?.selectedStatus}
-        setSelectedStatus={store?.setSelectedStatus}
-        selectedProject={store?.selectedProject}
-        setSelectedProject={store?.setSelectedProject}
-        openDeleteModal={store?.openDeleteModal}
-        closeDeleteModal={store?.closeDeleteModal}
-        isDeleteModalOpen={store?.isDeleteModalOpen}
-        openEditModal={store?.openEditModal}
-        closeEditModal={store?.closeEditModal}
-        isEditModalOpen={store?.isEditModalOpen}
-        createProject={store?.createProject}
-        editProject={store?.updateProject}
-        confirmLoading={store?.confirmLoading}
-        deleteProject={store?.deleteProject}
-      />
+      <ProjectsTable />
     </div>
   );
 };
