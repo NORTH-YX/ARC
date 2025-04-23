@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import UserBook from '../domain/UserBook';
-import { User } from '../../../interfaces/user';
+import { User, UserCreate, UserUpdate } from '../../../interfaces/user';
 import _ from 'lodash';
 
 interface UserStoreState {
@@ -44,6 +44,41 @@ const useUserStore = create<UserStoreState>((set, get) => ({
   isDeleteModalOpen: false,
   roleFilter: [],
   workModalityFilter: [],
+
+
+  createUser: async (userData: UserCreate) => {
+    const { userBook } = get();
+    if (!userBook) throw new Error("UserBook is not initialized");
+
+    const prevState = _.cloneDeep(userBook);
+    try {
+      const newUser = await userBook.createUser(userData);
+      set({ userBook });
+      return newUser;
+    } catch (error) {
+      set({ userBook: prevState });
+      throw error;
+    }
+  },
+
+  updateUser: async (userId: number, userData: Partial<User>) => {
+    const { userBook } = get();
+    if (!userBook) throw new Error("UserBook is not initialized");
+
+    const prevState = _.cloneDeep(userBook);
+    try {
+      const updatedUser = await userBook.updateUser(userId, userData as UserUpdate);
+      set({ userBook });
+      if (updatedUser) {
+        set({ selectedUser: updatedUser });
+      }
+      return updatedUser;
+    } catch (error) {
+      set({ userBook: prevState });
+      throw error;
+    }
+  },
+
 
   setUserBook: (userBook) => {
     // Inject domain methods into the store

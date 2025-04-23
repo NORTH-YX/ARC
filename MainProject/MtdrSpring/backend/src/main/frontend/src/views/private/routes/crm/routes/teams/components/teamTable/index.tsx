@@ -38,7 +38,7 @@ const assignRanks = (members: any[]): any[] => {
     const tasks = member.tasksCompleted ?? 0;
     const deviation = member.hoursDeviation ?? 0;
 
-    const score = (compliance * 1000) + (tasks * 10) - Math.abs(deviation);
+    const score = (compliance * 1000) + (tasks * 10) - deviation;
 
     return {
       ...member,
@@ -140,7 +140,7 @@ export const TeamTable: React.FC<TeamTableProps> = ({ teamMembers, complianceRat
           render={(_, record: any) => (
             <span style={{
               color: getColorByDeviation(record.hoursDeviation),
-              fontWeight: "bold",
+              fontWeight: "normal",
               display: "inline-flex",
               alignItems: "center",
               justifyContent: "center",

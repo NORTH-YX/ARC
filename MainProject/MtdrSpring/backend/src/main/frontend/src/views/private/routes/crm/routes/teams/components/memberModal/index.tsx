@@ -1,18 +1,20 @@
 import React, { useEffect } from "react";
 import { Modal, Form, Input } from "antd";
-import { User } from "../../../../../../../../interfaces/user";
+import { User, UserCreate } from "../../../../../../../../interfaces/user";
 
 // Define props for the MemberModal
 interface MemberModalProps {
   user: User | undefined;
   isModalOpen: boolean;
   setIsModalOpen: (open: boolean) => void;
+  onCreate: (userData: UserCreate ) => void;
 }
 
 export const MemberModal: React.FC<MemberModalProps> = ({
   user,
   isModalOpen,
   setIsModalOpen,
+  onCreate,
 }) => {
   const [form] = Form.useForm();
 
