@@ -4,10 +4,15 @@ import com.springboot.MyTodoList.model.User;
 import com.springboot.MyTodoList.model.Task;
 import com.springboot.MyTodoList.service.TaskService;
 import com.springboot.MyTodoList.service.UserService;
+
+import oracle.net.aso.f;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -86,7 +91,10 @@ public class TaskController {
 
     @GetMapping("/kpis")
     public Map<String, Object> getComplianceRate() {
-        KpiResponse kpiResponse = taskService.getComplianceRateKpis();
+
+        String fechaConsulta = OffsetDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+        KpiResponse kpiResponse = taskService.getComplianceRateKpis(fechaConsulta);
 
         // Envolverlo como: { "kpis": { "compliance_rate": {...} } }
         Map<String, Object> wrapper = new HashMap<>();

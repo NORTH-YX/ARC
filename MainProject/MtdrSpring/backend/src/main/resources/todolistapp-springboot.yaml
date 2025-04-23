@@ -48,6 +48,8 @@ spec:
           image: %DOCKER_REGISTRY%/todolistapp-springboot:0.1
           imagePullPolicy: Always
           env:
+            - name: RUN_TELEGRAM_BOT
+              value: "true"
             - name: db_user
               value: "TODOUSER"
             - name: db_url

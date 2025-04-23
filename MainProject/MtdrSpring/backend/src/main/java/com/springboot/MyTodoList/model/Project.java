@@ -1,6 +1,9 @@
 package com.springboot.MyTodoList.model;
 
 import javax.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import java.time.OffsetDateTime;
 
 @Entity
@@ -29,6 +32,10 @@ public class Project {
 
     @Column(name = "REAL_FINISH_DATE")
     private OffsetDateTime realFinishDate;
+
+    @OneToOne(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference 
+    private Team team; // Relación con Team
 
     @Column(name = "DELETED_AT")
     private OffsetDateTime deletedAt;
@@ -79,6 +86,14 @@ public class Project {
 
     public OffsetDateTime getDeletedAt() {
         return deletedAt;
+    }
+
+    public Team getTeam() {
+        return team;
+    }
+
+    public void setTeam(Team team) {
+        this.team = team;
     }
 
     public void setProjectName(String projectName) {

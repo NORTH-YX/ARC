@@ -1,8 +1,13 @@
 package com.springboot.MyTodoList.controller;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -17,12 +22,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import com.springboot.MyTodoList.dto.KpiResponse;
+import com.springboot.MyTodoList.model.Sprint;
 import com.springboot.MyTodoList.model.Task;
 import com.springboot.MyTodoList.model.User;
 import com.springboot.MyTodoList.model.Sprint;
@@ -34,9 +39,7 @@ import com.springboot.MyTodoList.service.AIService;
 import com.springboot.MyTodoList.service.ValidatorService;
 import com.springboot.MyTodoList.validation.MissingParamResolver;
 import com.springboot.MyTodoList.util.BotCommands;
-import com.springboot.MyTodoList.util.BotHelper;
 import com.springboot.MyTodoList.util.BotLabels;
-import com.springboot.MyTodoList.util.BotMessages;
 
 public class ToDoItemBotController extends TelegramLongPollingBot {
 
@@ -234,15 +237,25 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 		// Procesar comandos generales
 		} else if (messageText.equals("Main Menu")) {
 			showMainMenu(chatId); // Mostrar el menú principal
+		} else if (messageText.equals("📊 Show Project KPIs")) {
+			showKpis(chatId);
+		} else if (messageText.equals("👤 KPIs by User")) { // Nuevo comando para KPIs por usuario
+			showUsersForKpis(chatId);
+		} else if (messageText.equals("🚀 KPIs by Sprint")) { // Nuevo comando para KPIs por sprint
+			showSprintsForKpis(chatId);
+		} else if (messageText.startsWith("User KPIs:")) { // Manejar selección de usuario para KPIs
+			showKpisByUser(chatId, messageText);
+		} else if (messageText.startsWith("Sprint KPIs:")) { // Manejar selección de sprint para KPIs
+			showKpisBySprint(chatId, messageText);
 		} else if (messageText.equals(BotCommands.START_COMMAND.getCommand()) || messageText.equals(BotLabels.SHOW_MAIN_SCREEN.getLabel())) {
 			showMainMenu(chatId);
 		} else if (messageText.equals(BotLabels.LIST_ALL_ITEMS.getLabel())) {
 			showTaskNames(chatId, getAllTasks());
-		} else if (messageText.equals(BotLabels.ADD_NEW_ITEM.getLabel())) {
+		} else if (messageText.equals("🟢 Add New Task")) {
 			startTaskCreation(chatId);
-		} else if (messageText.equals(BotLabels.SEARCH_TASKS_BY_USER.getLabel())) {
+		} else if (messageText.equals("🔍👤 Tasks by User")) {
 			showUsers(chatId);
-		} else if (messageText.equals(BotLabels.SEARCH_TASKS_BY_SPRINT.getLabel())) {
+		} else if (messageText.equals("🔍🚀 Tasks by Sprint")) {
 			showSprints(chatId);
 		} else if (messageText.equals("📋 My Tasks")) { // Manejar el botón "📋 My Tasks"
 			showMyTasks(chatId);
@@ -277,10 +290,11 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 		}
 	}
 
-    private void showMainMenu(long chatId) {
+	private void showMainMenu(long chatId) {
 		List<KeyboardRow> keyboard = new ArrayList<>();
-		keyboard.add(createRow(BotLabels.LIST_ALL_ITEMS.getLabel(), BotLabels.ADD_NEW_ITEM.getLabel()));
-		keyboard.add(createRow(BotLabels.SEARCH_TASKS_BY_USER.getLabel(), BotLabels.SEARCH_TASKS_BY_SPRINT.getLabel()));
+		keyboard.add(createRow("🟢 Add New Task")); // Agregar emoji al botón
+		keyboard.add(createRow("🔍👤 Tasks by User", "🔍🚀 Tasks by Sprint"));
+		keyboard.add(createRow("📊 Show Project KPIs", "👤 KPIs by User", "🚀 KPIs by Sprint"));
 		keyboard.add(createRow("📋 My Tasks")); // Agregar el botón "📋 My Tasks"
 		sendKeyboard(chatId, "Main Menu:", keyboard);
 	}
@@ -470,14 +484,22 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 			return;
 		}
 	
-		// Construir el mensaje con solo los nombres de las tareas
-		StringBuilder taskNames = new StringBuilder("📋 *Task Names:*\n\n");
+		// Ordenar las tareas por estado: Blocked, To Do, In Progress, Completed
+		tasks.sort((task1, task2) -> {
+			List<String> order = Arrays.asList("Blocked", "To Do", "In Progress", "Completed");
+			return Integer.compare(order.indexOf(task1.getStatus()), order.indexOf(task2.getStatus()));
+		});
+	
+		// Construir el mensaje con los nombres de las tareas
+		StringBuilder taskNames = new StringBuilder("📋 *Task Names (Ordered by Status):*\n\n");
 		List<KeyboardRow> keyboard = new ArrayList<>();
 	
 		for (Task task : tasks) {
 			taskNames.append("ID: ").append(task.getTaskId())
-				 .append(" | 📄 ").append(task.getTaskName())
-				 .append("\n");
+					 .append(" 📄 ").append(task.getTaskName())
+					 .append("\n")
+					 .append(" 📌 ").append(task.getStatus())
+					 .append("\n\n");
 	
 			// Crear un botón principal para cada tarea
 			KeyboardRow taskInfoRow = new KeyboardRow();
@@ -694,22 +716,25 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 				sendMessage(chatId, "No task selected for completion.");
 				return;
 			}
-
+	
 			Task task = getTaskById(taskId).getBody();
 			if (task == null) {
 				sendMessage(chatId, "Task not found.");
 				return;
 			}
-
+	
 			// Verificar el paso actual del flujo
 			String currentStep = userTaskCompletionStep.getOrDefault(chatId, "realHours");
-
+	
 			if ("realHours".equals(currentStep)) {
 				// Primera etapa: ingresar las horas reales
 				try {
 					Integer realHours = Integer.valueOf(messageText);
 					task.setRealHours(realHours);
-
+	
+					// Actualizar la tarea en la base de datos
+					updateTask(task, taskId);
+	
 					// Solicitar la fecha y hora real de finalización
 					sendMessage(chatId, "📅 Please enter the real finish date and time in the format `YYYY/MM/DD HH:mm`:");
 					userTaskCompletionStep.put(chatId, "realFinishDate"); // Cambiar al siguiente paso
@@ -719,23 +744,23 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 					return;
 				}
 			}
-
+	
 			if ("realFinishDate".equals(currentStep)) {
 				// Segunda etapa: ingresar la fecha y hora real de finalización
 				try {
 					OffsetDateTime realFinishDate = parseDateTimeInput(messageText);
 					task.setRealFinishDate(realFinishDate);
-			
+	
 					// Actualizar el estado de la tarea a completada
 					task.setStatus("Completed");
 					updateTask(task, taskId);
-			
+	
 					sendMessage(chatId, "✅ Task marked as completed with real finish date: " + realFinishDate.toString());
 					userTaskCompletionState.remove(chatId); // Limpiar el estado del usuario
 					userTaskCompletionStep.remove(chatId); // Limpiar el paso actual
 					showTaskDetails(chatId, task);
 				} catch (Exception e) {
-					sendMessage(chatId, "⚠️ Invalid date and time format. Please use `YYYY/MM/DDTHH:mmZ`:");
+					sendMessage(chatId, "⚠️ Invalid date and time format. Please use `YYYY/MM/DD HH:mm`:");
 					logger.error("Error parsing date: " + messageText, e);
 				}
 			}
@@ -811,6 +836,177 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
         row.addAll(Arrays.asList(buttons));
         return row;
     }
+
+	private void showKpis(long chatId) {
+		try {
+			String fechaConsulta = OffsetDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+			
+			// Llamar al servicio para obtener los KPIs
+			KpiResponse kpiResponse = taskService.getComplianceRateKpis(fechaConsulta);
+	
+			// Formatear los datos de los KPIs del proyecto
+			StringBuilder kpiMessage = new StringBuilder("📊 *Project KPIs Overview:*\n\n");
+	
+			// Compliance Rate para proyectos
+			kpiMessage.append("*Compliance Rate:*\n");
+			kpiMessage.append("📂 *Projects:*\n").append(formatKpiDataWithIcons(kpiResponse.getComplianceRate().get("projects")));
+	
+			// Estimation Precision para proyectos
+			kpiMessage.append("\n*Estimation Precision:*\n");
+			kpiMessage.append("📂 *Projects:*\n").append(formatKpiDataWithIcons(kpiResponse.getEstimationPrecision().get("projects")));
+	
+			// Enviar el mensaje al usuario
+			sendMessage(chatId, kpiMessage.toString());
+		} catch (Exception e) {
+			logger.error("Error fetching project KPIs: " + e.getMessage(), e);
+			sendMessage(chatId, "⚠️ An error occurred while fetching project KPIs. Please try again later.");
+		}
+	}
+
+	private void showUsersForKpis(long chatId) {
+		List<User> users = getAllUsers();
+		if (users.isEmpty()) {
+			sendMessage(chatId, "No users found.");
+			return;
+		}
+	
+		List<KeyboardRow> keyboard = new ArrayList<>();
+		for (User user : users) {
+			keyboard.add(createRow("User KPIs: " + user.getUserId() + " - " + user.getName()));
+		}
+	
+		sendKeyboard(chatId, "Select a user to view their KPIs:", keyboard);
+	}
+
+	private void showKpisByUser(long chatId, String messageText) {
+		try {
+			// Extraer el ID del usuario del mensaje
+			String[] parts = messageText.split(":")[1].trim().split(" - ");
+			int userId = Integer.parseInt(parts[0]);
+
+			String fechaConsulta = OffsetDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+	
+			// Obtener los KPIs del usuario
+			KpiResponse kpiResponse = taskService.getKpisByUserId(userId, fechaConsulta);
+	
+			// Formatear los datos de los KPIs
+			StringBuilder kpiMessage = new StringBuilder("📊 *KPIs for User: " + parts[1] + "*\n\n");
+			kpiMessage.append("📈 *Compliance Rate:*\n");
+			kpiMessage.append(formatKpiDataWithIcons(kpiResponse.getComplianceRate().get("users")));
+			kpiMessage.append("\n📏 *Estimation Precision:*\n");
+			kpiMessage.append(formatKpiDataWithIcons(kpiResponse.getEstimationPrecision().get("users")));
+	
+			// Enviar el mensaje al usuario
+			sendMessage(chatId, kpiMessage.toString());
+		} catch (Exception e) {
+			logger.error("Error fetching KPIs for user: " + e.getMessage(), e);
+			sendMessage(chatId, "⚠️ An error occurred while fetching KPIs for the user. Please try again.");
+		}
+	}
+
+	private void showSprintsForKpis(long chatId) {
+		List<Sprint> sprints = getAllSprints();
+		if (sprints.isEmpty()) {
+			sendMessage(chatId, "No sprints found.");
+			return;
+		}
+	
+		List<KeyboardRow> keyboard = new ArrayList<>();
+		for (Sprint sprint : sprints) {
+			keyboard.add(createRow("Sprint KPIs: " + sprint.getSprintId() + " - " + sprint.getSprintName()));
+		}
+	
+		sendKeyboard(chatId, "Select a sprint to view its KPIs:", keyboard);
+	}
+
+	private void showKpisBySprint(long chatId, String messageText) {
+		try {
+			// Extraer el ID del sprint del mensaje
+			String[] parts = messageText.split(":")[1].trim().split(" - ");
+			int sprintId = Integer.parseInt(parts[0]);
+	
+			// Obtener la fecha de consulta
+			String fechaConsulta = OffsetDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+	
+			// Obtener los KPIs del sprint con la fecha de consulta
+			KpiResponse kpiResponse = taskService.getKpisBySprintId(sprintId, fechaConsulta);
+	
+			// Formatear los datos de los KPIs
+			StringBuilder kpiMessage = new StringBuilder("📊 *KPIs for Sprint: " + parts[1] + "*\n\n");
+			kpiMessage.append("📈 *Compliance Rate:*\n");
+			kpiMessage.append(formatKpiDataWithIcons(kpiResponse.getComplianceRate().get("sprints")));
+			kpiMessage.append("\n📏 *Estimation Precision:*\n");
+			kpiMessage.append(formatKpiDataWithIcons(kpiResponse.getEstimationPrecision().get("sprints")));
+	
+			// Enviar el mensaje al usuario
+			sendMessage(chatId, kpiMessage.toString());
+		} catch (Exception e) {
+			logger.error("Error fetching KPIs for sprint: " + e.getMessage(), e);
+			sendMessage(chatId, "⚠️ An error occurred while fetching KPIs for the sprint. Please try again.");
+		}
+	}
+
+	private String formatKpiDataWithIcons(List<Map<String, Object>> kpiData) {
+		if (kpiData == null || kpiData.isEmpty()) {
+			return "❌ No data available.\n";
+		}
+	
+		StringBuilder formattedData = new StringBuilder();
+		for (Map<String, Object> entry : kpiData) {
+			for (Map.Entry<String, Object> field : entry.entrySet()) {
+				String key = field.getKey();
+				Object value = field.getValue();
+	
+				// Agregar emojis y etiquetas según el campo
+				switch (key.toLowerCase()) {
+					case "id":
+						formattedData.append("🆔 *ID:* ").append(value).append("\n");
+						break;
+					case "name":
+						formattedData.append("👤 *Name:* ").append(value).append("\n");
+						break;
+					case "tareas_a_tiempo":
+						formattedData.append("⏳ *On Time Tasks:* ").append(value).append("\n");
+						break;
+					case "tareas_completadas":
+						formattedData.append("✅ *Completed Tasks:* ").append(value).append("\n");
+						break;
+					case "tareas_en_progreso":
+						formattedData.append("🔄 *In Progress Tasks:* ").append(value).append("\n");
+						break;
+					case "tareas_por_hacer":
+						formattedData.append("📋 *To Do Tasks:* ").append(value).append("\n");
+						break;
+					case "tareas_bloqueadas":
+						formattedData.append("🚫 *Blocked Tasks:* ").append(value).append("\n");
+						break;
+					case "tasa_cumplimiento":
+						formattedData.append("📊 *Compliance Rate:* ").append(value).append("%\n");
+						break;
+					case "horas_estimadas":
+						formattedData.append("⏱️ *Estimated Hours:* ").append(value).append("\n");
+						break;
+					case "horas_reales":
+						formattedData.append("🕒 *Real Hours:* ").append(value).append("\n");
+						break;
+					case "desviacion_promedio_dias":
+						formattedData.append("📅 *Average Deviation (Days):* ").append(value).append("\n");
+						break;
+					case "desviacion_promedio_horas":
+						formattedData.append("⏳ *Average Deviation (Hours):* ").append(value).append("\n");
+						break;
+					case "tareas_totales":
+						formattedData.append("🔰 *Total Tasks:* ").append(value).append("\n");
+						break;
+					default:
+						formattedData.append("• ").append(key).append(": ").append(value).append("\n");
+						break;
+				}
+			}
+			formattedData.append("\n");
+		}
+		return formattedData.toString();
+	}
 
 	@Override
 	public String getBotUsername() {		

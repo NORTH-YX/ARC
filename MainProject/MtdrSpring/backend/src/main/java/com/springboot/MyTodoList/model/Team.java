@@ -1,6 +1,10 @@
 package com.springboot.MyTodoList.model;
 
 import javax.persistence.*;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.time.OffsetDateTime;
 
 @Entity
@@ -21,7 +25,13 @@ public class Team {
 
     @ManyToOne
     @JoinColumn(name = "PROJECT_ID", unique = true)
+    @JsonBackReference
     private Project project;
+
+    @JsonProperty("projectId")
+    public Integer getProjectId() {
+        return project != null ? project.getProjectId() : null;
+    }
 
     @Column(name = "CREATION_DATE")
     private OffsetDateTime creationDate;
