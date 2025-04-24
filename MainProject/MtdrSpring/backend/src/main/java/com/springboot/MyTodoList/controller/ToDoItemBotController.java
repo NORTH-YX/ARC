@@ -1,6 +1,7 @@
 package com.springboot.MyTodoList.controller;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,12 +49,12 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
   private final UserService userService;
   private final SprintService sprintService;
   private final String botName;
+  private final AIService aiService;
   private final Map<Long, Boolean> userWelcomeState = new HashMap<>();
   private final Map<Long, Integer> userTaskCompletionState = new HashMap<>();
   private final Map<Long, Task> userTaskCreationState = new HashMap<>();
   private final Map<Long, String> userTaskCreationStep = new HashMap<>();
   private final Map<Long, String> userTaskCompletionStep = new HashMap<>();
-  private AIService aiService = new AIService("https://api.openai.com/v1/chat/completions", "apikey");
 
 	// Map to store AI corrections waiting for user input (keyed by chat id)
 	private Map<Long, AiActionCorrection> aiCorrectionMap = new HashMap<>();
@@ -73,6 +74,11 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
         this.userService = userService;
         this.sprintService = sprintService;
         this.botName = botName;
+
+        // Leer la API Key desde las variables de entorno
+        String apiKey = System.getenv("API_KEY");
+
+        this.aiService = new AIService("https://api.openai.com/v1/chat/completions", apiKey);
     }
 
     @Override
@@ -136,7 +142,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
         String aiInstruction = messageText.replaceFirst("(?i)/ai", "").trim();
         
         // date/time for ai context
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now(ZoneOffset.of("-06:00"));
         String currentDateTime = now.toString();
         
         // AI prompt, -> extracts Action from AI service
@@ -786,12 +792,13 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 	}
 
     private String formatTaskDetails(Task task) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.of("-06:00"));
+		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
         String creationDate = task.getCreationDate().format(formatter);
         String realHours = task.getRealHours() != null ? task.getRealHours().toString() : "Not Finished";
 
-		String estimatedFinishDate = task.getEstimatedFinishDate() != null ? task.getEstimatedFinishDate().format(formatter) : "Not Set";
-		String realFinishDate = task.getRealFinishDate() != null ? task.getRealFinishDate().format(formatter) : "Not Finished";
+		String estimatedFinishDate = task.getEstimatedFinishDate() != null ? task.getEstimatedFinishDate().format(dateFormatter) : "Not Set";
+		String realFinishDate = task.getRealFinishDate() != null ? task.getRealFinishDate().format(dateFormatter) : "Not Finished";
 
 		return String.format(
 			"🆔 %d\n📄 %s\n📌 %s\n🚀 Sprint: %s\n🕰️ Created: %s\n⏳ Estimated Hours: %d\n🔑 Priority: %d\n👤 User: %s\n🏁 Real Hours: %s\n📅 Estimated Finish Date: %s\n📅 Real Finish Date: %s\n\n",
@@ -1107,7 +1114,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
      */
     private String buildAiPrompt(String userInstruction, String currentDateTime) {
         String actionSchema = "Action Schema:\n"
-                + "- create_task: Required fields: TASK_NAME, DESCRIPTION, PRIORITY, ESTIMATED_FINISH_DATE, SPRINT_ID, USER_ID\n"
+                + "- create_task: Required fields: TASK_NAME, DESCRIPTION, PRIORITY, ESTIMATED_FINISH_DATE, SPRINT_ID, USER_ID, ESTIMATED_HOURS\n"
                 + "- update_task_status: Required fields: TASK_ID, STATUS; Optional fields: REAL_HOURS, REAL_FINISH_DATE\n";
         return String.format(
                 "You are a backend system for a Telegram task management bot. "
@@ -1137,13 +1144,74 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 	private void processValidAction(Action aiAction, long chatId) {
 		if ("create_task".equalsIgnoreCase(aiAction.getAction())) {
 			Task task = new Task();
+	
 			// Populate fields from the AI action
-			task.setTaskName(aiAction.getParams().get("TASK_NAME").toString());
-			task.setDescription(aiAction.getParams().get("DESCRIPTION").toString());
-			task.setPriority(Integer.parseInt(aiAction.getParams().get("PRIORITY").toString()));
-			// Similarly set estimated finish date, sprint id, user id, etc.
+			task.setTaskName(aiAction.getParams().get("task_name").toString());
+			task.setDescription(aiAction.getParams().get("description").toString());
+			task.setPriority(Integer.parseInt(aiAction.getParams().get("priority").toString()));
+	
+			// Set estimated finish date
+			if (aiAction.getParams().get("estimated_finish_date") != null) {
+				try {
+					String dateString = aiAction.getParams().get("estimated_finish_date").toString();
+					OffsetDateTime finishDate = OffsetDateTime.parse(dateString);
+					task.setEstimatedFinishDate(finishDate);
+				} catch (DateTimeParseException e) {
+					logger.warn("Could not parse estimated finish date: " + aiAction.getParams().get("estimated_finish_date"));
+				}
+			}
+	
+			// Set sprint
+			if (aiAction.getParams().get("sprint_id") != null) {
+				try {
+					int sprintIdValue = Integer.parseInt(aiAction.getParams().get("sprint_id").toString());
+					Optional<Sprint> sprintOptional = sprintService.findById(sprintIdValue);
+					if (sprintOptional.isPresent()) {
+						task.setSprint(sprintOptional.get());
+					} else {
+						logger.warn("Sprint not found for id: " + sprintIdValue);
+					}
+				} catch (NumberFormatException e) {
+					logger.warn("Could not parse sprint id: " + aiAction.getParams().get("sprint_id"));
+				}
+			}
+	
+			// Set user
+			if (aiAction.getParams().get("user_id") != null) {
+				try {
+					int userIdValue = Integer.parseInt(aiAction.getParams().get("user_id").toString());
+					Optional<User> userOptional = userService.findById(userIdValue);
+					if (userOptional.isPresent()) {
+						task.setUser(userOptional.get());
+					} else {
+						logger.warn("User not found for id: " + userIdValue);
+					}
+				} catch (NumberFormatException e) {
+					logger.warn("Could not parse user id: " + aiAction.getParams().get("user_id"));
+				}
+			}
+	
+			// Set estimated hours
+			if (aiAction.getParams().get("estimated_hours") != null) {
+				try {
+					int estimatedHours = Integer.parseInt(aiAction.getParams().get("estimated_hours").toString());
+					task.setEstimatedHours(estimatedHours);
+				} catch (NumberFormatException e) {
+					logger.warn("Could not parse estimated hours: " + aiAction.getParams().get("estimated_hours"));
+				}
+			}
+	
+			// Set default status if not provided
+			if (aiAction.getParams().get("status") != null) {
+				task.setStatus(aiAction.getParams().get("status").toString());
+			} else {
+				task.setStatus("To Do"); // Default value
+			}
+	
+			// Save the task
 			taskService.addTask(task);
 			clearUserCreationState(chatId);
+			sendMessage(chatId, formatTaskDetails(task));
 			sendMessage(chatId, "✅ Task created successfully via AI command!");
 			showMainMenu(chatId);
 		} else {
