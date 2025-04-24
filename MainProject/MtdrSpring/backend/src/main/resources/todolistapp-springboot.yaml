@@ -48,6 +48,11 @@ spec:
           image: %DOCKER_REGISTRY%/todolistapp-springboot:0.1
           imagePullPolicy: Always
           env:
+            - name: API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: api-key-secret
+                  key: API_KEY
             - name: RUN_TELEGRAM_BOT
               value: "true"
             - name: db_user
