@@ -2,10 +2,10 @@ import { useEffect, useRef } from "react";
 import { KpisResponse } from "../modules/kpis/domain/types";
 import UserBook from "../modules/users/domain/UserBook";
 import KpiBook from "../modules/kpis/domain/KpiBook";
-import { User } from "../interfaces/user";
+import { UsersResponse } from "../interfaces/user";
 
 export function useTeamInitialization(
-    usersData: User[] | undefined,
+    usersData: UsersResponse | undefined,
     kpisData: KpisResponse | undefined,
     userStore: any,
     kpiStore: any
@@ -13,7 +13,7 @@ export function useTeamInitialization(
     const isInitialized = useRef(false);
     const dataRef = useRef<{
         kpis: any | null;
-        users: User[] | null;
+        users: any | null;
     }>({
         kpis: null,
         users: null
@@ -32,19 +32,19 @@ export function useTeamInitialization(
         if (shouldInitialize) {
           // Initialize both stores in a single batch
           const kpiBookInstance = new KpiBook(kpis.kpis);
-          const userBookInstance = new UserBook(users);
+          const userBookInstance = new UserBook(users.users);
     
           // Update stores
           kpiStore.setKpiBook(kpiBookInstance);
           kpiStore.setKpis(kpis.kpis);
           userStore.setUserBook(userBookInstance);
-          userStore.setFilteredUsers(users);
+          userStore.setFilteredUsers(users.users);
     
           // Update refs
           isInitialized.current = true;
           dataRef.current = {
             kpis: kpis.kpis,
-            users: users
+            users: users.users
           };
         }
       }, [kpisData, usersData]); 

@@ -14,7 +14,7 @@ docker rmi arcproject
 docker build -f Dockerfile --platform linux/arm64 -t arcproject .
 
 # Run the Docker container
-docker run -d --name agilecontainer -p 8080:8080 -e RUN_TELEGRAM_BOT=true arcproject
+docker run -d --name agilecontainer -p 8080:8080 -e RUN_TELEGRAM_BOT=false arcproject
 
 # Show logs in real time
 docker logs -f agilecontainer

@@ -2,7 +2,7 @@ import { apiClient } from "./client";
 import { User, UserCreate, UserUpdate, UsersResponse } from "../interfaces/user/index";
 
 export const getUsers = {
-  all: async (): Promise<User[]> => {
+  all: async (): Promise<UsersResponse> => {
     return apiClient.get("/users");
   },
   byId: async (userId: number): Promise<User> => {
