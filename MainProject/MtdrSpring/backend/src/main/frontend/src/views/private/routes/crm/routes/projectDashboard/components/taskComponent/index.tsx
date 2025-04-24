@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ProfileImage,
   TaskRow,
@@ -19,7 +19,7 @@ import {
 } from "@ant-design/icons";
 import { shortenText, getInitials, getStatusTag } from "../../../utils";
 import { Task } from "../../../../../../../../interfaces/task";
-import useTaskStore from "../../../../../../../../modules/tasks/store/useTaskStore";
+import useProjectStore from "../../../../../../../../modules/projects/store/useProjectStore";
 const isMobile = window.innerWidth <= 600;
 
 const TASK_STATUSES = ["To Do", "In Progress", "Completed", "Blocked"];
@@ -34,8 +34,20 @@ const TaskComponent: React.FC<TaskComponentProps> = ({ task }) => {
   const [originalTaskName, setOriginalTaskName] = useState(
     task?.taskName || ""
   );
-  const taskStore = useTaskStore();
-
+  const [estimatedHoursValue, setEstimatedHoursValue] = useState<number | undefined>(task?.estimatedHours);
+  const [realHoursValue, setRealHoursValue] = useState<number | undefined>(task?.realHours);
+  const projectStore = useProjectStore();
+  
+  // Update local state when task prop changes from parent
+  useEffect(() => {
+    if (task?.taskName) {
+      setTaskNameValue(task.taskName);
+      setOriginalTaskName(task.taskName);
+    }
+    setEstimatedHoursValue(task?.estimatedHours);
+    setRealHoursValue(task?.realHours);
+  }, [task?.taskName, task?.status, task?.estimatedHours, task?.realHours]);
+  
   const handleFocus = () => {
     setIsInputFocused(true);
     // Save the original name when focusing, to be able to restore it if canceled
@@ -49,14 +61,15 @@ const TaskComponent: React.FC<TaskComponentProps> = ({ task }) => {
 
   const handleSave = () => {
     if (task?.taskId && taskNameValue !== originalTaskName) {
-      taskStore.updateTask?.(task.taskId, { taskName: taskNameValue });
+      projectStore.updateTask?.(task.taskId, { taskName: taskNameValue });
     }
     setIsInputFocused(false);
   };
 
   const handleStatusChange = (value: unknown) => {
     if (task?.taskId) {
-      taskStore.updateTask?.(task.taskId, { status: value as string });
+      console.log("Changing status to:", value);
+      projectStore.updateTask?.(task.taskId, { status: value as string });
     }
   };
 
@@ -93,7 +106,7 @@ const TaskComponent: React.FC<TaskComponentProps> = ({ task }) => {
         onClick={() => {
           // Handle delete task
           if (task?.taskId) {
-            taskStore.deleteTask?.(task.taskId);
+            projectStore.deleteTask?.(task.taskId);
           }
         }}
       >
@@ -118,7 +131,7 @@ const TaskComponent: React.FC<TaskComponentProps> = ({ task }) => {
           checked={task.status === "Completed"}
           onChange={(e) => {
             if (task.taskId) {
-              taskStore.updateTask?.(task.taskId, {
+              projectStore.updateTask?.(task.taskId, {
                 status: e.target.checked ? "Completed" : "To Do",
               });
             }
@@ -167,12 +180,16 @@ const TaskComponent: React.FC<TaskComponentProps> = ({ task }) => {
             size="small"
             min={1}
             max={100000}
-            value={task?.estimatedHours || ""}
-            onChange={(e) => {
-              if (task?.taskId) {
-                const value = e ? Number(e) : null;
-                taskStore.updateTask?.(task.taskId, {
-                  estimatedHours: value,
+            value={estimatedHoursValue || ""}
+            onChange={(value) => {
+              // Just update local state on change, don't send API request yet
+              setEstimatedHoursValue(value ? Number(value) : undefined);
+            }}
+            onBlur={() => {
+              // Only send API request when field loses focus
+              if (task?.taskId && estimatedHoursValue !== task.estimatedHours) {
+                projectStore.updateTask?.(task.taskId, {
+                  estimatedHours: estimatedHoursValue,
                 });
               }
             }}
@@ -189,12 +206,16 @@ const TaskComponent: React.FC<TaskComponentProps> = ({ task }) => {
             size="small"
             min={1}
             max={99}
-            value={task?.realHours || ""}
-            onChange={(e) => {
-              if (task?.taskId) {
-                const value = e ? Number(e) : null;
-                taskStore.updateTask?.(task.taskId, {
-                  realHours: value,
+            value={realHoursValue || ""}
+            onChange={(value) => {
+              // Just update local state on change, don't send API request yet
+              setRealHoursValue(value ? Number(value) : undefined);
+            }}
+            onBlur={() => {
+              // Only send API request when field loses focus
+              if (task?.taskId && realHoursValue !== task.realHours) {
+                projectStore.updateTask?.(task.taskId, {
+                  realHours: realHoursValue,
                 });
               }
             }}

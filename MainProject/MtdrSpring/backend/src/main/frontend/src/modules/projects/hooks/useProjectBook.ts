@@ -9,10 +9,11 @@ export const useProjectBook = () => {
     token ? "projects" : null,
     () => getProjects.all(),
     {
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-      shouldRetryOnError: false,
-      dedupingInterval: 5000,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+      shouldRetryOnError: true,
+      dedupingInterval: 2000,
+      refreshInterval: 30000,
     }
   );
 

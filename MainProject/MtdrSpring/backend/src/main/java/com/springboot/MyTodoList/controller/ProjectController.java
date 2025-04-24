@@ -22,7 +22,6 @@ public class ProjectController {
     public ResponseEntity<ProjectResponse> getAllProjects() {
         List<Project> projects = projectService.findAll();
         ProjectResponse response = new ProjectResponse(projects);
-        System.out.println("Response----------------------------------------------------------------------------: " + response);
         return ResponseEntity.ok(response);
     }
 

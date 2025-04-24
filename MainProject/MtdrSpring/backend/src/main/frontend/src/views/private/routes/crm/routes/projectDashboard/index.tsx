@@ -22,7 +22,6 @@ const ProjectDashboard: React.FC = () => {
   const {
     selectedProject: project,
     projectSprints: sprints,
-    projectTasks: tasks,
     isLoadingProjectDetails,
     setProjectWithDetails,
   } = projectStore;
@@ -38,14 +37,14 @@ const ProjectDashboard: React.FC = () => {
 
       // If project is not loaded or different from URL, load it with details
       if (!project || project.projectId !== currentProjectId) {
+        // Force a complete load of project details to ensure store initialization
+        setProjectWithDetails(currentProjectId);
+      } else if (projectStore.projectBook === null) {
+        // If we have a project but no projectBook, initialize the store
         setProjectWithDetails(currentProjectId);
       }
     }
-  }, [projectId, project, setProjectWithDetails]);
-
-  console.log("Project Sprints:", sprints);
-  console.log("Project:", project);
-  console.log("Project Tasks:", tasks);
+  }, [projectId, project, setProjectWithDetails, projectStore.projectBook]);
 
   // Handle loading states
   if (isLoadingProjectDetails) {
@@ -161,9 +160,6 @@ const ProjectDashboard: React.FC = () => {
             onClick={() => openSprintModal()}
           >
             New Sprint
-          </Button>
-          <Button icon={<PlusOutlined />} type="primary">
-            New Task
           </Button>
         </ButtonsContainer>
       </StyledRow>

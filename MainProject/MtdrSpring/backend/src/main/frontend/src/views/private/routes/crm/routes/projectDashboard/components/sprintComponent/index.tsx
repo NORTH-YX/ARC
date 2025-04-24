@@ -1,17 +1,17 @@
 import React from "react";
 import {
-  Container,
-  Header,
-  SprintDateDesktop,
-  SprintDateMobile,
-  StyledButton,
+    Container,
+    Header,
+    SprintDateDesktop,
+    SprintDateMobile,
+    StyledButton,
 } from "./elements";
 import { Col, Row, Button, Popover, Divider } from "antd";
 import {
-  MoreOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  PlusOutlined,
+    MoreOutlined,
+    EditOutlined,
+    DeleteOutlined,
+    PlusOutlined,
 } from "@ant-design/icons";
 import { getSprintStatus, getTimeLineFormat } from "../../../utils";
 import { Sprint } from "../../../../../../../../interfaces/sprint";

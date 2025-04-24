@@ -25,6 +25,7 @@ export const createTask = async (taskData: TaskCreate): Promise<Task> => {
 };
 
 export const updateTask = async (taskId: number, taskData: TaskUpdate): Promise<Task> => {
+  console.log("Updating task:", taskId, taskData);
   return apiClient.put(`/tasks/${taskId}`, taskData);
   
 };
