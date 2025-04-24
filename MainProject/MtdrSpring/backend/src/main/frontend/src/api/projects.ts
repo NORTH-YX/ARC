@@ -19,6 +19,26 @@ export const getProjects = {
   byStatus: async (status: string): Promise<Project[]> => {
     return apiClient.get(`/projects/status/${status}`);
   },
+  withSprints: async (projectId: number): Promise<{ project: Project, sprints: any[] }> => {
+    // First get the project
+    const project = await apiClient.get(`/projects/${projectId}`);
+    // Then get its sprints
+    const sprints = await apiClient.get(`/sprints/project/${projectId}`);
+    return { project, sprints };
+  },
+  withSprintsAndTasks: async (projectId: number): Promise<{ project: Project, sprints: any[], tasks: any[] }> => {
+    // Get project with sprints
+    const { project, sprints } = await getProjects.withSprints(projectId);
+    
+    // Get all tasks
+    const tasksResponse = await apiClient.get(`/tasks`);
+    // Extract the tasks array from the response, handling potential response structures
+    const tasks = Array.isArray(tasksResponse) 
+      ? tasksResponse 
+      : (tasksResponse.tasks || []);
+    
+    return { project, sprints, tasks };
+  }
 };
 
 export const createProject = async (

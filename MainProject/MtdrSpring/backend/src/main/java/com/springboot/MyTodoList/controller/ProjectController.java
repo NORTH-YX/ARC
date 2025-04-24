@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.springboot.MyTodoList.dto.ProjectDTO;
+import com.springboot.MyTodoList.dto.ProjectResponse;
 
 @RestController
 @RequestMapping("api/projects")
@@ -20,9 +21,10 @@ public class ProjectController {
     private ProjectService projectService;
 
     @GetMapping
-    public ResponseEntity<List<ProjectDTO>> getAllProjects() {
-        List<ProjectDTO> projects = projectService.getAllProjects();
-        return ResponseEntity.ok(projects);
+    public ResponseEntity<ProjectResponse> getAllProjects() {
+        List<Project> projects = projectService.findAll();
+        ProjectResponse response = new ProjectResponse(projects);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
