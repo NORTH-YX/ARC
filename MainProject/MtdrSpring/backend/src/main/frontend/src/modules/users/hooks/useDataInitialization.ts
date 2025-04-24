@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
 import { UsersResponse } from '../../../interfaces/user';
 import UserBook from '../domain/UserBook';
-import useUserStore from '../store/useUserStore';
 
-export function useDataInitialization(usersData: UsersResponse | undefined) {
-  const store = useUserStore();
+
+export function useDataInitialization(usersData: UsersResponse | undefined, store: any) {
+
 
   useEffect(() => {
     if (!usersData) return;

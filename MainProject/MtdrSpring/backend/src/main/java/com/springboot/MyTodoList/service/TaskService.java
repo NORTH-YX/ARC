@@ -90,14 +90,14 @@ public class TaskService {
         taskRepository.deleteById(id);
     }
 
-    public KpiResponse getComplianceRateKpis() {
+    public KpiResponse getComplianceRateKpis(String fechaConsulta) {
         Map<String, List<Map<String, Object>>> complianceRate = new HashMap<>();
         Map<String, List<Map<String, Object>>> estimationPrecision = new HashMap<>();
 
         // Compliance Rate Data
-        complianceRate.put("users", convertKeysToLowercase(taskRepository.getUserComplianceRate()));
-        complianceRate.put("projects", convertKeysToLowercase(taskRepository.getProjectComplianceRate()));
-        complianceRate.put("sprints", convertKeysToLowercase(taskRepository.getSprintComplianceRate()));
+        complianceRate.put("users", convertKeysToLowercase(taskRepository.getUserComplianceRate(fechaConsulta)));
+        complianceRate.put("projects", convertKeysToLowercase(taskRepository.getProjectComplianceRate(fechaConsulta)));
+        complianceRate.put("sprints", convertKeysToLowercase(taskRepository.getSprintComplianceRate(fechaConsulta)));
 
         // Estimation Precision Data
         estimationPrecision.put("users", convertKeysToLowercase(taskRepository.getUserEstimationPrecision()));
@@ -118,4 +118,27 @@ public class TaskService {
         }
         return lowerCaseList;
     }
+
+    public KpiResponse getKpisByUserId(int userId, String fechaConsulta) {
+        // Lógica para obtener los KPIs de un usuario específico
+        Map<String, List<Map<String, Object>>> complianceRate = new HashMap<>();
+        Map<String, List<Map<String, Object>>> estimationPrecision = new HashMap<>();
+    
+        complianceRate.put("users", convertKeysToLowercase(taskRepository.getUserComplianceRateById(userId, fechaConsulta)));
+        estimationPrecision.put("users", convertKeysToLowercase(taskRepository.getUserEstimationPrecisionById(userId)));
+    
+        return new KpiResponse(complianceRate, estimationPrecision);
+    }
+    
+    public KpiResponse getKpisBySprintId(int sprintId, String fechaConsulta) {
+        // Lógica para obtener los KPIs de un sprint específico
+        Map<String, List<Map<String, Object>>> complianceRate = new HashMap<>();
+        Map<String, List<Map<String, Object>>> estimationPrecision = new HashMap<>();
+    
+        complianceRate.put("sprints", convertKeysToLowercase(taskRepository.getSprintComplianceRateById(sprintId, fechaConsulta)));
+        estimationPrecision.put("sprints", convertKeysToLowercase(taskRepository.getSprintEstimationPrecisionById(sprintId)));
+    
+        return new KpiResponse(complianceRate, estimationPrecision);
+    }
+    
 }

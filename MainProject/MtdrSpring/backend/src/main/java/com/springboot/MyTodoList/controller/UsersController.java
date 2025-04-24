@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import com.springboot.MyTodoList.dto.UserResponse;
 
 @RestController
 @RequestMapping("api/users")
@@ -19,9 +20,10 @@ public class UsersController {
 
     // Obtener todos los usuarios
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
+    public ResponseEntity<UserResponse> getAllUsers() {
         List<User> users = userService.findAll();
-        return ResponseEntity.ok(users);
+        UserResponse response = new UserResponse(users);
+        return ResponseEntity.ok(response);
     }
 
     // Obtener un usuario por ID usando @RequestParam

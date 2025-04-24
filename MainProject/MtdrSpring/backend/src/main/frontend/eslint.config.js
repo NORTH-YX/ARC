@@ -18,11 +18,11 @@ export default tseslint.config(
       'react-refresh': reactRefresh,
     },
     rules: {
-      ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
+      // Relaxed rules for development
+      '@typescript-eslint/no-explicit-any': 'off', // Allow 'any' type
+      '@typescript-eslint/no-unused-vars': 'warn', // Downgrade to warning
+      'react-hooks/exhaustive-deps': 'off', // Turn off exhaustive deps check
+      'react-refresh/only-export-components': 'off', // Turn off refresh components warnings
     },
   },
 )

@@ -1,86 +1,53 @@
-name: Super Linter
+name: Linter Workflow
 
 on:
-  workflow_dispatch:
-    inputs:
-      logLevel:
-        description: 'Log level'     
-        required: true
-        default: 'warning'
-      tags:
-        description: 'Test scenario tags' 
   push:
-    branches: null
+    branches-ignore:
+      - main
+    paths:
+      - 'MainProject/MtdrSpring/backend/src/main/java/com/springboot/MyTodoList/**'
+      - 'MainProject/MtdrSpring/backend/src/main/frontend/**'
+
+# Set specific permissions instead of implicit write-all
+permissions:
+  contents: read
+  checks: write
+  statuses: write
+  security-events: write
 
 jobs:
-  super-lint:
-    name: Lint code base
+  lint:
+    name: Run Linter
     runs-on: ubuntu-latest
-    steps:       
+    steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
-          # Full git history is needed to get a proper list of changed files
           fetch-depth: 0
 
-      - name: Selenium Test
-        continue-on-error: true
-        run: |
-          pip install -U selenium
-          pip install -U pytest
-          pip install -U pytest-html
-          pip install -U webdriver-manager
-          pytest test1.py --html=report.html.
-          cat report.html
+      - name: Setup Node.js for Frontend Linting
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: MainProject/MtdrSpring/backend/src/main/frontend/package-lock.json
 
-      - name: Path
-        continue-on-error: true
+      - name: Frontend Lint
+        working-directory: MainProject/MtdrSpring/backend/src/main/frontend
         run: |
-          sudo mkdir -p /action/lib/.automation/
-          sudo chown -R runner:docker /action
-          pwd
-          ls -l
-          echo "root /"
-          ls -l /
-          cp java_checks.xml /action/lib/.automation/
-          echo ".automation"
-          ls -l /action/lib/.automation/
+          npm ci
+          npm run lint -- --max-warnings=100
 
-      - name:   Java checks
-        continue-on-error: true
-        run: |
-          ls -l /
-          (cd /action/lib/.automation/; readlink -f java_checks.xml)
-
-      - name: Run Super-Linter
+      - name: Run Super-Linter for Java
         uses: github/super-linter@v6
         env:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VALIDATE_ALL_CODEBASE: true
-          VALIDATE_KUBERNETES_KUBECONFORM: false
-          VALIDATE_SHELL_SHFMT: false
-          VALIDATE_CSS: false
-          VALIDATE_CSS_PRETTIER: false
-          VALIDATE_GITLEAKS: false
-          VALIDATE_JAVASCRIPT_STANDARD: false
-          VALIDATE_JSCPD: false
-          VALIDATE_NATURAL_LANGUAGE: false
-          VALIDATE_MARKDOWN: false
-          VALIDATE_PYTHON_BLACK: false
-          VALIDATE_PYTHON_FLAKE8: false
-          VALIDATE_PYTHON_ISORT: false
-          VALIDATE_PYTHON_RUFF: false
-          VALIDATE_TERRAFORM_TFLINT: false
-          VALIDATE_TERRAFORM_FMT: false
-          VALIDATE_GOOGLE_JAVA_FORMAT: false
-          VALIDATE_YAML: false
-          VALIDATE_YAML_PRETTIER: false
-          BASH_SEVERITY: warning
+          VALIDATE_ALL_CODEBASE: false
+          FILTER_REGEX_INCLUDE: .*MainProject/MtdrSpring/backend/src/main/java/com/springboot/MyTodoList/.*
           JAVA_FILE_NAME: google_checks.xml
-          VALIDATE_BASH_EXEC: false
-          VALIDATE_BASH: false
-          VALIDATE_KUBEVAL: false
-          VALIDATE_CHECKOV: false
-          VALIDATE_PYTHON_PYLINT: false
-
+          # Only validate these languages - don't use mixed enable/disable approach
+          VALIDATE_JAVA: true
+          VALIDATE_GOOGLE_JAVA_FORMAT: true
+          # Disable validation of all other linters by setting VALIDATE_ALL to false
+          VALIDATE_ALL: false

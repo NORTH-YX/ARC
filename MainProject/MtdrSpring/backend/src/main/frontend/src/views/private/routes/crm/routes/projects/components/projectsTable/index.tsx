@@ -27,15 +27,6 @@ import useProjectStore from "../../../../../../../../modules/projects/store/useP
 
 const { Text } = Typography;
 
-// Ya se creo en otro archivo(PopView), ver como manejarla en ambos
-// const getInitials = (name: string): string => {
-//   const names = name.split(" ");
-//   const initials = names
-//     .slice(0, 2)
-//     .map((n) => n.charAt(0).toUpperCase())
-//     .join("");
-//   return initials;
-// };
 
 const ProjectsTable: React.FC = () => {
   const store = useProjectStore();

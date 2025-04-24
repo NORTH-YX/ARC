@@ -13,7 +13,8 @@ interface TaskStoreState {
   selectedSprintId: number | null;
   selectedUserId: number | null;
   selectedStatus: string | null;
-  OldTaskName: string | null;
+  dateRange: [Date | null, Date | null];
+  searchText: string;
 
   // Actions
   setTaskBook: (taskBook: TaskBook) => void;
@@ -27,7 +28,10 @@ interface TaskStoreState {
   setSelectedSprintId: (sprintId: number | null) => void;
   setSelectedUserId: (userId: number | null) => void;
   setSelectedStatus: (status: string | null) => void;
+  setDateRange: (range: [Date | null, Date | null]) => void;
+  setSearchText: (text: string) => void;
   getTasksBySprint: (sprintId: number) => Promise<Task[]>;
+  getFilteredTasks: () => Task[];
   _updateBook: () => void;
   updateTaskInState: (task: Task) => void;
   setOldTaskName: (taskName: string | null) => void;
@@ -52,7 +56,8 @@ export default create<TaskStoreState>((set, get) => ({
   selectedSprintId: null,
   selectedUserId: null,
   selectedStatus: null,
-  OldTaskName: null,
+  dateRange: [null, null],
+  searchText: "",
 
   setTaskBook: (taskBook) => {
     console.log("Setting task book:", taskBook);
@@ -211,7 +216,13 @@ export default create<TaskStoreState>((set, get) => ({
   setSelectedSprintId: (sprintId) => {
     set({ selectedSprintId: sprintId });
     const taskBook = get().taskBook;
-    if (!taskBook || !sprintId) return;
+    if (!taskBook) return;
+
+    // If sprintId is null, reset to all tasks
+    if (sprintId === null) {
+      set({ filteredTasks: taskBook.getTasks() });
+      return;
+    }
 
     const tasks = taskBook.getTasksBySprint(sprintId);
     set({ filteredTasks: tasks });
@@ -234,6 +245,42 @@ export default create<TaskStoreState>((set, get) => ({
     const tasks = taskBook.getTasksByStatus(status);
     set({ filteredTasks: tasks });
   },
+
+  setDateRange: (range) => {
+    set({ dateRange: range });
+  },
+
+  setSearchText: (text) => {
+    set({ searchText: text });
+  },
+
+  getFilteredTasks: () => {
+    const { taskBook, filteredTasks, dateRange, searchText } = get();
+    
+    if (!taskBook) return [];
+    
+    let filtered = filteredTasks.length > 0 ? filteredTasks : taskBook.getTasks();
+    
+    // Filter by date range if both dates are set
+    if (dateRange[0] && dateRange[1]) {
+      filtered = filtered.filter((task: Task) => {
+        const creationDate = new Date(task.creationDate);
+        return creationDate >= dateRange[0]! && creationDate <= dateRange[1]!;
+      });
+    }
+    
+    // Filter by search text
+    if (searchText) {
+      const lowerSearchText = searchText.toLowerCase();
+      filtered = filtered.filter((task: Task) => 
+        task.taskName.toLowerCase().includes(lowerSearchText) ||
+        (task.user?.name && task.user.name.toLowerCase().includes(lowerSearchText))
+      );
+    }
+    
+    return filtered;
+  },
+
   getTasksBySprint: async (sprintId) => {
     const { taskBook } = get();
     if (!taskBook) return [];

@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
-import com.springboot.MyTodoList.dto.ProjectResponse;
+
+import com.springboot.MyTodoList.dto.ProjectDTO;
 
 @RestController
 @RequestMapping("api/projects")
