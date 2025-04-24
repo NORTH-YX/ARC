@@ -34,7 +34,6 @@ interface TaskStoreState {
   getFilteredTasks: () => Task[];
   _updateBook: () => void;
   updateTaskInState: (task: Task) => void;
-  setOldTaskName: (taskName: string | null) => void;
 
   // These will be injected from TaskBook
   createTask?: (taskData: any) => Promise<Task>;
@@ -300,5 +299,4 @@ export default create<TaskStoreState>((set, get) => ({
       return [];
     }
   },
-  setOldTaskName: (taskName) => set({ OldTaskName: taskName }),
 }));
