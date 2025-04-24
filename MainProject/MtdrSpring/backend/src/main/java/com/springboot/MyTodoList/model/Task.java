@@ -2,6 +2,7 @@ package com.springboot.MyTodoList.model;
 
 import javax.persistence.*;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "TASKS")
@@ -51,12 +52,13 @@ public class Task {
     private OffsetDateTime deletedAt;
 
     public Task() {
-        this.creationDate = OffsetDateTime.now();
+        // Ajustar la zona horaria a UTC-6
+        this.creationDate = OffsetDateTime.now(ZoneOffset.of("-06:00"));
     }
 
     public Task(int taskId, String taskName, String description, Integer priority, String status, Sprint sprintId,
-    User userId, OffsetDateTime creationDate, OffsetDateTime estimatedFinishDate,
-    OffsetDateTime realFinishDate, Integer estimatedHours, Integer realHours, OffsetDateTime deletedAt) {
+                User userId, OffsetDateTime creationDate, OffsetDateTime estimatedFinishDate,
+                OffsetDateTime realFinishDate, Integer estimatedHours, Integer realHours, OffsetDateTime deletedAt) {
         this.taskId = taskId;
         this.taskName = taskName;
         this.description = description;
@@ -64,7 +66,8 @@ public class Task {
         this.status = status;
         this.sprintId = sprintId;
         this.userId = userId;
-        this.creationDate = creationDate != null ? creationDate : OffsetDateTime.now();
+        // Usar la zona horaria local si no se proporciona una fecha de creación
+        this.creationDate = creationDate != null ? creationDate : OffsetDateTime.now(ZoneOffset.of("-06:00"));
         this.estimatedFinishDate = estimatedFinishDate;
         this.realFinishDate = realFinishDate;
         this.estimatedHours = estimatedHours;
