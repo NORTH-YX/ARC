@@ -52,7 +52,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: telegram-bot-secret
-                  key: token
+                  key: TELEGRAM_BOT_TOKEN
             - name: TELEGRAM_BOT_NAME
               value: "EsteEsUnBotDePruebabot"
             - name: API_KEY
