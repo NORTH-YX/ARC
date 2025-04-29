@@ -48,6 +48,13 @@ spec:
           image: %DOCKER_REGISTRY%/todolistapp-springboot:0.1
           imagePullPolicy: Always
           env:
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: telegram-bot-secret
+                  key: token
+            - name: TELEGRAM_BOT_NAME
+              value: "EsteEsUnBotDePruebabot"
             - name: API_KEY
               valueFrom:
                 secretKeyRef:

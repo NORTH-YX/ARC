@@ -5,7 +5,6 @@ import com.springboot.MyTodoList.model.Task;
 import com.springboot.MyTodoList.service.TaskService;
 import com.springboot.MyTodoList.service.UserService;
 
-import oracle.net.aso.f;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -101,5 +100,20 @@ public class TaskController {
         wrapper.put("kpis", kpiResponse);
 
         return wrapper;
+    }
+
+    @GetMapping("/kpis/sprints")
+    public ResponseEntity<Map<String, Object>> getKpisBySprintAndUser() {
+        List<Map<String, Object>> kpis = taskService.getKpisBySprintAndUser();
+
+        if (kpis.isEmpty()) {
+            return ResponseEntity.status(404).body(Map.of("message", "No KPIs found for any sprint or user"));
+        }
+
+        // Envolver la lista de sprints en un mapa con la clave "sprints"
+        Map<String, Object> response = new HashMap<>();
+        response.put("sprints", kpis);
+
+        return ResponseEntity.ok(response);
     }
 }

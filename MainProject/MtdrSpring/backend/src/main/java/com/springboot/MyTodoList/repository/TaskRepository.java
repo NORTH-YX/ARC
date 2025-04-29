@@ -253,4 +253,45 @@ public interface TaskRepository extends JpaRepository<Task, Integer> {
     )
     List<Map<String, Object>> getSprintEstimationPrecisionById(@Param("sprintId") int sprintId);
 
+    @Query(
+        value = "SELECT s.sprint_id AS sprintId, s.sprint_name AS sprintName, " +
+                "u.user_id AS userId, u.name AS userName, " +
+                "COUNT(CASE WHEN t.real_finish_date <= t.estimated_finish_date " +
+                "           AND t.real_finish_date IS NOT NULL THEN 1 END) AS tareas_a_tiempo, " +
+                "COUNT(CASE WHEN t.status = 'Completed' THEN 1 END) AS tareas_completadas, " +
+                "COUNT(CASE WHEN t.status = 'In Progress' THEN 1 END) AS tareas_en_progreso, " +
+                "COUNT(CASE WHEN t.status = 'To Do' THEN 1 END) AS tareas_por_hacer, " +
+                "COUNT(CASE WHEN t.status = 'Blocked' THEN 1 END) AS tareas_bloqueadas, " +
+                "COUNT(*) AS tareas_totales, " +
+                "ROUND(CASE WHEN COUNT(CASE WHEN t.real_finish_date IS NOT NULL THEN 1 END) > 0 " +
+                "     THEN COUNT(CASE WHEN t.real_finish_date <= t.estimated_finish_date " +
+                "                    AND t.real_finish_date IS NOT NULL THEN 1 END) * 100.0 / " +
+                "          COUNT(CASE WHEN t.real_finish_date IS NOT NULL THEN 1 END) " +
+                "     ELSE 0 END, 2) AS tasa_cumplimiento " +
+                "FROM TODOUSER.tasks t " +
+                "JOIN TODOUSER.users u ON t.user_id = u.user_id " +
+                "JOIN TODOUSER.sprints s ON t.sprint_id = s.sprint_id " +
+                "GROUP BY s.sprint_id, s.sprint_name, u.user_id, u.name",
+        nativeQuery = true
+    )
+    List<Map<String, Object>> getComplianceRateBySprintAndUser();
+
+    @Query(
+        value = "SELECT s.sprint_id AS sprintId, s.sprint_name AS sprintName, " +
+                "u.user_id AS userId, u.name AS userName, " +
+                "ROUND(AVG(CAST(t.real_finish_date AS DATE) - CAST(t.estimated_finish_date AS DATE)), 2) AS desviacion_promedio_dias, " +
+                "ROUND(AVG((CAST(t.real_finish_date AS DATE) - CAST(t.estimated_finish_date AS DATE)) * 24), 2) AS desviacion_promedio_horas, " +
+                "SUM(t.estimated_hours) AS horas_estimadas, " +
+                "SUM(t.real_hours) AS horas_reales " +
+                "FROM TODOUSER.tasks t " +
+                "JOIN TODOUSER.users u ON t.user_id = u.user_id " +
+                "JOIN TODOUSER.sprints s ON t.sprint_id = s.sprint_id " +
+                "WHERE t.status = 'Completed' " +
+                "AND t.real_finish_date IS NOT NULL " +
+                "AND t.estimated_finish_date IS NOT NULL " +
+                "GROUP BY s.sprint_id, s.sprint_name, u.user_id, u.name",
+        nativeQuery = true
+    )
+    List<Map<String, Object>> getEstimationPrecisionBySprintAndUser();
+
 }
