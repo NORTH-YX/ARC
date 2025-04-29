@@ -32,10 +32,8 @@ public class MyTodoListApplication implements CommandLineRunner {
 	@Autowired
 	private SprintService SprintService;
 
-	@Value("${telegram.bot.token}")
 	private String telegramBotToken;
 
-	@Value("${telegram.bot.name}")
 	private String botName;
 
 	public static void main(String[] args) {
@@ -44,6 +42,19 @@ public class MyTodoListApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
+		// Leer las variables de entorno
+        telegramBotToken = System.getenv("TELEGRAM_BOT_TOKEN");
+        botName = System.getenv("TELEGRAM_BOT_NAME");
+
+        // Validar que las variables de entorno estén configuradas
+        if (telegramBotToken == null || telegramBotToken.isEmpty()) {
+            logger.error("TELEGRAM_BOT_TOKEN environment variable is not set.");
+            return;
+        }
+        if (botName == null || botName.isEmpty()) {
+            logger.error("TELEGRAM_BOT_NAME environment variable is not set.");
+            return;
+        }
 		// Verificar si se debe ejecutar el bot
 		String runBot = System.getenv("RUN_TELEGRAM_BOT"); // Leer la variable de entorno
 		if ("true".equalsIgnoreCase(runBot)) {
