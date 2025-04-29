@@ -34,7 +34,7 @@ const menuItems: MenuItem[] = [
   {
     key: "3",
     icon: <TeamOutlined />,
-    label: "Teams",
+    label: "Team",
     path: "/teams"
   },
   {

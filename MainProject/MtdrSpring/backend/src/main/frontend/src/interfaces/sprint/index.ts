@@ -23,7 +23,6 @@ export interface SprintUpdate {
 
 export interface SprintCreate {
   sprintName: string;
-  projectId: number;
   status: string;
   creationDate: string;
   estimatedFinishDate: string;

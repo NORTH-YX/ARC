@@ -1,10 +1,11 @@
 import ProjectsTable from "./components/projectsTable";
-import { Typography } from "antd";
+import { Typography, Spin, Result } from "antd";
 import {
   FolderFilled,
   CheckOutlined,
   ClockCircleFilled,
   UsergroupAddOutlined,
+  LoadingOutlined,
 } from "@ant-design/icons";
 import {
   IconWrapper,
@@ -33,8 +34,24 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
 
   // Initialize the store with data
   useDataInitialization(data, store);
-  if (error) return <div>Failed to load projects</div>;
-  if (isLoading) return <div>Loading...</div>;
+  if (error) {
+    return (
+      <Result status="500" title="500" subTitle="Failed to load projects." />
+    );
+  }
+  if (isLoading)
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
+      </div>
+    );
 
   return (
     <div style={{ display: "flex", flexDirection: "column", padding: "5px" }}>
@@ -114,25 +131,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
           </StyledCard>
         </IndicatorsContainer>
       </div>
-      <ProjectsTable
-        filteredProjects={store?.filteredProjects}
-        searchQuery={store?.searchQuery}
-        setSearchQuery={store?.setSearchQuery}
-        selectedStatus={store?.selectedStatus}
-        setSelectedStatus={store?.setSelectedStatus}
-        selectedProject={store?.selectedProject}
-        setSelectedProject={store?.setSelectedProject}
-        openDeleteModal={store?.openDeleteModal}
-        closeDeleteModal={store?.closeDeleteModal}
-        isDeleteModalOpen={store?.isDeleteModalOpen}
-        openEditModal={store?.openEditModal}
-        closeEditModal={store?.closeEditModal}
-        isEditModalOpen={store?.isEditModalOpen}
-        createProject={store?.createProject}
-        editProject={store?.updateProject}
-        confirmLoading={store?.confirmLoading}
-        deleteProject={store?.deleteProject}
-      />
+      <ProjectsTable />
     </div>
   );
 };

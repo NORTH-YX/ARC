@@ -1,5 +1,6 @@
 import { Tag } from "antd";
 import { ResponsiveTag } from "./elements";
+import { format } from "date-fns";
 
 export const getStatusTag = (status: string) => {
   let bgcolor;
@@ -37,6 +38,25 @@ export const getStatusTag = (status: string) => {
     bgcolor: bgcolor,
   };
 };
+
+// Format date in a more readable way: "Apr 13, 6:01 p.m."
+export const formatReadableDate = (dateString: string | null) => {
+  if (!dateString) return null;
+  
+  const date = new Date(dateString);
+  return format(date, "MMM d, h:mm a");
+};
+
+// Custom date comparison for sorting
+export const compareDates = (a: string | null, b: string | null) => {
+  if (!a && !b) return 0;
+  if (!a) return -1;
+  if (!b) return 1;
+  return new Date(a).getTime() - new Date(b).getTime();
+};
+
+// Constants for tasks status
+export const TASK_STATUSES = ["To Do", "In Progress", "Completed", "Blocked"];
 
 export const getProjectStatus = (status: string) => {
   let bgcolor;
@@ -206,3 +226,22 @@ export const getInitials = (name: string): string => {
     .join("");
   return initials;
 };
+
+const avatarColors = [
+  "#FF9F7F", // soft coral
+  "#6DC6E7", // soft blue
+  "#B5EAD7", // mint green
+  "#FFDAC1", // peach
+  "#C3C3E5", // lavender gray
+  "#FFD6E0", // rose
+  "#A2D2FF", // light sky blue
+  "#E2F0CB", // pale lime
+  "#D1C4E9", // soft purple
+  "#B2EBF2", // cyan
+];
+
+export const getRandomAvatarColor = (): string => {
+  const index = Math.floor(Math.random() * avatarColors.length);
+  return avatarColors[index];
+};
+

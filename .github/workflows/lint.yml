@@ -38,21 +38,7 @@ jobs:
           npm ci
           npm run lint -- --max-warnings=100
 
-      # Additional Java-specific linting step using Maven
-      - name: Setup Java for Maven-based linting
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: Run Java Checkstyle with Maven
-        working-directory: MainProject/MtdrSpring/backend
-        run: |
-          chmod +x mvnw
-          ./mvnw checkstyle:check
-
-      - name: Run Super-Linter
+      - name: Run Super-Linter for Java
         uses: github/super-linter@v6
         env:
           DEFAULT_BRANCH: main
@@ -65,4 +51,3 @@ jobs:
           VALIDATE_GOOGLE_JAVA_FORMAT: true
           # Disable validation of all other linters by setting VALIDATE_ALL to false
           VALIDATE_ALL: false
-

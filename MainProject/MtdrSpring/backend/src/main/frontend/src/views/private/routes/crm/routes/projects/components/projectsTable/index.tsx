@@ -17,68 +17,28 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import {
-  Project,
-  ProjectCreate,
-  ProjectUpdate,
+  Project
 } from "../../../../../../../../interfaces/project";
 import { getProjectStatus } from "../../../utils";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import DeleteProjectModal from "../deleteModal";
 import EditProjectModal from "../editModal";
+import useProjectStore from "../../../../../../../../modules/projects/store/useProjectStore";
 
 const { Text } = Typography;
 
-// Ya se creo en otro archivo(PopView), ver como manejarla en ambos
-// const getInitials = (name: string): string => {
-//   const names = name.split(" ");
-//   const initials = names
-//     .slice(0, 2)
-//     .map((n) => n.charAt(0).toUpperCase())
-//     .join("");
-//   return initials;
-// };
 
-interface ProjectsTableProps {
-  filteredProjects: Project[];
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  selectedStatus: string | null;
-  setSelectedStatus: (status: string | null) => void;
-  setSelectedProject: (project: Project) => void;
-  selectedProject: Project | null;
-  openDeleteModal: () => void;
-  closeDeleteModal: () => void;
-  isDeleteModalOpen: boolean;
-  openEditModal: () => void;
-  closeEditModal: () => void;
-  isEditModalOpen: boolean;
-  createProject: (projectData: ProjectCreate) => void;
-  editProject: (projectId: number, projectData: ProjectUpdate) => void;
-  confirmLoading: boolean;
-  deleteProject: (projectId: number) => void;
-}
-
-const ProjectsTable: React.FC<ProjectsTableProps> = ({
-  filteredProjects,
-  searchQuery,
-  setSearchQuery,
-  selectedStatus,
-  setSelectedStatus,
-  openDeleteModal,
-  closeDeleteModal,
-  isDeleteModalOpen,
-  openEditModal,
-  closeEditModal,
-  isEditModalOpen,
-  setSelectedProject,
-  selectedProject,
-  createProject,
-  editProject,
-  confirmLoading,
-  deleteProject,
-}) => {
+const ProjectsTable: React.FC = () => {
+  const store = useProjectStore();
+  const navigate = useNavigate();
+  
   const handleStatusChange = (value: string) => {
-    setSelectedStatus(value);
+    store.setSelectedStatus(value);
+  };
+
+  const handleNavigateToProject = (record: Project) => {
+    // Set the project ID and navigate - it will be loaded with details in the dashboard
+    navigate(`/projectDashboard/${record.projectId}`);
   };
 
   const getActions = (record: any) => (
@@ -89,23 +49,19 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
         alignItems: "flex-start",
       }}
     >
-      <Link to={`/projectDashboard/${record.projectId}`}>
-        <StyledButton
-          type="text"
-          icon={<EyeOutlined />}
-          onClick={() => {
-            setSelectedProject(record);
-          }}
-        >
-          See Details
-        </StyledButton>
-      </Link>
+      <StyledButton
+        type="text"
+        icon={<EyeOutlined />}
+        onClick={() => handleNavigateToProject(record)}
+      >
+        See Details
+      </StyledButton>
       <StyledButton
         type="text"
         icon={<EditOutlined />}
         onClick={() => {
-          setSelectedProject(record);
-          openEditModal();
+          store.setSelectedProject(record);
+          store.openEditModal();
         }}
       >
         Edit
@@ -114,8 +70,8 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
         type="text"
         icon={<DeleteOutlined />}
         onClick={() => {
-          setSelectedProject(record);
-          openDeleteModal();
+          store.setSelectedProject(record);
+          store.openDeleteModal();
         }}
       >
         Delete
@@ -126,7 +82,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
   return (
     <>
       <StyledTable
-        dataSource={filteredProjects}
+        dataSource={store.filteredProjects}
         title={() => (
           <Hearder>
             <span style={{ fontWeight: "400" }}>Active Projects</span>
@@ -134,13 +90,13 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
               <StytledSearchDesktop
                 placeholder="Search something..."
                 allowClear
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onSearch={setSearchQuery}
+                value={store.searchQuery}
+                onChange={(e) => store.setSearchQuery(e.target.value)}
+                onSearch={store.setSearchQuery}
                 style={{ width: 300, marginRight: "10px" }}
               />
               <Select
-                value={selectedStatus || "allProjects"}
+                value={store.selectedStatus || "allProjects"}
                 style={{ width: 120 }}
                 onChange={handleStatusChange}
                 options={[
@@ -154,7 +110,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
                 type="primary"
                 style={{ marginLeft: "10px" }}
                 onClick={() => {
-                  openEditModal();
+                  store.openEditModal();
                 }}
                 icon={<PlusOutlined />}
               >
@@ -164,7 +120,7 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
             <StytledSearchMobile
               placeholder="Search something..."
               allowClear
-              onSearch={(value) => setSearchQuery(value)}
+              onSearch={(value) => store.setSearchQuery(value)}
               style={{ width: "100%" }}
             />
           </Hearder>
@@ -177,23 +133,20 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
             dataIndex="projectName"
             key="projectName"
             render={(projectName: string, record: any) => (
-              <Link to={`/projectDashboard/${record.projectId}`}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                  }}
-                  onClick={() => {
-                    setSelectedProject(record);
-                  }}
-                >
-                  <IconWrapper bgColor="#DBEAFE">
-                    <MobileFilled style={{ fontSize: "20px" }} />
-                  </IconWrapper>
-                  <p style={{ color: "#000" }}>{projectName}</p>
-                </div>
-              </Link>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  cursor: "pointer"
+                }}
+                onClick={() => handleNavigateToProject(record)}
+              >
+                <IconWrapper bgColor="#DBEAFE">
+                  <MobileFilled style={{ fontSize: "20px" }} />
+                </IconWrapper>
+                <p style={{ color: "#000" }}>{projectName}</p>
+              </div>
             )}
           />
           <StyledTable.Column
@@ -302,31 +255,31 @@ const ProjectsTable: React.FC<ProjectsTableProps> = ({
       </StyledTable>
 
       <DeleteProjectModal
-        project={selectedProject}
-        visible={isDeleteModalOpen}
-        onCancel={closeDeleteModal}
+        project={store.selectedProject}
+        visible={store.isDeleteModalOpen}
+        onCancel={store.closeDeleteModal}
         onDelete={() => {
-          if (selectedProject) {
-            deleteProject(selectedProject.projectId);
-            closeDeleteModal();
+          if (store.selectedProject) {
+            store.deleteProject(store.selectedProject.projectId);
+            store.closeDeleteModal();
           }
         }}
       />
       <EditProjectModal
-        visible={isEditModalOpen}
-        onCancel={closeEditModal}
-        project={selectedProject}
+        visible={store.isEditModalOpen}
+        onCancel={store.closeEditModal}
+        project={store.selectedProject}
         onEdit={(projectData) => {
-          if (selectedProject) {
-            editProject(selectedProject?.projectId, projectData);
-            closeEditModal();
+          if (store.selectedProject) {
+            store.updateProject(store.selectedProject?.projectId, projectData);
+            store.closeEditModal();
           }
         }}
         onCreate={(projectData) => {
-          createProject(projectData);
-          closeEditModal();
+          store.createProject(projectData);
+          store.closeEditModal();
         }}
-        confirmLoading={confirmLoading}
+        confirmLoading={store.confirmLoading}
       />
     </>
   );

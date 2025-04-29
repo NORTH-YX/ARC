@@ -26,6 +26,12 @@ export interface KpiUser {
   tareas_a_tiempo?: number;
   desviacion_promedio_dias?: number;
   desviacion_promedio_horas?: number;
+  tareas_en_progreso?: number;
+  tareas_por_hacer?: number;
+  tareas_bloqueadas?: number;
+  horas_estimadas?: number;
+  tareas_totales?: number;
+  horas_reales?: number;
 }
 
 export interface ComplianceRate {
