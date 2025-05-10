@@ -159,6 +159,12 @@ export const StyledSelect = styled(Select)`
   }
 `;
 
+export const HoursContainer = styled.div`
+  @media (max-width: 800px) {
+    display: none;
+  }
+`;
+
 export const SelectWrapper = styled.div`
   .ant-select-dropdown {
     .ant-select-item-option-selected {

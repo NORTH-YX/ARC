@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Row, Button, Spin, Result, Empty } from "antd";
+import { Row, Button, Spin, Result, Empty, Typography } from "antd";
 import {
   Container,
   StyledRow,
@@ -15,6 +15,8 @@ import Indicators from "./components/indicators";
 import { Link, useParams } from "react-router-dom";
 import useProjectStore from "../../../../../../modules/projects/store/useProjectStore";
 import NewSprintModal from "./components/newSprintModal";
+
+const { Title } = Typography;
 
 const ProjectDashboard: React.FC = () => {
   const { projectId } = useParams();
@@ -150,7 +152,7 @@ const ProjectDashboard: React.FC = () => {
       </Row>
       <StyledRow>
         <TitleContainer>
-          <h1>{project?.projectName}</h1>
+          <Title level={2}>{project?.projectName}</Title>
           <p>{project?.description}</p>
         </TitleContainer>
         <ButtonsContainer>
