@@ -7,6 +7,7 @@ import {
   StyledButton,
   StyledSelect,
   SelectWrapper,
+  HoursContainer,
 } from "./elements";
 import { Row, Button, Popover, Checkbox, Tooltip } from "antd";
 import {
@@ -34,10 +35,14 @@ const TaskComponent: React.FC<TaskComponentProps> = ({ task }) => {
   const [originalTaskName, setOriginalTaskName] = useState(
     task?.taskName || ""
   );
-  const [estimatedHoursValue, setEstimatedHoursValue] = useState<number | undefined>(task?.estimatedHours);
-  const [realHoursValue, setRealHoursValue] = useState<number | undefined>(task?.realHours);
+  const [estimatedHoursValue, setEstimatedHoursValue] = useState<
+    number | undefined
+  >(task?.estimatedHours);
+  const [realHoursValue, setRealHoursValue] = useState<number | undefined>(
+    task?.realHours
+  );
   const projectStore = useProjectStore();
-  
+
   // Update local state when task prop changes from parent
   useEffect(() => {
     if (task?.taskName) {
@@ -47,7 +52,7 @@ const TaskComponent: React.FC<TaskComponentProps> = ({ task }) => {
     setEstimatedHoursValue(task?.estimatedHours);
     setRealHoursValue(task?.realHours);
   }, [task?.taskName, task?.status, task?.estimatedHours, task?.realHours]);
-  
+
   const handleFocus = () => {
     setIsInputFocused(true);
     // Save the original name when focusing, to be able to restore it if canceled
@@ -170,57 +175,62 @@ const TaskComponent: React.FC<TaskComponentProps> = ({ task }) => {
         )}
       </Row>
       <Row style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-        <span
-          style={{ fontSize: "12px", color: "#6B7280", marginRight: "4px" }}
-        >
-          Est:
-        </span>
-        <Tooltip title="Estimated hours">
-          <TaskInputNumber
-            size="small"
-            min={1}
-            max={100000}
-            value={estimatedHoursValue || ""}
-            onChange={(value) => {
-              // Just update local state on change, don't send API request yet
-              setEstimatedHoursValue(value ? Number(value) : undefined);
-            }}
-            onBlur={() => {
-              // Only send API request when field loses focus
-              if (task?.taskId && estimatedHoursValue !== task.estimatedHours) {
-                projectStore.updateTask?.(task.taskId, {
-                  estimatedHours: estimatedHoursValue,
-                });
-              }
-            }}
-          />
-        </Tooltip>
+        <HoursContainer>
+          <span
+            style={{ fontSize: "12px", color: "#6B7280", marginRight: "4px" }}
+          >
+            Est:
+          </span>
+          <Tooltip title="Estimated hours">
+            <TaskInputNumber
+              size="small"
+              min={1}
+              max={100000}
+              value={estimatedHoursValue || ""}
+              onChange={(value) => {
+                // Just update local state on change, don't send API request yet
+                setEstimatedHoursValue(value ? Number(value) : undefined);
+              }}
+              onBlur={() => {
+                // Only send API request when field loses focus
+                if (
+                  task?.taskId &&
+                  estimatedHoursValue !== task.estimatedHours
+                ) {
+                  projectStore.updateTask?.(task.taskId, {
+                    estimatedHours: estimatedHoursValue,
+                  });
+                }
+              }}
+            />
+          </Tooltip>
 
-        <span
-          style={{ fontSize: "12px", color: "#6B7280", marginRight: "4px" }}
-        >
-          Real:
-        </span>
-        <Tooltip title="Actual hours spent">
-          <TaskInputNumber
-            size="small"
-            min={1}
-            max={99}
-            value={realHoursValue || ""}
-            onChange={(value) => {
-              // Just update local state on change, don't send API request yet
-              setRealHoursValue(value ? Number(value) : undefined);
-            }}
-            onBlur={() => {
-              // Only send API request when field loses focus
-              if (task?.taskId && realHoursValue !== task.realHours) {
-                projectStore.updateTask?.(task.taskId, {
-                  realHours: realHoursValue,
-                });
-              }
-            }}
-          />
-        </Tooltip>
+          <span
+            style={{ fontSize: "12px", color: "#6B7280", marginRight: "4px" }}
+          >
+            Real:
+          </span>
+          <Tooltip title="Actual hours spent">
+            <TaskInputNumber
+              size="small"
+              min={1}
+              max={99}
+              value={realHoursValue || ""}
+              onChange={(value) => {
+                // Just update local state on change, don't send API request yet
+                setRealHoursValue(value ? Number(value) : undefined);
+              }}
+              onBlur={() => {
+                // Only send API request when field loses focus
+                if (task?.taskId && realHoursValue !== task.realHours) {
+                  projectStore.updateTask?.(task.taskId, {
+                    realHours: realHoursValue,
+                  });
+                }
+              }}
+            />
+          </Tooltip>
+        </HoursContainer>
 
         <SelectWrapper>
           {task.taskId && (

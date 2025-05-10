@@ -16,9 +16,7 @@ import {
   MobileFilled,
   PlusOutlined,
 } from "@ant-design/icons";
-import {
-  Project
-} from "../../../../../../../../interfaces/project";
+import { Project } from "../../../../../../../../interfaces/project";
 import { getProjectStatus } from "../../../utils";
 import { useNavigate } from "react-router-dom";
 import DeleteProjectModal from "../deleteModal";
@@ -27,11 +25,10 @@ import useProjectStore from "../../../../../../../../modules/projects/store/useP
 
 const { Text } = Typography;
 
-
 const ProjectsTable: React.FC = () => {
   const store = useProjectStore();
   const navigate = useNavigate();
-  
+
   const handleStatusChange = (value: string) => {
     store.setSelectedStatus(value);
   };
@@ -138,12 +135,14 @@ const ProjectsTable: React.FC = () => {
                   display: "flex",
                   alignItems: "center",
                   gap: "10px",
-                  cursor: "pointer"
+                  cursor: "pointer",
                 }}
                 onClick={() => handleNavigateToProject(record)}
               >
                 <IconWrapper bgColor="#DBEAFE">
-                  <MobileFilled style={{ fontSize: "20px" }} />
+                  <MobileFilled
+                    style={{ fontSize: "20px", color: "#2563EB" }}
+                  />
                 </IconWrapper>
                 <p style={{ color: "#000" }}>{projectName}</p>
               </div>

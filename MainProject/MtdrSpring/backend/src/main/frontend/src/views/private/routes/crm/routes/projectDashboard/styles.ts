@@ -49,7 +49,7 @@ export const ButtonsContainer = styled.div`
 `;
 
 export const IndicatorsContainer = styled.div`
-  padding: 40px 40px 20px;
+  padding: 40px 0 20px;
 
   @media (max-width: 768px) {
     padding: 20px 10px 0px;

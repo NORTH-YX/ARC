@@ -20,7 +20,7 @@ import { useProjectBook } from "../../../../../../modules/projects/hooks/useProj
 import useProjectStore from "../../../../../../modules/projects/store/useProjectStore";
 import { useDataInitialization } from "../../../../../../modules/projects/hooks/useDataInitialization";
 
-const { Text } = Typography;
+const { Text, Title } = Typography;
 
 interface ProjectsProps {
   user: User;
@@ -59,11 +59,12 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
         style={{
           display: "flex",
           flexDirection: "column",
-          marginBottom: "20px",
-          padding: "20px 40px 0",
+          padding: "20px",
         }}
       >
-        <h1 style={{ marginBottom: "5px" }}>Projects</h1>
+        <Title level={2} style={{ marginBottom: "5px" }}>
+          Projects
+        </Title>
         <p style={{ color: "#6B7280" }}>
           {isAdmin
             ? "Manage all organization projects"
@@ -74,7 +75,7 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
         style={{
           display: "flex",
           flexDirection: "column",
-          padding: "0px 40px 20px",
+          padding: "0px 20px 20px",
         }}
       >
         <IndicatorsContainer>
@@ -131,7 +132,9 @@ const Projects: React.FC<ProjectsProps> = ({ user }) => {
           </StyledCard>
         </IndicatorsContainer>
       </div>
-      <ProjectsTable />
+      <div style={{ padding: "0px 20px" }}>
+        <ProjectsTable />
+      </div>
     </div>
   );
 };
