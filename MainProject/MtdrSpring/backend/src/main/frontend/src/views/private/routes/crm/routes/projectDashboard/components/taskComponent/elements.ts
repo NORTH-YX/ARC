@@ -73,7 +73,7 @@ export const TaskInputNumber = styled(InputNumber).attrs({
   variant: "borderless",
   controls: false, // Elimina las flechas para ahorrar espacio
   maxLength: 2, // Limita a 2 caracteres
-})<{}>`
+})`
   margin: 0;
   width: 40px; // Ancho fijo pequeño
   min-width: 40px; // Min-width igual al width para consistencia
