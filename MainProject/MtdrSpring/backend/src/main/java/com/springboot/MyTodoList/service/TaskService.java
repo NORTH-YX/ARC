@@ -62,6 +62,15 @@ public class TaskService {
         return taskRepository.findByStatus(status);
     }
 
+    //findbystatusandsprintid
+    public List<Task> findByStatusAndSprintId(String status, Sprint sprintId) {
+        return taskRepository.findByStatusAndSprintId(status, sprintId);
+    }
+
+    public List<Task> findByStatusAndUserIdAndSprintId(String status, User userId, Sprint sprintId) {
+        return taskRepository.findByStatusAndUserIdAndSprintId(status, userId, sprintId);
+    }
+
     public Task addTask(Task task) {
         return taskRepository.save(task);
     }
