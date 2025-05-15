@@ -20,6 +20,8 @@ public interface TaskRepository extends JpaRepository<Task, Integer> {
     List<Task> findBySprintId(Sprint sprintId);
     List<Task> findByPriority(Integer priority);
     List<Task> findByStatus(String status);
+    List<Task> findByStatusAndSprintId(String status, Sprint sprintId);
+    List<Task> findByStatusAndUserIdAndSprintId(String status, User userId, Sprint sprintId);
 
     @Query(
         value = "SELECT u.user_id AS id, u.name AS name, " +
