@@ -158,28 +158,6 @@ const Login: React.FC<LoginProps> = ({ setUser }) => {
           </div>
         </Card>
       </Col>
-      <Col
-        xs={0}
-        sm={0}
-        md={12}
-        lg={12}
-        style={{
-          display: "flex",
-          alignItems: "flex-end",
-        }}
-      >
-        <Image
-          src="https://images.pexels.com/photos/392018/pexels-photo-392018.jpeg?cs=srgb&dl=pexels-vojtech-okenka-127162-392018.jpg&fm=jpg"
-          preview={false}
-          style={{
-            width: "100%",
-            height: "100vh",
-            objectFit: "cover",
-            borderRadius: "16px 0 0 16px",
-            display: "block",
-          }}
-        />
-      </Col>
     </Row>
   );
 };
