@@ -9,6 +9,7 @@ import { useKpiStore } from "../../../../../../modules/kpis/store/useKpiStore";
 import { useKpisBook } from "../../../../../../modules/kpis/hooks/useKpisBook";
 import { useTaskBook } from "../../../../../../modules/tasks/hooks/useTaskBook";
 import SprintPerformance from "./components/SprintPerformance";
+import AIManagerTips from "./components/AIManagerTips";
 import { Task } from "../../../../../../interfaces/task";
 import { useDashboardInitialization } from "../../../../../../hooks/useDashboardInitialization";
 
@@ -220,6 +221,11 @@ const Dashboard: React.FC<DashProps> = ({ user }) => {
           </Title>
         </Col>
       </Row>
+
+      {/* AI Manager Tips Section - Fix role check to work with Spring Security roles */}
+      {user && (
+        <AIManagerTips />
+      )}
 
       {/* Metrics Overview Section */}
       <Row gutter={[24, 24]} style={{ marginBottom: "24px" }}>
