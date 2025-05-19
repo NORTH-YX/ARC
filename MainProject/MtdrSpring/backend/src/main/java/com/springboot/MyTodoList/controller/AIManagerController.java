@@ -26,7 +26,6 @@ public class AIManagerController {
      * @return List of management suggestions with context
      */
     @GetMapping("/suggestions")
-    @PreAuthorize("hasAnyRole('ROLE_ADMIN', 'ROLE_MANAGER')")
     public ResponseEntity<Map<String, Object>> getComprehensiveSuggestions() {
         List<Map<String, Object>> suggestions = aiManagerService.getComprehensiveSuggestions();
         
