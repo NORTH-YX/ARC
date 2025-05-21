@@ -44,8 +44,16 @@ export interface TaskCreate {
   status: string;
   estimatedFinishDate?: string;
   estimatedHours: number;
-  userId: number;
-  sprintId: number;
+  user: UserId;
+  sprint: SprintId;
+}
+
+interface SprintId {
+  sprintId: number
+}
+
+interface UserId {
+  userId: number
 }
 
 export interface TaskUpdate {
@@ -66,3 +74,4 @@ export interface TasksResponse {
   count: number;
   status: string;
 } 
+

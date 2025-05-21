@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import TaskBook from "../domain/TaskBook";
-import { Task } from "../../../interfaces/task/index";
+import { Task, TaskCreate } from "../../../interfaces/task/index";
 import _ from "lodash";
 
 interface TaskStoreState {
@@ -36,7 +36,7 @@ interface TaskStoreState {
   updateTaskInState: (task: Task) => void;
 
   // These will be injected from TaskBook
-  createTask?: (taskData: any) => Promise<Task>;
+  createTask: (taskData: TaskCreate) => Promise<Task>;
   updateTask?: (taskId: number, taskData: any) => Promise<Task | undefined>;
   deleteTask?: (taskId: number) => Promise<boolean>;
   restoreTask?: (taskId: number) => Promise<boolean>;
@@ -57,6 +57,32 @@ export default create<TaskStoreState>((set, get) => ({
   selectedStatus: null,
   dateRange: [null, null],
   searchText: "",
+
+  createTask: async (taskData: TaskCreate) => {
+  const { taskBook, _updateBook } = get();
+  if (!taskBook) {
+    console.warn("⚠️ taskBook is undefined. Cannot create task.");
+    return;
+  }
+
+  const prevState = _.cloneDeep(taskBook);
+
+  try {
+    console.log("📤 Creating task with data:", taskData);
+
+    const result = await taskBook.createTask(taskData); // método del dominio
+    console.log("✅ Task created successfully:", result);
+
+    _updateBook(); // actualizar estado local
+    return result;
+  } catch (error) {
+    console.error("❌ Error creating task:", error);
+    set({ taskBook: prevState }); // rollback
+    throw error;
+  }
+},
+
+
 
   setTaskBook: (taskBook) => {
     console.log("Setting task book:", taskBook);
