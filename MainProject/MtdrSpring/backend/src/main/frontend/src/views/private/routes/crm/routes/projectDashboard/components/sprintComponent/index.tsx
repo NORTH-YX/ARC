@@ -19,6 +19,8 @@ import { Task } from "../../../../../../../../interfaces/task";
 import TaskComponent from "../taskComponent";
 import NewTaskModal from "../newTaskModal";
 import useTaskStore from "../../../../../../../../modules/tasks/store/useTaskStore";
+import { useTaskBook } from "../../../../../../../../modules/tasks/hooks/useTaskBook";
+import { useDataInitialization } from "../../../../../../../../modules/tasks/hooks/useDataInitialization";
 
 interface SprintComponentProps {
   sprint: Sprint;
@@ -29,7 +31,14 @@ const SprintComponent: React.FC<SprintComponentProps> = ({
   sprint,
   openSprintModal,
 }) => {
+
+  const { data } = useTaskBook();
+
   const taskStore = useTaskStore();
+
+  useDataInitialization(data, taskStore)
+
+  const { createTask } = taskStore
 
   const getActions = (
     <div
@@ -110,7 +119,10 @@ const SprintComponent: React.FC<SprintComponentProps> = ({
       {taskStore?.isTaskModalOpen && (
         <NewTaskModal
           onCancel={taskStore.closeTaskModal}
-          onCreate={taskStore.closeTaskModal}
+          onCreate={(taskData) => {
+            createTask(taskData);
+            taskStore.closeTaskModal()
+          }}
           sprintId={sprint?.sprintId}
         />
       )}

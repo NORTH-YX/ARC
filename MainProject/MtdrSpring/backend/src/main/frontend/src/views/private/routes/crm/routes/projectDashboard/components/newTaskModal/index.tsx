@@ -2,11 +2,16 @@ import { Form, Input, Select, DatePicker, Row, Button, Col } from "antd";
 import { CloseOutlined, CheckOutlined } from "@ant-design/icons";
 import { TaskCreate } from "../../../../../../../../interfaces/task";
 import { Container } from "./elements";
-//import useUserStore from "../../../../../../../../modules/users/store/useUserStore";
+import useUserStore from "../../../../../../../../modules/users/store/useUserStore";
+import { useDataInitialization } from "../../../../../../../../modules/users/hooks/useDataInitialization";
+import { useUserBook } from "../../../../../../../../modules/users/hooks/useUserBook";
+
 
 const { Item } = Form;
 const { TextArea } = Input;
-const { RangePicker } = DatePicker;
+
+
+
 
 interface NewTaskModalProps {
   onCancel: () => void;
@@ -19,27 +24,45 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({
   onCreate,
   sprintId,
 }) => {
+
+   const { data } = useUserBook()
+  
+    const store = useUserStore();
+  
+    useDataInitialization(data, store)
+
+    const users = data?.users || [];
+
   const [form] = Form.useForm();
 
-  const handleOk = () => {
-    form.validateFields().then((values) => {
-      const formattedValues = {
-        taskName: values?.taskName,
-        description: values?.description,
-        status: values?.status,
-        startDate: values?.dates ? values?.dates[0].toISOString() : null,
-        dueDate: values?.dates ? values?.dates[1].toISOString() : null,
-        priority: values?.priority,
-        sprintId: sprintId,
-        userId: values?.userId,
-        estimatedHours: values?.estimatedHours,
-      };
+const handleOk = () => {
+  form.validateFields().then((values) => {
+    const priorityMap: Record<string, number> = {
+      Low: 1,
+      Medium: 2,
+      High: 3,
+    };
 
-      onCreate(formattedValues);
+    const formattedValues = {
+      taskName: values?.taskName,
+      description: values?.description,
+      priority: priorityMap[values?.priority] ?? 0, // fallback por si algo falla
+      status: values?.status,
+      estimatedFinishDate: values?.dates ? values?.dates.toISOString() : null,
+      estimatedHours: Number(values?.estimatedHours),
+      user: { userId: values?.userId },
+      sprint: { sprintId: sprintId },
+      realFinishDate: null,
+      realHours: null,
+      deletedAt: null,
+    };
 
-      form.resetFields();
-    });
-  };
+    console.log("🧩 Formatted task to create:", formattedValues);
+    onCreate(formattedValues);
+    form.resetFields();
+  });
+};
+
 
   const handleCancel = () => {
     form.resetFields();
@@ -89,10 +112,10 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({
           >
             <Col>
               <Item name="dates">
-                <RangePicker
+                <DatePicker
                   style={{ width: "100%" }}
                   format="YYYY-MM-DD"
-                  placeholder={["Start Date", "Due Date"]}
+                  placeholder={"Estimated finish date"}
                 />
               </Item>
             </Col>
@@ -127,10 +150,13 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({
             </Col>
 
             <Col>
-              <Item name="userId">
+              <Item name="userId" rules={[{ required: true, message: "Please assign a user!" }]}>
                 <Select placeholder="Assign to">
-                  <Select.Option value={1}>User 1</Select.Option>
-                  <Select.Option value={2}>User 2</Select.Option>
+                  {users.map((user) => (
+                    <Select.Option key={user.userId} value={user.userId}>
+                      {user.name}
+                    </Select.Option>
+                  ))}
                 </Select>
               </Item>
             </Col>
