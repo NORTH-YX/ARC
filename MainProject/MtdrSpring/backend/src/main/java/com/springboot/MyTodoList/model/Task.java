@@ -159,6 +159,10 @@ public class Task {
         this.realFinishDate = realFinishDate;
     }
 
+    public void setCreationDate(OffsetDateTime creationDate) {
+        this.creationDate = creationDate;
+    }
+
     public void setEstimatedHours(Integer estimatedHours) {
         this.estimatedHours = estimatedHours;
     }
