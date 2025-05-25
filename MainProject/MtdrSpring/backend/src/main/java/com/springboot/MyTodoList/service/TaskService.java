@@ -19,7 +19,7 @@ import java.util.Optional;
 import java.util.Map;
 
 @Service
-public class TaskService {
+public class TaskService implements ITaskService {
 
     @Autowired
     private TaskRepository taskRepository;
@@ -86,9 +86,13 @@ public class TaskService {
             if (task.getSprint() != null) _task.setSprint(task.getSprint());
             if (task.getPriority() != null) _task.setPriority(task.getPriority());
             if (task.getStatus() != null) _task.setStatus(task.getStatus());
+            if (task.getCreationDate() != null) _task.setCreationDate(task.getCreationDate());
+            if (task.getEstimatedFinishDate() != null) _task.setEstimatedFinishDate(task.getEstimatedFinishDate());
             if (task.getRealFinishDate() != null) _task.setRealFinishDate(task.getRealFinishDate());
             if (task.getRealHours() != null) _task.setRealHours(task.getRealHours());
+            if (task.getEstimatedHours() != null) _task.setEstimatedHours(task.getEstimatedHours());
     
+
             return taskRepository.save(_task);
         } else {
             throw new RuntimeException("Task with ID " + id + " not found.");

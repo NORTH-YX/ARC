@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import type { Dayjs } from 'dayjs';
 import { User } from "../../../../../../../../interfaces/user/index";
 import { Sprint } from "../../../../../../../../interfaces/sprint/index";
+import NewTaskModal from "../../../projectDashboard/components/newTaskModal/index.tsx";
 
 const { RangePicker } = DatePicker;
 const { Text } = Typography;
@@ -423,6 +424,17 @@ const TasksTable: React.FC = () => {
           </Button>
         )}
       </div>
+
+      {store.isTaskModalOpen && (
+        <NewTaskModal
+          onCancel={store.closeTaskModal}
+          onCreate={async (taskData) => {
+            await store.createTask(taskData);
+            store.closeTaskModal();
+          }}
+          sprintId={store.selectedSprintId || (sprints.length > 0 ? sprints[0].sprintId : 1)}
+        />
+      )}
       
       <StyledTable
         dataSource={getFilteredTasks()}

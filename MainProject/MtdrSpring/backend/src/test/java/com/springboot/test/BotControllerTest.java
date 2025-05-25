@@ -3,9 +3,9 @@ package com.springboot.test;
 import com.springboot.MyTodoList.model.Task;
 import com.springboot.MyTodoList.model.User;
 import com.springboot.MyTodoList.model.Sprint;
-import com.springboot.MyTodoList.service.TaskService;
 import com.springboot.MyTodoList.repository.TaskRepository;
 import com.springboot.MyTodoList.service.UserService;
+import com.springboot.MyTodoList.service.ITaskService;
 import com.springboot.MyTodoList.service.SprintService;
 import com.springboot.MyTodoList.controller.ToDoItemBotController;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ import static org.mockito.Mockito.*;
 class ToDoItemBotControllerTest {
 
     @Mock
-    private TaskService taskService;
+    private ITaskService taskService;
 
     @Mock
     private UserService userService;

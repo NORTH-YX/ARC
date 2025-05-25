@@ -114,7 +114,8 @@ const handleOk = () => {
               <Item name="dates">
                 <DatePicker
                   style={{ width: "100%" }}
-                  format="YYYY-MM-DD"
+                  format="MMM D, YYYY h:mm a"
+                  showTime // <-- Esto habilita la selección de hora
                   placeholder={"Estimated finish date"}
                 />
               </Item>

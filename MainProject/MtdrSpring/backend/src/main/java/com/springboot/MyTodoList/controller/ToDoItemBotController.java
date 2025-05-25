@@ -3,12 +3,6 @@ package com.springboot.MyTodoList.controller;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,6 +31,7 @@ import com.springboot.MyTodoList.service.TaskService;
 import com.springboot.MyTodoList.service.UserService;
 import com.springboot.MyTodoList.service.SprintService;
 import com.springboot.MyTodoList.service.AIService;
+import com.springboot.MyTodoList.service.ITaskService;
 import com.springboot.MyTodoList.service.ValidatorService;
 import com.springboot.MyTodoList.validation.MissingParamResolver;
 import com.springboot.MyTodoList.util.BotCommands;
@@ -45,7 +40,7 @@ import com.springboot.MyTodoList.util.BotLabels;
 public class ToDoItemBotController extends TelegramLongPollingBot {
 
   private static final Logger logger = LoggerFactory.getLogger(ToDoItemBotController.class);
-  private final TaskService taskService;
+  private final ITaskService taskService;
   private final UserService userService;
   private final SprintService sprintService;
   private final String botName;
@@ -68,7 +63,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
         }
     }
 
-    public ToDoItemBotController(String botToken, String botName, TaskService taskService, UserService userService, SprintService sprintService) {
+    public ToDoItemBotController(String botToken, String botName, ITaskService taskService, UserService userService, SprintService sprintService) {
         super(botToken);
         this.taskService = taskService;
         this.userService = userService;
@@ -639,6 +634,9 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
             return;
         }
 
+		// Ordenar por ID ascendente
+		sprints.sort(Comparator.comparingInt(Sprint::getSprintId));
+
         List<KeyboardRow> keyboard = new ArrayList<>();
         for (Sprint sprint : sprints) {
             keyboard.add(createRow(sprint.getSprintId() + BotLabels.UNDERSCORE.getLabel() + sprint.getSprintName()));
@@ -782,7 +780,7 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 			String formattedInput = input.replace("/", "-");
 	
 			// Reemplazar el espacio con "T" y agregar "Z" al final
-			formattedInput = formattedInput.replace(" ", "T") + "Z";
+			formattedInput = formattedInput.replace(" ", "T") + "-06:00";
 	
 			// Parsear la fecha al formato OffsetDateTime
 			return OffsetDateTime.parse(formattedInput);
@@ -792,13 +790,12 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 	}
 
     private String formatTaskDetails(Task task) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.of("-06:00"));
-		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm").withZone(ZoneOffset.of("-06:00"));
         String creationDate = task.getCreationDate().format(formatter);
         String realHours = task.getRealHours() != null ? task.getRealHours().toString() : "Not Finished";
 
-		String estimatedFinishDate = task.getEstimatedFinishDate() != null ? task.getEstimatedFinishDate().format(dateFormatter) : "Not Set";
-		String realFinishDate = task.getRealFinishDate() != null ? task.getRealFinishDate().format(dateFormatter) : "Not Finished";
+		String estimatedFinishDate = task.getEstimatedFinishDate() != null ? task.getEstimatedFinishDate().format(formatter) : "Not Set";
+		String realFinishDate = task.getRealFinishDate() != null ? task.getRealFinishDate().format(formatter) : "Not Finished";
 
 		return String.format(
 			"🆔 %d\n📄 %s\n📌 %s\n🚀 Sprint: %s\n🕰️ Created: %s\n⏳ Estimated Hours: %d\n🔑 Priority: %d\n👤 User: %s\n🏁 Real Hours: %s\n📅 Estimated Finish Date: %s\n📅 Real Finish Date: %s\n\n",
