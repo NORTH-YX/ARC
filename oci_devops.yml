@@ -29,17 +29,18 @@ steps:
 
   - type: Command
     name: "Install Node.js 18"
-    command:  cd /tmp
-              curl -O https://nodejs.org/dist/v18.20.3/node-v18.20.3-linux-x64.tar.xz
-              tar -xf node-v18.20.3-linux-x64.tar.xz
-              mv node-v18.20.3-linux-x64 /opt/node
-              export PATH=/opt/node/bin:$PATH
-              node -v
+    command:  cd /tmp;
+              curl -O https://nodejs.org/dist/v18.20.3/node-v18.20.3-linux-x64.tar.xz;
+              tar -xf node-v18.20.3-linux-x64.tar.xz;
+              mv node-v18.20.3-linux-x64 /opt/node;
+              export PATH=/opt/node/bin:$PATH;
+              node -v;
               npm -v
 
   - type: Command
     name: "Build"
     command:  cd MainProject/MtdrSpring;
+              export PATH=/opt/node/bin:$PATH;
               source env.sh;
               (cd backend;source build.sh)
 
