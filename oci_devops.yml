@@ -42,6 +42,10 @@ steps:
       npm --version
       ls -l /node/node-v16.14.2-linux-x64/bin/node || echo "No node here"
       ls -l /usr/bin/node || echo "No node here"
+      /node/node-v16.14.2-linux-x64/bin/node --version
+      /node/node-v16.14.2-linux-x64/bin/npm --version
+      ls -l /node/node-v16.14.2-linux-x64/bin/node
+      ls -l /node/node-v16.14.2-linux-x64/bin/npm
 
   - type: Command
     name: "Install Node.js and npm"
@@ -58,6 +62,11 @@ steps:
         cd MainProject/MtdrSpring;
         source env.sh;
         cd backend;
+        export PATH=/node/node-v16.14.2-linux-x64/bin:$PATH
+        export NODE_EXECUTABLE=/node/node-v16.14.2-linux-x64/bin/node
+        export NPM_EXECUTABLE=/node/node-v16.14.2-linux-x64/bin/npm
+        /node/node-v16.14.2-linux-x64/bin/node --version
+        /node/node-v16.14.2-linux-x64/bin/npm --version
         source build.sh
 
   - type: Command
