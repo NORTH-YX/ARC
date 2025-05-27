@@ -105,36 +105,40 @@
 		<plugins>
 			<!-- Keeps frontend and backend separate. -->
 			<plugin>
-				  <groupId>com.github.eirslett</groupId>
-				  <artifactId>frontend-maven-plugin</artifactId>
-				  <version>1.9.1</version>
-				  <configuration>
-				    <workingDirectory>${frontend-src-dir}</workingDirectory>
-				    <installNodeAndNpm>false</installNodeAndNpm>
-				    <nodeExecutable>/usr/bin/node</nodeExecutable>
-				    <npmExecutable>/usr/bin/npm</npmExecutable>
-				  </configuration>
-				  <executions>
-				    <execution>
-				      <id>npm install</id>
-				      <goals>
-				        <goal>npm</goal>
-				      </goals>
-				      <configuration>
-				        <arguments>install</arguments>
-				      </configuration>
-				    </execution>
-				    <execution>
-				      <id>npm run build</id>
-				      <goals>
-				        <goal>npm</goal>
-				      </goals>
-				      <configuration>
-				        <arguments>run build</arguments>
-				      </configuration>
-				    </execution>
-				  </executions>
-				</plugin>
+			  <groupId>com.github.eirslett</groupId>
+			  <artifactId>frontend-maven-plugin</artifactId>
+			  <version>1.9.1</version>
+			  <configuration>
+			    <workingDirectory>${frontend-src-dir}</workingDirectory>
+			    <installNodeAndNpm>false</installNodeAndNpm>
+			    <nodeExecutable>/node/node-v16.14.2-linux-x64/bin/node</nodeExecutable>
+			    <npmExecutable>/node/node-v16.14.2-linux-x64/bin/npm</npmExecutable>
+			  </configuration>
+			  <executions>
+			    <execution>
+			      <id>npm install</id>
+			      <goals>
+			        <goal>npm</goal>
+			      </goals>
+			      <configuration>
+			        <arguments>install</arguments>
+			        <nodeExecutable>/node/node-v16.14.2-linux-x64/bin/node</nodeExecutable>
+			        <npmExecutable>/node/node-v16.14.2-linux-x64/bin/npm</npmExecutable>
+			      </configuration>
+			    </execution>
+			    <execution>
+			      <id>npm run build</id>
+			      <goals>
+			        <goal>npm</goal>
+			      </goals>
+			      <configuration>
+			        <arguments>run build</arguments>
+			        <nodeExecutable>/node/node-v16.14.2-linux-x64/bin/node</nodeExecutable>
+			        <npmExecutable>/node/node-v16.14.2-linux-x64/bin/npm</npmExecutable>
+			      </configuration>
+			    </execution>
+			  </executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-resources-plugin</artifactId>
