@@ -40,7 +40,6 @@ steps:
   - type: Command
     name: "Build"
     command:  cd MainProject/MtdrSpring;
-              export PATH=/opt/node/bin:$PATH
               source env.sh;
               (cd backend;source build.sh)
 
