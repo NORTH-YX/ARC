@@ -56,9 +56,6 @@ steps:
         cd MainProject/MtdrSpring;
         source env.sh;
         cd backend;
-        export PATH=/node/node-v16.14.2-linux-x64/bin:$PATH;
-        export NODE_EXECUTABLE=/node/node-v16.14.2-linux-x64/bin/node;
-        export NPM_EXECUTABLE=/node/node-v16.14.2-linux-x64/bin/npm;
         source build.sh
 
   - type: Command
