@@ -112,6 +112,7 @@
 			    <workingDirectory>src/main/frontend</workingDirectory>
 			    <nodeExecutable>/opt/node/bin/node</nodeExecutable>
 			    <npmExecutable>/opt/node/bin/npm</npmExecutable>
+			    <installDirectory>skip</installDirectory>
 			  </configuration>
 			  <executions>
 			    <execution>
