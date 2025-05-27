@@ -40,6 +40,8 @@ steps:
       which npm
       node --version
       npm --version
+      ls -l /node/node-v16.14.2-linux-x64/bin/node || echo "No node here"
+      ls -l /usr/bin/node || echo "No node here"
 
   - type: Command
     name: "Install Node.js and npm"
