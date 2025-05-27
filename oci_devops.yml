@@ -28,6 +28,13 @@ steps:
               cat at.cfg | docker login -u "ax2fs7hibrfo/a00836801@tec.mx" --password-stdin mx-queretaro-1.ocir.io
 
   - type: Command
+    name: "Install Node.js 18"
+    command:  curl -fsSL https://rpm.nodesource.com/setup_18.x | bash -
+              yum install -y nodejs
+              node -v
+              npm -v
+
+  - type: Command
     name: "Build"
     command:  cd MainProject/MtdrSpring;
               source env.sh;
