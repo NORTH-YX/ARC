@@ -37,9 +37,9 @@ steps:
               node -v
               npm -v
 
-    - type: Command
-      name: "Build"
-      command:
+  - type: Command
+    name: "Build"
+    command:
         cd MainProject/MtdrSpring;
         export PATH=/opt/node/bin:$PATH;
         export NODE_EXECUTABLE=/opt/node/bin/node;
