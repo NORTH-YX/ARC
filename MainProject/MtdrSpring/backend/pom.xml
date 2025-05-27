@@ -111,8 +111,8 @@
 			  <configuration>
 			    <workingDirectory>${frontend-src-dir}</workingDirectory>
 			    <installNodeAndNpm>false</installNodeAndNpm>
-			    <nodeExecutable>/node/node-v16.14.2-linux-x64/bin/node</nodeExecutable>
-			    <npmExecutable>/node/node-v16.14.2-linux-x64/bin/npm</npmExecutable>
+			    <nodeExecutable>/usr/bin/node</nodeExecutable>
+			    <npmExecutable>/usr/bin/npm</npmExecutable>
 			  </configuration>
 			  <executions>
 			    <execution>
@@ -122,8 +122,8 @@
 			      </goals>
 			      <configuration>
 			        <arguments>install</arguments>
-			        <nodeExecutable>/node/node-v16.14.2-linux-x64/bin/node</nodeExecutable>
-			        <npmExecutable>/node/node-v16.14.2-linux-x64/bin/npm</npmExecutable>
+			        <nodeExecutable>/usr/bin/node</nodeExecutable>
+			    	<npmExecutable>/usr/bin/npm</npmExecutable>
 			      </configuration>
 			    </execution>
 			    <execution>
@@ -133,8 +133,8 @@
 			      </goals>
 			      <configuration>
 			        <arguments>run build</arguments>
-			        <nodeExecutable>/node/node-v16.14.2-linux-x64/bin/node</nodeExecutable>
-			        <npmExecutable>/node/node-v16.14.2-linux-x64/bin/npm</npmExecutable>
+			        <nodeExecutable>/usr/bin/node</nodeExecutable>
+			    	<npmExecutable>/usr/bin/npm</npmExecutable>
 			      </configuration>
 			    </execution>
 			  </executions>
