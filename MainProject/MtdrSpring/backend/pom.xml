@@ -109,11 +109,12 @@
 			  <artifactId>frontend-maven-plugin</artifactId>
 			  <version>1.9.1</version>
 			  <configuration>
-			    <workingDirectory>src/main/frontend</workingDirectory> <!-- o "." si prefieres -->
+			    <workingDirectory>src/main/frontend</workingDirectory>
 			    <installNodeAndNpm>false</installNodeAndNpm>
 			    <nodeExecutable>/opt/node/bin/node</nodeExecutable>
-			    <npmExecutable>/opt/node/bin/npm</npmExecutable>
-			  </configuration>
+		            <npmExecutable>/opt/node/bin/npm</npmExecutable>
+		            <nodeWorkingDirectory>/opt/node/bin</nodeWorkingDirectory>
+  			  </configuration>
 			  <executions>
 			    <execution>
 			      <id>npm install</id>
