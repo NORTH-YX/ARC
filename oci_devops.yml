@@ -70,6 +70,11 @@ steps:
       source build.sh
 
   - type: Command
+    name: "Check frontend build output"
+    command: |
+      ls -l MainProject/MtdrSpring/backend/src/main/frontend/dist || echo "No dist folder"
+
+  - type: Command
     name: "Install K8s"
     command: mkdir -p $HOME/.kube;
       cd $HOME;
