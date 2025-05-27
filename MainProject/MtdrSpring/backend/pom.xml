@@ -113,6 +113,7 @@
 				    <installNodeAndNpm>false</installNodeAndNpm>
 				    <nodeExecutable>/node/node-v16.14.2-linux-x64/bin/node</nodeExecutable>
 				    <npmExecutable>/node/node-v16.14.2-linux-x64/bin/npm</npmExecutable>
+				    <failOnError>true</failOnError>
 				  </configuration>
 				  <executions>
 				    <execution>
