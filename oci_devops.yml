@@ -65,8 +65,8 @@ steps:
         export PATH=/node/node-v16.14.2-linux-x64/bin:$PATH
         export NODE_EXECUTABLE=/node/node-v16.14.2-linux-x64/bin/node
         export NPM_EXECUTABLE=/node/node-v16.14.2-linux-x64/bin/npm
-        /node/node-v16.14.2-linux-x64/bin/node --version
-        /node/node-v16.14.2-linux-x64/bin/npm --version
+        $NODE_EXECUTABLE --version
+        $NPM_EXECUTABLE --version
         source build.sh
 
   - type: Command
