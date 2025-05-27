@@ -50,8 +50,8 @@ steps:
   - type: Command
     name: "Install Node.js and npm"
     command: |
-      sudo yum install -y oracle-epel-release-el8
-      sudo yum install -y nodejs npm
+      yum install -y oracle-epel-release-el8
+      yum install -y nodejs npm
       node --version
       npm --version
 
