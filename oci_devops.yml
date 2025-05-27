@@ -28,22 +28,10 @@ steps:
               cat at.cfg | docker login -u "ax2fs7hibrfo/a00836801@tec.mx" --password-stdin mx-queretaro-1.ocir.io
 
   - type: Command
-    name: "Install Node.js 18"
-    command:  cd /tmp
-              curl -O https://nodejs.org/dist/v18.20.3/node-v18.20.3-linux-x64.tar.xz
-              tar -xf node-v18.20.3-linux-x64.tar.xz
-              mv node-v18.20.3-linux-x64 /opt/node
-              export PATH=/opt/node/bin:$PATH
-              node -v
-              npm -v
-
-  - type: Command
     name: "Build"
+    failInmediatelyOnError: true
     command:
         cd MainProject/MtdrSpring;
-        export PATH=/opt/node/bin:$PATH;
-        export NODE_EXECUTABLE=/opt/node/bin/node;
-        export NPM_EXECUTABLE=/opt/node/bin/npm;
         source env.sh;
         cd backend;
         source build.sh;
