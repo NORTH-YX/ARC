@@ -16,6 +16,10 @@ steps:
     command: yum -y install graalvm22-ee-17-native-image
 
   - type: Command
+    name: "update glibc"
+    command: yum -y install glibc
+
+  - type: Command
     name: "Set PATH Variable"
     command: export PATH=$JAVA_HOME/bin:$PATH
 
