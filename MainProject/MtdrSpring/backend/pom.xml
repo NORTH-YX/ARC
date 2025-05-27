@@ -110,9 +110,9 @@
 			  <version>1.9.1</version>
 			  <configuration>
 			    <workingDirectory>src/main/frontend</workingDirectory>
-			    <nodeExecutable>/opt/node/bin/node</nodeExecutable>
-			    <npmExecutable>/opt/node/bin/npm</npmExecutable>
-			    <installNodeAndNpm>false</installNodeAndNpm>
+    			    <installNodeAndNpm>false</installNodeAndNpm>
+                            <nodeExecutable>/opt/node/bin/node</nodeExecutable>
+                            <npmExecutable>/opt/node/bin/npm</npmExecutable>
 			  </configuration>
 			  <executions>
 			    <execution>
