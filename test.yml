@@ -5,35 +5,34 @@ shell: bash
 
 steps:
   - type: Command
-    name: "Install K8s and ZAP"
-    command: |
-      # Instalar kubectl
-      mkdir -p $HOME/.kube
-      cd $HOME
-      mkdir -p k8s
-      cd k8s
-      wget https://dl.k8s.io/v1.31.2/bin/linux/amd64/kubectl
-      chmod +x kubectl
-      export PATH=$PATH:$HOME/k8s
-      echo 'export PATH=$PATH:$HOME/k8s' >> $HOME/.bashrc
-      kubectl version --client
+  name: "Install K8s and ZAP"
+  command: |
+    # Instalar kubectl
+    mkdir -p $HOME/.kube
+    cd $HOME
+    mkdir k8s
+    cd k8s
+    wget https://dl.k8s.io/v1.31.2/bin/linux/amd64/kubectl
+    chmod +x kubectl
+    export PATH=$PATH:$HOME/k8s
+    kubectl version --client
 
-      # Configurar kubeconfig
-      oci ce cluster create-kubeconfig --cluster-id ocid1.cluster.oc1.mx-queretaro-1.aaaaaaaayt4ltydknxnaxvp6gzsgh4sxzkstzoc65r4ppjo4ac54i5xmdcwa \
-        --file $HOME/.kube/config \
-        --region mx-queretaro-1 \
-        --token-version 2.0.0 \
-        --kube-endpoint PUBLIC_ENDPOINT
-      export KUBECONFIG=$HOME/.kube/config
-      echo 'export KUBECONFIG=$HOME/.kube/config' >> $HOME/.bashrc
+    # Crear kubeconfig
+    oci ce cluster create-kubeconfig --cluster-id ocid1.cluster.oc1.mx-queretaro-1.aaaaaaaayt4ltydknxnaxvp6gzsgh4sxzkstzoc65r4ppjo4ac54i5xmdcwa \
+      --file $HOME/.kube/config \
+      --region mx-queretaro-1 \
+      --token-version 2.0.0 \
+      --kube-endpoint PUBLIC_ENDPOINT
 
-      # Descargar ZAP (versión .tar.gz correcta)
-      cd $HOME
-      wget https://github.com/zaproxy/zaproxy/releases/download/v2.14.0/ZAP_2.14.0_Core.tar.gz
-      mkdir -p zap
-      tar -xvzf ZAP_2.14.0_Core.tar.gz -C zap --strip-components=1
-      echo 'export ZAP_PATH=$HOME/zap' >> $HOME/.bashrc
-      echo 'export PATH=$PATH:$ZAP_PATH' >> $HOME/.bashrc
+    export KUBECONFIG=$HOME/.kube/config
+
+    # Descargar e instalar OWASP ZAP 2.16.1
+    cd /root
+    mkdir zap
+    cd zap
+    wget https://github.com/zaproxy/zaproxy/releases/download/v2.16.1/ZAP_2.16.1_Linux.tar.gz
+    tar -xvzf ZAP_2.16.1_Linux.tar.gz
+    chmod +x zap.sh
 
   - type: Command
     name: "Get LoadBalancer IP"
@@ -46,13 +45,7 @@ steps:
       echo "TARGET_IP=$TARGET_IP" >> $OCI_OUTPUT_DIR/env_vars
 
   - type: Command
-    name: "Run OWASP ZAP Scan"
-    command: |
-      source $HOME/.bashrc
-      source $OCI_OUTPUT_DIR/env_vars
-      if [ -z "$TARGET_IP" ]; then
-        echo "❌ No se pudo obtener la IP del LoadBalancer. Abortando escaneo ZAP."
-        exit 1
-      fi
-      echo "Running OWASP ZAP against http://$TARGET_IP"
-      $HOME/zap/zap.sh -cmd -quickurl http://$TARGET_IP -quickout zap_report.html
+  name: "Run OWASP ZAP Scan"
+  command: |
+    echo "Running OWASP ZAP against http://$LB_IP"
+    /root/zap/zap.sh -cmd -quickurl http://$LB_IP -quickout /root/zap-report.html -quickprogress
