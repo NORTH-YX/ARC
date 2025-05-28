@@ -5,8 +5,14 @@ shell: bash
 
 steps:
   - type: Command
-    name: "Install K8s and ZAP"
+    name: "Install & Run ZAP"
     command: |
+      # Instalar Java 17
+      apt update
+      apt install -y openjdk-17-jdk wget unzip
+      export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+      export PATH=$JAVA_HOME/bin:$PATH
+
       # Instalar kubectl
       mkdir -p $HOME/.kube
       cd $HOME
@@ -25,7 +31,13 @@ steps:
 
       export KUBECONFIG=$HOME/.kube/config
 
-      # Descargar e instalar OWASP ZAP 2.16.1
+      # Esperar LoadBalancer
+      echo "⏳ Esperando 30 segundos para IP..."
+      sleep 30
+      TARGET_IP=$(kubectl get svc --all-namespaces -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}')
+      echo "✅ IP obtenida: $TARGET_IP"
+
+      # Descargar e instalar OWASP ZAP
       cd /root
       mkdir zap
       cd zap
@@ -34,17 +46,5 @@ steps:
       cd ZAP_2.16.1
       chmod +x zap.sh
 
-  - type: Command
-    name: "Get LoadBalancer IP"
-    command: |
-      echo "⏳ Esperando 30 segundos para que el LoadBalancer tenga IP..."
-      sleep 30
-      TARGET_IP=$(kubectl get svc --all-namespaces -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}')
-      echo "✅ IP obtenida: $TARGET_IP"
-      echo "LB_IP=$TARGET_IP" >> $OCI_OUTPUT_DIR/env_vars
-
-  - type: Command
-    name: "Run OWASP ZAP Scan"
-    command: |
-      echo "Running OWASP ZAP against http://$LB_IP"
-      /root/zap/ZAP_2.16.1/zap.sh -cmd -quickurl http://$LB_IP -quickout /root/zap-report.html -quickprogress
+      # Ejecutar escaneo
+      ./zap.sh -cmd -quickurl http://$TARGET_IP -quickout /root/zap-report.html -quickprogress
