@@ -7,7 +7,7 @@ steps:
   - type: Command
     name: "Install tools"
     command: |
-      sudo yum install -y java-17-openjdk wget unzip
+      yum install -y java-17-openjdk wget unzip
       wget https://downloads.apache.org//jmeter/binaries/apache-jmeter-5.6.3.tgz
       tar -xvzf apache-jmeter-5.6.3.tgz
       export JMETER_HOME=$PWD/apache-jmeter-5.6.3
