@@ -71,6 +71,16 @@ steps:
     command: |
       cp /root/zap-report.html $OCI_PRIMARY_SOURCE_DIR/zap-report.html
 
+  - type: Command
+    name: "Subir artefacto a Object Storage"
+    command: |
+      echo "☁️ Subiendo zap-report.html al bucket de Object Storage..."
+      oci os object put \
+        --bucket-name reacttodo-pruebo \
+        --name zap-report.html \
+        --file /root/zap/ZAP_2.16.1/zap-report.html \
+        --force
+
 outputArtifacts:
   - name: zap-report
     type: BINARY
