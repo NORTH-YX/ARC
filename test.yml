@@ -1,3 +1,8 @@
+version: 0.1
+component: build
+timeoutInSeconds: 1800
+shell: bash
+
 steps:
   - type: Command
     name: "Install K8s and ZAP"
