@@ -3,17 +3,32 @@ component: build
 timeoutInSeconds: 1800
 shell: bash
 
+env:
+  variables:
+    JAVA_HOME: /usr/lib64/graalvm/graalvm22-ee-java17
+
+  exportedVariables:
+    - BuildServiceDemoVersion
+    - JAVA_HOME
+
 steps:
   - type: Command
-    name: "Install & Run ZAP with Java 17"
+    name: "Instalar Native Image para GraalVM"
     command: |
-      echo "☕ Instalando Java 17 con yum..."
-      yum install -y java-17-openjdk java-17-openjdk-devel
+      echo "⚙️ Instalando GraalVM Native Image para Java 17..."
+      yum -y install graalvm22-ee-17-native-image || echo "⚠️ No se pudo instalar Native Image (puede omitirse)."
 
-      export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+  - type: Command
+    name: "Configurar entorno Java 17 (GraalVM)"
+    command: |
       export PATH=$JAVA_HOME/bin:$PATH
-      echo "✅ Java version instalada:"
+      echo "✅ Versión de Java:"
       java -version
+
+  - type: Command
+    name: "Instalar y ejecutar ZAP con Java 17 (GraalVM)"
+    command: |
+      export PATH=$JAVA_HOME/bin:$PATH
 
       # Instalar kubectl
       mkdir -p $HOME/.kube
@@ -48,5 +63,5 @@ steps:
       cd ZAP_2.16.1
       chmod +x zap.sh
 
-      echo "🔍 Ejecutando escaneo ZAP con Java 17..."
-      JAVA_HOME=/usr/lib/jvm/java-17-openjdk ./zap.sh -cmd -quickurl http://$TARGET_IP -quickout /root/zap-report.html -quickprogress
+      echo "🔍 Ejecutando escaneo ZAP con Java 17 (GraalVM)..."
+      JAVA_HOME=$JAVA_HOME ./zap.sh -cmd -quickurl http://$TARGET_IP -quickout /root/zap-report.html -quickprogress
