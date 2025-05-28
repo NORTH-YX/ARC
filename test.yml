@@ -32,7 +32,7 @@ steps:
       sleep 25
 
       TARGET_IP=$(kubectl get services --all-namespaces -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}')
-      echo "✅ IP obtenida: $TARGET_IP"
+      echo " IP obtenida: $TARGET_IP"
       echo $TARGET_IP > ip.txt
 
   - type: Command
