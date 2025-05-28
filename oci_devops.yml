@@ -12,72 +12,6 @@ env:
 
 steps:
   - type: Command
-    name: "Install GraalVM Enterprise 22.x Native Image for Java17"
-    command: yum -y install graalvm22-ee-17-native-image
-
-  - type: Command
-    name: "update glibc"
-    command: yum -y install glibc
-
-  - type: Command
-    name: "Set PATH Variable"
-    command: export PATH=$JAVA_HOME/bin:$PATH
-
-  - type: Command
-    name: "Docker Login"
-    command:  cd MainProject/MtdrSpring;
-              oci os object get --bucket-name reacttodo-puebo --name deployment_config.tgz --file deployment_config.tgz;
-              tar -xzvf deployment_config.tgz;
-              source env.sh;
-              cat at.cfg | docker login -u "ax2fs7hibrfo/a00836801@tec.mx" --password-stdin mx-queretaro-1.ocir.io
-
-  - type: Command
-    name: "Clean local node binaries"
-    command: |
-      rm -rf MainProject/MtdrSpring/backend/src/main/frontend/node
-      rm -rf MainProject/MtdrSpring/backend/target/node
-
-  - type: Command
-    name: "Check Node.js path"
-    command: |
-      which node
-      which npm
-      node --version
-      npm --version
-      ls -l /node/node-v16.14.2-linux-x64/bin/node || echo "No node here"
-      ls -l /usr/bin/node || echo "No node here"
-      /node/node-v16.14.2-linux-x64/bin/node --version
-      /node/node-v16.14.2-linux-x64/bin/npm --version
-      ls -l /node/node-v16.14.2-linux-x64/bin/node
-      ls -l /node/node-v16.14.2-linux-x64/bin/npm
-
-  - type: Command
-    name: "Install Node.js and npm"
-    command: |
-      yum install -y oracle-epel-release-el8
-      yum install -y nodejs npm
-      node --version
-      npm --version
-
-  - type: Command
-    name: "Build"
-    failInmediatelyOnError: true
-    command: |
-      cd MainProject/MtdrSpring
-      source env.sh
-      cd backend
-      export PATH=/node/node-v16.14.2-linux-x64/bin:$PATH
-      export NODE_EXECUTABLE=/node/node-v16.14.2-linux-x64/bin/node
-      export NPM_EXECUTABLE=/node/node-v16.14.2-linux-x64/bin/npm
-      $NODE_EXECUTABLE --version
-      $NPM_EXECUTABLE --version
-
-  - type: Command
-    name: "Check frontend build output"
-    command: |
-      ls -l MainProject/MtdrSpring/backend/src/main/frontend/dist || echo "No dist folder"
-
-  - type: Command
     name: "Install K8s"
     command: mkdir -p $HOME/.kube;
       cd $HOME;
@@ -97,6 +31,7 @@ steps:
 
   - type: Command
     name: "Undeploy"
+    ignoreFailure: true
     command: export PATH=$PATH:$HOME/k8s;kubectl version;
       export KUBECONFIG=$HOME/.kube/config;
       cd MainProject/MtdrSpring;
@@ -105,6 +40,4 @@ steps:
       ls -l;
       kubectl config view;
       source undeploy.sh;
-
-
 
