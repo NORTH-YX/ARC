@@ -217,7 +217,10 @@ const Dashboard: React.FC<DashProps> = ({ user }) => {
             {formatDate(currentDateTime)}
           </Text>
           <Title level={2} style={{ margin: 0, fontSize: '32px', fontWeight: 600 }}>
-            ERROR!
+            {formatTime(currentDateTime)}! {user?.name || 'User'}
+          </Title>
+          <Title level={2} style={{ margin: 0, fontSize: '32px', fontWeight: 600 }}>
+            ERROR
           </Title>
         </Col>
       </Row>
