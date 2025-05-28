@@ -30,7 +30,6 @@ steps:
       export ZAP_PATH=$HOME/zap/ZAP_2.14.0
       export PATH=$PATH:$ZAP_PATH
 
-  steps:
   - type: Command
     name: "Configure Kubeconfig and Get IP"
     command: |
