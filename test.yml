@@ -5,11 +5,14 @@ shell: bash
 
 steps:
   - type: Command
-    name: "Install & Run ZAP"
+    name: "Install & Run ZAP with Java 17"
     command: |
-      # Configurar Java 17
-      export JAVA_HOME=/usr/lib64/graalvm/graalvm22-ee-java17
+      # Instalar Java 17
+      apt update
+      apt install -y openjdk-17-jdk wget unzip
+      export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
       export PATH=$JAVA_HOME/bin:$PATH
+      echo "✅ Java version instalada:"
       java -version
 
       # Instalar kubectl
@@ -31,13 +34,12 @@ steps:
 
       export KUBECONFIG=$HOME/.kube/config
 
-      # Esperar IP del LoadBalancer
-      echo "⏳ Esperando 30 segundos para que el LoadBalancer tenga IP..."
+      echo "⏳ Esperando 30 segundos para IP del LoadBalancer..."
       sleep 30
       TARGET_IP=$(kubectl get svc --all-namespaces -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}')
       echo "✅ IP obtenida: $TARGET_IP"
 
-      # Descargar e instalar OWASP ZAP
+      # Instalar OWASP ZAP
       cd /root
       mkdir -p zap
       cd zap
@@ -46,6 +48,5 @@ steps:
       cd ZAP_2.16.1
       chmod +x zap.sh
 
-      # Ejecutar escaneo OWASP ZAP
-      echo "🔍 Ejecutando escaneo OWASP ZAP en http://$TARGET_IP"
-      ./zap.sh -cmd -quickurl http://$TARGET_IP -quickout /root/zap-report.html -quickprogress
+      echo "🔍 Ejecutando escaneo ZAP con Java 17..."
+      JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 ./zap.sh -cmd -quickurl http://$TARGET_IP -quickout /root/zap-report.html -quickprogress
