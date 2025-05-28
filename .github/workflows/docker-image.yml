@@ -7,29 +7,32 @@ on:
     branches: [ "main" ]
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-    - uses: graalvm/setup-graalvm@v1
-      with:
-        java-version: '21'
-        distribution: 'graalvm'
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        native-image-job-reports: 'true'
-          
-    - name: Docker Login
-      run: cd MainProject/MtdrSpring;
-            wget https://objectstorage.mx-queretaro-1.oraclecloud.com/n/ax2fs7hibrfo/b/reacttodo-puebo/o/deployment_config.tgz
-            tar -xzvf deployment_config.tgz;
-            source env.sh;
-            cat at.cfg | docker login -u "ax2fs7hibrfo/a00836801@tec.mx" --password-stdin mx-queretaro-1.ocir.io
-          
-    - name: Build Project
-      run: cd MainProject/MtdrSpring
-           source env.sh
-           cd backend
-           . build.sh
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up GraalVM with Java 21
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21'
+          distribution: 'graalvm'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          native-image-job-reports: 'true'
+
+      - name: Docker Login
+        run: |
+          cd MainProject/MtdrSpring
+          wget https://objectstorage.mx-queretaro-1.oraclecloud.com/n/ax2fs7hibrfo/b/reacttodo-puebo/o/deployment_config.tgz;
+          tar -xzvf deployment_config.tgz
+          source env.sh
+          cat at.cfg | docker login -u "ax2fs7hibrfo/a00836801@tec.mx" --password-stdin mx-queretaro-1.ocir.io
+
+      - name: Build Project
+        run: |
+          cd MainProject/MtdrSpring
+          source env.sh
+          cd backend
+          ./build.sh
