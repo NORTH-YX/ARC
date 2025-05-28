@@ -27,6 +27,7 @@ jobs:
           cd MainProject/MtdrSpring
           wget https://objectstorage.mx-queretaro-1.oraclecloud.com/n/ax2fs7hibrfo/b/reacttodo-puebo/o/deployment_config.tgz;
           tar -xzvf deployment_config.tgz
+          cp -r wallet backend/wallet
           source env.sh
           cat at.cfg | docker login -u "ax2fs7hibrfo/a00836801@tec.mx" --password-stdin mx-queretaro-1.ocir.io
 
