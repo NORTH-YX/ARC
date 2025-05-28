@@ -32,6 +32,7 @@ steps:
       cd zap
       wget https://github.com/zaproxy/zaproxy/releases/download/v2.16.1/ZAP_2.16.1_Linux.tar.gz
       tar -xvzf ZAP_2.16.1_Linux.tar.gz
+      cd ZAP_2.16.1  # Ajusta este nombre si el tar descomprime con otro nombre
       chmod +x zap.sh
 
   - type: Command
