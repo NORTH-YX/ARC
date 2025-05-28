@@ -45,7 +45,7 @@ steps:
       echo "TARGET_IP=$TARGET_IP" >> $OCI_OUTPUT_DIR/env_vars
 
   - type: Command
-  name: "Run OWASP ZAP Scan"
-  command: |
-    echo "Running OWASP ZAP against http://$LB_IP"
-    /root/zap/zap.sh -cmd -quickurl http://$LB_IP -quickout /root/zap-report.html -quickprogress
+    name: "Run OWASP ZAP Scan"
+    command: |
+      echo "Running OWASP ZAP against http://$LB_IP"
+      /root/zap/zap.sh -cmd -quickurl http://$LB_IP -quickout /root/zap-report.html -quickprogress
