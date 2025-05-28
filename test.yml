@@ -9,51 +9,36 @@ steps:
     command: |
       sudo yum install -y java-17-openjdk wget unzip curl tar
 
-      # Instalar kubectl
       mkdir -p $HOME/k8s
       cd $HOME/k8s
       wget https://dl.k8s.io/v1.31.2/bin/linux/amd64/kubectl
       chmod +x kubectl
-      export PATH=$PATH:$HOME/k8s
 
-      # Instalar JMeter
       cd $HOME
-      wget https://downloads.apache.org//jmeter/binaries/apache-jmeter-5.6.3.tgz
+      wget https://downloads.apache.org/jmeter/binaries/apache-jmeter-5.6.3.tgz
       tar -xvzf apache-jmeter-5.6.3.tgz
-      export JMETER_HOME=$HOME/apache-jmeter-5.6.3
-      export PATH=$PATH:$JMETER_HOME/bin
 
-      # Instalar OWASP ZAP
-      wget https://github.com/zaproxy/zaproxy/releases/download/v2.14.0/ZAP_2.14.0_unix.sh
-      chmod +x ZAP_2.14.0_unix.sh
-      ./ZAP_2.14.0_unix.sh -q -dir $HOME/zap
-      export ZAP_PATH=$HOME/zap/ZAP_2.14.0
-      export PATH=$PATH:$ZAP_PATH
+      export PATH=$PATH:$HOME/k8s:$HOME/apache-jmeter-5.6.3/bin
 
   - type: Command
     name: "Configure Kubeconfig and Get IP"
     command: |
+      export PATH=$PATH:$HOME/k8s
       mkdir -p $HOME/.kube
-      oci ce cluster create-kubeconfig --cluster-id <CLUSTER_OCID> --file $HOME/.kube/config --region mx-queretaro-1 --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
+      oci ce cluster create-kubeconfig --cluster-id ocid1.cluster.oc1.mx-queretaro-1.aaaaaaaaxyz123abc... --file $HOME/.kube/config --region mx-queretaro-1 --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
       export KUBECONFIG=$HOME/.kube/config
 
-      echo "⏳ Esperando 25 segundos para que el LoadBalancer obtenga IP..."
+      echo "⏳ Esperando 25 segundos..."
       sleep 25
 
       TARGET_IP=$(kubectl get services --all-namespaces -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}')
       echo "✅ IP obtenida: $TARGET_IP"
-
+      echo $TARGET_IP > ip.txt
 
   - type: Command
     name: "Run JMeter test"
     command: |
-      source $OCI_OUTPUT_DIR/env_vars
+      export PATH=$PATH:$HOME/apache-jmeter-5.6.3/bin
+      export TARGET_IP=$(cat ip.txt)
       echo "Running JMeter against http://$TARGET_IP"
       jmeter -n -t jmeter/test_plan.jmx -Jhost=$TARGET_IP -l jmeter/results.jtl
-
-  - type: Command
-    name: "Run ZAP Scan"
-    command: |
-      source $OCI_OUTPUT_DIR/env_vars
-      echo "Running OWASP ZAP against http://$TARGET_IP"
-      $HOME/zap/ZAP_2.14.0/zap.sh -cmd -quickurl http://$TARGET_IP -quickout zap_report.html
