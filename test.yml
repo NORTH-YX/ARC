@@ -65,3 +65,14 @@ steps:
 
       echo "🔍 Ejecutando escaneo ZAP con Java 17 (GraalVM)..."
       JAVA_HOME=$JAVA_HOME ./zap.sh -cmd -quickurl http://$TARGET_IP -quickout /root/zap-report.html -quickprogress
+
+  - type: Command
+    name: "Copiar reporte para artefacto"
+    command: |
+      mkdir -p $OCI_PRIMARY_SOURCE_DIR/artifacts
+      cp /root/zap-report.html $OCI_PRIMARY_SOURCE_DIR/artifacts/
+
+outputArtifacts:
+  - name: zap-report
+    type: DIRECTORY
+    location: artifacts
