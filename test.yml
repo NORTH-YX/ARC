@@ -69,10 +69,9 @@ steps:
   - type: Command
     name: "Copiar reporte para artefacto"
     command: |
-      mkdir -p $OCI_PRIMARY_SOURCE_DIR/artifacts
-      cp /root/zap-report.html $OCI_PRIMARY_SOURCE_DIR/artifacts/
+      cp /root/zap-report.html $OCI_PRIMARY_SOURCE_DIR/zap-report.html
 
 outputArtifacts:
   - name: zap-report
-    type: DIRECTORY
-    location: artifacts
+    type: BINARY
+    location: zap-report.html
