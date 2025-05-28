@@ -7,10 +7,10 @@ steps:
   - type: Command
     name: "Install & Run ZAP with Java 17"
     command: |
-      # Instalar Java 17
-      apt update
-      apt install -y openjdk-17-jdk wget unzip
-      export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+      echo "☕ Instalando Java 17 con yum..."
+      yum install -y java-17-openjdk java-17-openjdk-devel
+
+      export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
       export PATH=$JAVA_HOME/bin:$PATH
       echo "✅ Java version instalada:"
       java -version
@@ -20,7 +20,7 @@ steps:
       cd $HOME
       mkdir -p k8s
       cd k8s
-      wget https://dl.k8s.io/v1.31.2/bin/linux/amd64/kubectl
+      curl -LO https://dl.k8s.io/v1.31.2/bin/linux/amd64/kubectl
       chmod +x kubectl
       mv kubectl /usr/local/bin/
 
@@ -43,10 +43,10 @@ steps:
       cd /root
       mkdir -p zap
       cd zap
-      wget https://github.com/zaproxy/zaproxy/releases/download/v2.16.1/ZAP_2.16.1_Linux.tar.gz
+      curl -LO https://github.com/zaproxy/zaproxy/releases/download/v2.16.1/ZAP_2.16.1_Linux.tar.gz
       tar -xvzf ZAP_2.16.1_Linux.tar.gz
       cd ZAP_2.16.1
       chmod +x zap.sh
 
       echo "🔍 Ejecutando escaneo ZAP con Java 17..."
-      JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64 ./zap.sh -cmd -quickurl http://$TARGET_IP -quickout /root/zap-report.html -quickprogress
+      JAVA_HOME=/usr/lib/jvm/java-17-openjdk ./zap.sh -cmd -quickurl http://$TARGET_IP -quickout /root/zap-report.html -quickprogress
