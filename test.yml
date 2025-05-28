@@ -13,6 +13,7 @@ env:
   exportedVariables:
     - BuildServiceDemoVersion
     - JAVA_HOME
+    - REPO_OCID
 
 steps:
   - type: Command
@@ -77,12 +78,23 @@ steps:
       cp /root/zap-report.html $OCI_PRIMARY_SOURCE_DIR/zap-report.html
 
   - type: Command
+    name: "Obtener OCID del repositorio"
+    command: |
+      export REPO_OCID=$(oci artifacts generic-repository list \
+        --compartment-id $COMPARTMENT_ID \
+        --name $REPO_NAME \
+        --query "data[0].id" \
+        --raw-output)
+      echo "📦 OCID del repositorio: $REPO_OCID"
+
+  - type: Command
     name: "Subir reporte a Artifact Registry"
     command: |
       echo "⬆️ Subiendo zap-report.html a Artifact Registry..."
       oci artifacts generic-artifact upload-by-path \
         --artifact-path zap-report.html \
-        --repository-id $(oci artifacts generic-repository list --compartment-id $COMPARTMENT_ID --name $REPO_NAME --query "data[0].id" --raw-output) \
+        --repository-id $REPO_OCID \
         --content-type text/html \
-        --namespace-name $NAMESPACE_NAME \
-        --compartment-id $COMPARTMENT_ID
+        --compartment-id $COMPARTMENT_ID \
+        --artifact-display-name zap-report.html \
+        --artifact-version $(date +%Y%m%d%H%M%S)
