@@ -71,7 +71,6 @@ steps:
       export NPM_EXECUTABLE=/node/node-v16.14.2-linux-x64/bin/npm
       $NODE_EXECUTABLE --version
       $NPM_EXECUTABLE --version
-      source build.sh
 
   - type: Command
     name: "Check frontend build output"
