@@ -231,7 +231,7 @@ const Dashboard: React.FC<DashProps> = ({ user }) => {
       <Row gutter={[24, 24]} style={{ marginBottom: "24px" }}>
         <Col xs={24} sm={8}>
           <Card styles={{ body: { padding: "24px", height: "160px" } }}>
-            <Text type="secondary" style={{ fontSize: '14px' }}>Average Compliance sssssssssssss</Text>
+            <Text type="secondary" style={{ fontSize: '14px' }}>Average Compliance Rate</Text>
             <Title level={2} style={{ margin: "12px 0", display: 'flex', alignItems: 'center' }}>
               {Math.round(projectStats.avgCompliance)}%
               <Tooltip title="Average compliance rate across all projects">
