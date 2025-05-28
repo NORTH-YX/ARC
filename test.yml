@@ -6,6 +6,9 @@ shell: bash
 env:
   variables:
     JAVA_HOME: /usr/lib64/graalvm/graalvm22-ee-java17
+    NAMESPACE_NAME: ax2fs7hibrfo
+    COMPARTMENT_ID: ocid1.compartment.oc1..aaaaaaaamhzttr3lwlq665qwm7xztqqdw53igngf3o6xnsztqerx36ckzegq
+    REPO_NAME: artifact-repository-20250528-1120
 
   exportedVariables:
     - BuildServiceDemoVersion
@@ -69,11 +72,17 @@ steps:
       cat /root/zap-report.html
 
   - type: Command
-    name: "Copiar reporte para artefacto"
+    name: "Copiar reporte para artefacto local"
     command: |
       cp /root/zap-report.html $OCI_PRIMARY_SOURCE_DIR/zap-report.html
 
-outputArtifacts:
-  - name: zap-report
-    type: BINARY
-    location: zap-report.html
+  - type: Command
+    name: "Subir reporte a Artifact Registry"
+    command: |
+      echo "⬆️ Subiendo zap-report.html a Artifact Registry..."
+      oci artifacts generic-artifact upload-by-path \
+        --artifact-path zap-report.html \
+        --repository-id $(oci artifacts generic-repository list --compartment-id $COMPARTMENT_ID --name $REPO_NAME --query "data[0].id" --raw-output) \
+        --content-type text/html \
+        --namespace-name $NAMESPACE_NAME \
+        --compartment-id $COMPARTMENT_ID
