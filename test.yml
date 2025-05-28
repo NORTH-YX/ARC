@@ -14,8 +14,7 @@ steps:
       cd k8s
       wget https://dl.k8s.io/v1.31.2/bin/linux/amd64/kubectl
       chmod +x kubectl
-      export PATH=$PATH:$HOME/k8s
-      kubectl version --client
+      mv kubectl /usr/local/bin/
 
       # Crear kubeconfig
       oci ce cluster create-kubeconfig --cluster-id ocid1.cluster.oc1.mx-queretaro-1.aaaaaaaayt4ltydknxnaxvp6gzsgh4sxzkstzoc65r4ppjo4ac54i5xmdcwa \
@@ -32,13 +31,12 @@ steps:
       cd zap
       wget https://github.com/zaproxy/zaproxy/releases/download/v2.16.1/ZAP_2.16.1_Linux.tar.gz
       tar -xvzf ZAP_2.16.1_Linux.tar.gz
-      cd ZAP_2.16.1  # Ajusta este nombre si el tar descomprime con otro nombre
+      cd ZAP_2.16.1
       chmod +x zap.sh
 
   - type: Command
     name: "Get LoadBalancer IP"
     command: |
-      source $HOME/.bashrc
       echo "⏳ Esperando 30 segundos para que el LoadBalancer tenga IP..."
       sleep 30
       TARGET_IP=$(kubectl get svc --all-namespaces -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}')
@@ -49,4 +47,4 @@ steps:
     name: "Run OWASP ZAP Scan"
     command: |
       echo "Running OWASP ZAP against http://$LB_IP"
-      /root/zap/zap.sh -cmd -quickurl http://$LB_IP -quickout /root/zap-report.html -quickprogress
+      /root/zap/ZAP_2.16.1/zap.sh -cmd -quickurl http://$LB_IP -quickout /root/zap-report.html -quickprogress
