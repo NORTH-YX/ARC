@@ -30,24 +30,20 @@ steps:
       export ZAP_PATH=$HOME/zap/ZAP_2.14.0
       export PATH=$PATH:$ZAP_PATH
 
+  steps:
   - type: Command
     name: "Configure Kubeconfig and Get IP"
     command: |
       mkdir -p $HOME/.kube
-      export PATH=$PATH:$HOME/k8s
-
-      oci ce cluster create-kubeconfig \
-        --cluster-id ocid1.cluster.oc1.mx-queretaro-1.aaaaaaaayt4ltydknxnaxvp6gzsgh4sxzkstzoc65r4ppjo4ac54i5xmdcwa \
-        --file $HOME/.kube/config \
-        --region mx-queretaro-1 \
-        --token-version 2.0.0 \
-        --kube-endpoint PUBLIC_ENDPOINT
-
+      oci ce cluster create-kubeconfig --cluster-id <CLUSTER_OCID> --file $HOME/.kube/config --region mx-queretaro-1 --token-version 2.0.0 --kube-endpoint PUBLIC_ENDPOINT
       export KUBECONFIG=$HOME/.kube/config
 
-      TARGET_IP=$(kubectl get svc -n default -o jsonpath="{.items[?(@.metadata.name=='todolistapp-springboot-service')].status.loadBalancer.ingress[0].ip}")
-      echo "TARGET_IP=$TARGET_IP"
-      echo "TARGET_IP=$TARGET_IP" >> $OCI_OUTPUT_DIR/env_vars
+      echo "⏳ Esperando 25 segundos para que el LoadBalancer obtenga IP..."
+      sleep 25
+
+      TARGET_IP=$(kubectl get services --all-namespaces -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}')
+      echo "✅ IP obtenida: $TARGET_IP"
+
 
   - type: Command
     name: "Run JMeter test"
