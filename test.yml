@@ -1,8 +1,3 @@
-version: 0.1
-component: build
-timeoutInSeconds: 1800
-shell: bash
-
 steps:
   - type: Command
     name: "Install K8s and ZAP"
@@ -15,6 +10,7 @@ steps:
       wget https://dl.k8s.io/v1.31.2/bin/linux/amd64/kubectl
       chmod +x kubectl
       export PATH=$PATH:$HOME/k8s
+      echo 'export PATH=$PATH:$HOME/k8s' >> $HOME/.bashrc
       kubectl version --client
 
       # Configurar kubeconfig
@@ -24,18 +20,20 @@ steps:
         --token-version 2.0.0 \
         --kube-endpoint PUBLIC_ENDPOINT
       export KUBECONFIG=$HOME/.kube/config
+      echo 'export KUBECONFIG=$HOME/.kube/config' >> $HOME/.bashrc
 
-      # Instalar OWASP ZAP
+      # Descargar ZAP (versión .tar.gz correcta)
       cd $HOME
-      wget https://github.com/zaproxy/zaproxy/releases/download/v2.14.0/ZAP_2.14.0_unix.sh
-      chmod +x ZAP_2.14.0_unix.sh
-      ./ZAP_2.14.0_unix.sh -q -dir $HOME/zap
-      export ZAP_PATH=$HOME/zap/ZAP_2.14.0
-      export PATH=$PATH:$ZAP_PATH
+      wget https://github.com/zaproxy/zaproxy/releases/download/v2.14.0/ZAP_2.14.0_Core.tar.gz
+      mkdir -p zap
+      tar -xvzf ZAP_2.14.0_Core.tar.gz -C zap --strip-components=1
+      echo 'export ZAP_PATH=$HOME/zap' >> $HOME/.bashrc
+      echo 'export PATH=$PATH:$ZAP_PATH' >> $HOME/.bashrc
 
   - type: Command
     name: "Get LoadBalancer IP"
     command: |
+      source $HOME/.bashrc
       echo "⏳ Esperando 30 segundos para que el LoadBalancer tenga IP..."
       sleep 30
       TARGET_IP=$(kubectl get svc --all-namespaces -o jsonpath='{.items[?(@.spec.type=="LoadBalancer")].status.loadBalancer.ingress[0].ip}')
@@ -45,6 +43,11 @@ steps:
   - type: Command
     name: "Run OWASP ZAP Scan"
     command: |
+      source $HOME/.bashrc
       source $OCI_OUTPUT_DIR/env_vars
+      if [ -z "$TARGET_IP" ]; then
+        echo "❌ No se pudo obtener la IP del LoadBalancer. Abortando escaneo ZAP."
+        exit 1
+      fi
       echo "Running OWASP ZAP against http://$TARGET_IP"
-      $HOME/zap/ZAP_2.14.0/zap.sh -cmd -quickurl http://$TARGET_IP -quickout zap_report.html
+      $HOME/zap/zap.sh -cmd -quickurl http://$TARGET_IP -quickout zap_report.html
