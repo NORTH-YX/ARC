@@ -6,12 +6,8 @@ import useUserStore from "../../../../../../../../modules/users/store/useUserSto
 import { useDataInitialization } from "../../../../../../../../modules/users/hooks/useDataInitialization";
 import { useUserBook } from "../../../../../../../../modules/users/hooks/useUserBook";
 
-
 const { Item } = Form;
 const { TextArea } = Input;
-
-
-
 
 interface NewTaskModalProps {
   onCancel: () => void;
@@ -24,45 +20,45 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({
   onCreate,
   sprintId,
 }) => {
-
-   const { data } = useUserBook()
-  
-    const store = useUserStore();
-  
-    useDataInitialization(data, store)
-
-    const users = data?.users || [];
-
+  const { data } = useUserBook();
+  const store = useUserStore();
+  useDataInitialization(data, store);
+  const users = data?.users || [];
   const [form] = Form.useForm();
 
-const handleOk = () => {
-  form.validateFields().then((values) => {
-    const priorityMap: Record<string, number> = {
-      Low: 1,
-      Medium: 2,
-      High: 3,
-    };
+  const handleOk = () => {
+    form.validateFields().then((values) => {
+      const priorityMap: Record<string, number> = {
+        Low: 1,
+        Medium: 2,
+        High: 3,
+      };
 
-    const formattedValues = {
-      taskName: values?.taskName,
-      description: values?.description,
-      priority: priorityMap[values?.priority] ?? 0, // fallback por si algo falla
-      status: values?.status,
-      estimatedFinishDate: values?.dates ? values?.dates.toISOString() : null,
-      estimatedHours: Number(values?.estimatedHours),
-      user: { userId: values?.userId },
-      sprint: { sprintId: sprintId },
-      realFinishDate: null,
-      realHours: null,
-      deletedAt: null,
-    };
+      if (!sprintId) {
+        console.error("Sprint ID is required");
+        return;
+      }
 
-    console.log("🧩 Formatted task to create:", formattedValues);
-    onCreate(formattedValues);
-    form.resetFields();
-  });
-};
+      // Format the task data properly according to TaskCreate interface
+      const formattedValues: TaskCreate = {
+        taskName: values.taskName?.trim(),
+        description: values.description?.trim() || "",
+        priority: priorityMap[values.priority] || 1,
+        status: values.status || "To Do",
+        estimatedFinishDate: values.dates
+          ? values.dates.toISOString()
+          : undefined,
+        estimatedHours: Number(values.estimatedHours) || 0,
+        user: users.find((u) => u.userId === values.userId) || {
+          userId: values.userId,
+        },
+        sprint: { sprintId },
+      };
 
+      onCreate(formattedValues);
+      form.resetFields();
+    });
+  };
 
   const handleCancel = () => {
     form.resetFields();
@@ -115,7 +111,7 @@ const handleOk = () => {
                 <DatePicker
                   style={{ width: "100%" }}
                   format="MMM D, YYYY h:mm a"
-                  showTime // <-- Esto habilita la selección de hora
+                  showTime
                   placeholder={"Estimated finish date"}
                 />
               </Item>
@@ -151,7 +147,10 @@ const handleOk = () => {
             </Col>
 
             <Col>
-              <Item name="userId" rules={[{ required: true, message: "Please assign a user!" }]}>
+              <Item
+                name="userId"
+                rules={[{ required: true, message: "Please assign a user!" }]}
+              >
                 <Select placeholder="Assign to">
                   {users.map((user) => (
                     <Select.Option key={user.userId} value={user.userId}>
