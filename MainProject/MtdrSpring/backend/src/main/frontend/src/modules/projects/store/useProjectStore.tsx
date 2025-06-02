@@ -506,7 +506,7 @@ export default create<ProjectStoreState>((set, get) => ({
   },
 
   createTask: async (projectId: number, taskData: TaskCreate) => {
-    const { projectBook, _updateBook } = get();
+    const { projectBook } = get();
     if (!projectBook) return;
 
     const prevState = _.cloneDeep(projectBook);

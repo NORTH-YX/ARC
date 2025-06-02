@@ -31,7 +31,7 @@ const SprintComponent: React.FC<SprintComponentProps> = ({
 }) => {
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const projectStore = useProjectStore();
-  const { projectTasks, projectSprints } = projectStore;
+  const { projectSprints } = projectStore;
 
   // Find the current sprint's tasks from the store's projectSprints
   const currentSprintTasks = React.useMemo(() => {
