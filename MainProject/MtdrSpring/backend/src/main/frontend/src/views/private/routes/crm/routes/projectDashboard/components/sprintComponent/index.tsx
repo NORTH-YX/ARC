@@ -1,26 +1,24 @@
-import React from "react";
+import React, { useState } from "react";
 import {
-    Container,
-    Header,
-    SprintDateDesktop,
-    SprintDateMobile,
-    StyledButton,
+  Container,
+  Header,
+  SprintDateDesktop,
+  SprintDateMobile,
+  StyledButton,
 } from "./elements";
-import { Col, Row, Button, Popover, Divider } from "antd";
+import { Col, Row, Button, Popover, Divider, message } from "antd";
 import {
-    MoreOutlined,
-    EditOutlined,
-    DeleteOutlined,
-    PlusOutlined,
+  MoreOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import { getSprintStatus, getTimeLineFormat } from "../../../utils";
 import { Sprint } from "../../../../../../../../interfaces/sprint";
-import { Task } from "../../../../../../../../interfaces/task";
+import { Task, TaskCreate } from "../../../../../../../../interfaces/task";
 import TaskComponent from "../taskComponent";
 import NewTaskModal from "../newTaskModal";
-import useTaskStore from "../../../../../../../../modules/tasks/store/useTaskStore";
-import { useTaskBook } from "../../../../../../../../modules/tasks/hooks/useTaskBook";
-import { useDataInitialization } from "../../../../../../../../modules/tasks/hooks/useDataInitialization";
+import useProjectStore from "../../../../../../../../modules/projects/store/useProjectStore";
 
 interface SprintComponentProps {
   sprint: Sprint;
@@ -31,14 +29,53 @@ const SprintComponent: React.FC<SprintComponentProps> = ({
   sprint,
   openSprintModal,
 }) => {
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const projectStore = useProjectStore();
+  const { projectTasks, projectSprints } = projectStore;
 
-  const { data } = useTaskBook();
+  // Find the current sprint's tasks from the store's projectSprints
+  const currentSprintTasks = React.useMemo(() => {
+    if (!projectSprints || !sprint?.sprintId) return [];
+    const currentSprint = projectSprints.find(
+      (s) => s.sprintId === sprint.sprintId
+    );
+    return currentSprint?.tasks || [];
+  }, [projectSprints, sprint?.sprintId]);
 
-  const taskStore = useTaskStore();
+  const handleCreateTask = async (taskData: TaskCreate) => {
+    try {
+      if (!sprint?.sprintId) {
+        message.error("Sprint ID is required");
+        return;
+      }
 
-  useDataInitialization(data, taskStore)
+      // Close modal immediately for better UX
+      setIsTaskModalOpen(false);
 
-  const { createTask } = taskStore
+      const result = await projectStore.createTask?.(
+        sprint.projectId,
+        taskData
+      );
+
+      if (!result || !result.taskId) {
+        throw new Error("Failed to create task - no result returned");
+      }
+    } catch (error: any) {
+      console.error("Error creating task:", {
+        error,
+        message: error.message,
+        response: error.response,
+      });
+
+      const errorMessage =
+        error.message ||
+        error.response?.message ||
+        error.response?.error ||
+        "Failed to create task";
+
+      message.error(errorMessage);
+    }
+  };
 
   const getActions = (
     <div
@@ -51,18 +88,14 @@ const SprintComponent: React.FC<SprintComponentProps> = ({
       <StyledButton
         type="text"
         icon={<PlusOutlined />}
-        onClick={() => {
-          taskStore.openTaskModal();
-        }}
+        onClick={() => setIsTaskModalOpen(true)}
       >
         Add Task
       </StyledButton>
       <StyledButton
         type="text"
         icon={<EditOutlined />}
-        onClick={() => {
-          openSprintModal();
-        }}
+        onClick={openSprintModal}
       >
         Edit
       </StyledButton>
@@ -74,6 +107,7 @@ const SprintComponent: React.FC<SprintComponentProps> = ({
 
   return (
     <Container>
+      <h3 style={{ color: "#6c6e76" }}>Sprint</h3>
       <Header>
         <Col>
           <h3 style={{ margin: 0 }}>{sprint?.sprintName}</h3>
@@ -116,20 +150,18 @@ const SprintComponent: React.FC<SprintComponentProps> = ({
         </Row>
       </Header>
       <Divider style={{ margin: "15px 0" }} />
-      {taskStore?.isTaskModalOpen && (
+      {isTaskModalOpen && (
         <NewTaskModal
-          onCancel={taskStore.closeTaskModal}
-          onCreate={(taskData) => {
-            createTask(taskData);
-            taskStore.closeTaskModal()
-          }}
+          onCancel={() => setIsTaskModalOpen(false)}
+          onCreate={handleCreateTask}
           sprintId={sprint?.sprintId}
         />
       )}
-      {sprint?.tasks?.map((task: Task, index: number) => (
-        <TaskComponent key={index} task={task} />
+      {currentSprintTasks.map((task: Task) => (
+        <TaskComponent key={task.taskId} task={task} />
       ))}
     </Container>
   );
 };
+
 export default SprintComponent;

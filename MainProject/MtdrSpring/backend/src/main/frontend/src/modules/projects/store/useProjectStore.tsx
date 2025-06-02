@@ -44,7 +44,7 @@ interface ProjectStoreState {
   deleteProject: (projectId: number) => Promise<boolean>;
   restoreProject?: (projectId: number) => Promise<boolean>;
   getProjectById?: (projectId: number) => Project | undefined;
-  
+
   // Task related methods
   createTask?: (projectId: number, taskData: TaskCreate) => Promise<Task>;
   updateTask?: (taskId: number, taskData: TaskUpdate) => Promise<Task>;
@@ -127,7 +127,7 @@ export default create<ProjectStoreState>((set, get) => ({
     injectableFunctions.forEach((funct) => {
       injectedMethods[funct.name] = async (...args: any[]) => {
         const { projectBook, _updateBook } = get();
-        
+
         // Save the entire state before making changes
         const prevState = _.cloneDeep(projectBook);
         const prevTasks = _.cloneDeep(get().projectTasks);
@@ -135,45 +135,132 @@ export default create<ProjectStoreState>((set, get) => ({
         const prevSelectedProject = _.cloneDeep(get().selectedProject);
 
         try {
-          // For task updates, apply optimistic UI update first
+          // For task operations, apply optimistic UI update first
           let optimisticUIApplied = false;
           if (funct.name === "updateTask") {
             const taskId = args[0];
             const taskData = args[1];
-            
+
             if (get().projectTasks) {
               optimisticUIApplied = true;
-              
+
               // Get current tasks and apply optimistic update
               const currentTasks = _.cloneDeep(get().projectTasks || []);
-              const updatedTasks = currentTasks.map(task => 
+              const updatedTasks = currentTasks.map((task) =>
                 task.taskId === taskId ? { ...task, ...taskData } : task
               );
-              
+
               // Get current sprints and apply optimistic update there too
               const currentSprints = _.cloneDeep(get().projectSprints || []);
-              currentSprints.forEach(sprint => {
+              currentSprints.forEach((sprint) => {
                 if (sprint.tasks) {
-                  sprint.tasks = sprint.tasks.map((t: any) => 
+                  sprint.tasks = sprint.tasks.map((t: any) =>
                     t.taskId === taskId ? { ...t, ...taskData } : t
                   );
                 }
               });
-              
+
               // Update the UI immediately with optimistic changes
               set({
                 projectTasks: updatedTasks,
-                projectSprints: currentSprints
+                projectSprints: currentSprints,
+              });
+            }
+          } else if (funct.name === "deleteTask") {
+            const taskId = args[0];
+
+            if (get().projectTasks) {
+              optimisticUIApplied = true;
+
+              // Get current tasks and remove the deleted task
+              const currentTasks = _.cloneDeep(get().projectTasks || []);
+              const updatedTasks = currentTasks.filter(
+                (task) => task.taskId !== taskId
+              );
+
+              // Get current sprints and remove the task there too
+              const currentSprints = _.cloneDeep(get().projectSprints || []);
+              currentSprints.forEach((sprint) => {
+                if (sprint.tasks) {
+                  sprint.tasks = sprint.tasks.filter(
+                    (t: any) => t.taskId !== taskId
+                  );
+                }
+              });
+
+              // Update the UI immediately with optimistic changes
+              set({
+                projectTasks: updatedTasks,
+                projectSprints: currentSprints,
+              });
+            }
+          } else if (funct.name === "createTask") {
+            const projectId = args[0];
+            const taskData = args[1];
+
+            if (get().projectTasks) {
+              optimisticUIApplied = true;
+
+              // Create an optimistic task with temporary ID
+              const optimisticTask = {
+                ...taskData,
+                taskId: `temp_${Date.now()}`, // Temporary ID that will be replaced
+                status: taskData.status || "To Do",
+                project: taskData.project || { projectId },
+                sprint: taskData.sprint || { sprintId: null, projectId },
+              };
+
+              // Get current tasks and add the new task
+              const currentTasks = _.cloneDeep(get().projectTasks || []);
+              // Filter out any existing temporary tasks and add the new one
+              const updatedTasks = currentTasks
+                .filter((t: Task) => !String(t.taskId).startsWith("temp_"))
+                .concat(optimisticTask);
+
+              // Get current sprints and add the task to the correct sprint
+              const currentSprints = _.cloneDeep(get().projectSprints || []);
+              const sprintId = taskData.sprint?.sprintId;
+
+              if (sprintId) {
+                const targetSprint = currentSprints.find(
+                  (s) => s.sprintId === sprintId
+                );
+                if (targetSprint) {
+                  if (!targetSprint.tasks) {
+                    targetSprint.tasks = [];
+                  }
+                  // Filter out any existing temporary tasks and add the new one
+                  targetSprint.tasks = targetSprint.tasks
+                    .filter((t: Task) => !String(t.taskId).startsWith("temp_"))
+                    .concat(optimisticTask);
+                }
+              }
+
+              // Update the UI immediately with optimistic changes
+              set({
+                projectTasks: updatedTasks,
+                projectSprints: currentSprints,
               });
             }
           }
-          
+
           // Call the domain method
           const result = await funct.bind(projectBook)(...args);
 
+          // For task operations, ensure we have a valid result
+          if (
+            ["createTask", "updateTask"].includes(funct.name) &&
+            (!result || !result.taskId)
+          ) {
+            throw new Error(`Invalid ${funct.name} response from server`);
+          }
+
           // Update store state using the helper method if not already done optimistically
-          // or if this is not a task update (other methods still need normal update)
-          if (!optimisticUIApplied || funct.name !== "updateTask") {
+          // or if this is not a task operation
+          if (
+            !optimisticUIApplied ||
+            !["updateTask", "deleteTask", "createTask"].includes(funct.name)
+          ) {
             _updateBook();
           }
 
@@ -181,65 +268,82 @@ export default create<ProjectStoreState>((set, get) => ({
           if (funct.name === "updateProject" && result) {
             set({ selectedProject: result });
           }
-          
-          // If this is a task update and we have projectTasks loaded, ensure final state matches response
-          if ((funct.name === "updateTask") && get().projectTasks && result) {
-            console.log("Finalizing optimistic task update with server response");
+
+          // If this is a task operation and we have projectTasks loaded, ensure final state matches response
+          if (
+            ["updateTask", "createTask"].includes(funct.name) &&
+            get().projectTasks &&
+            result
+          ) {
+            console.log(
+              "Finalizing optimistic task operation with server response"
+            );
             const selectedProjectId = get().selectedProject?.projectId;
             if (selectedProjectId) {
-              // For task updates, get the latest tasks from the domain
-              const updatedTasks = projectBook.getTasksByProject(selectedProjectId);
-              
+              // Get the latest tasks from the domain
+              const updatedTasks =
+                projectBook.getTasksByProject(selectedProjectId);
+
               // Update the sprints with the final result
-              const updatedSprintsList = _.cloneDeep(get().projectSprints || []);
-              updatedSprintsList.forEach(sprint => {
+              const updatedSprintsList = _.cloneDeep(
+                get().projectSprints || []
+              );
+
+              // For create task operations, we need the original task data
+              const originalTaskData =
+                funct.name === "createTask" ? args[1] : null;
+
+              updatedSprintsList.forEach((sprint) => {
                 if (sprint.tasks) {
-                  const taskIndex = sprint.tasks.findIndex((t: any) => t.taskId === result.taskId);
-                  if (taskIndex >= 0) {
-                    sprint.tasks[taskIndex] = { ...sprint.tasks[taskIndex], ...result };
+                  if (funct.name === "createTask" && originalTaskData) {
+                    // For create, add the new task with the real ID
+                    // Use the original taskData.sprint if result.sprint is undefined
+                    const targetSprintId =
+                      result.sprint?.sprintId ||
+                      originalTaskData.sprint?.sprintId;
+                    if (sprint.sprintId === targetSprintId) {
+                      // Remove any temporary tasks and add the real one
+                      sprint.tasks = sprint.tasks
+                        .filter(
+                          (t: Task) =>
+                            !String(t.taskId).startsWith("temp_") && t.taskId
+                        )
+                        .concat(result);
+                    }
+                  } else {
+                    // For update, replace the existing task
+                    const taskIndex = sprint.tasks.findIndex(
+                      (t: Task) => t.taskId === result.taskId
+                    );
+                    if (taskIndex >= 0) {
+                      sprint.tasks[taskIndex] = {
+                        ...sprint.tasks[taskIndex],
+                        ...result,
+                      };
+                    }
                   }
                 }
               });
-              
-              // Set the final state with server data
-              set({ 
-                projectTasks: updatedTasks,
-                projectSprints: updatedSprintsList
+
+              // Set the final state, ensuring we only have valid tasks
+              set({
+                projectTasks: updatedTasks.filter(
+                  (t: Task) => t.taskId && !String(t.taskId).startsWith("temp_")
+                ),
+                projectSprints: updatedSprintsList,
               });
             }
-          } else if ((funct.name === "createTask" || funct.name === "deleteTask") && get().projectTasks) {
-            // For create/delete, we need a full update
-            const selectedProjectId = get().selectedProject?.projectId;
-            if (selectedProjectId) {
-              const updatedTasks = projectBook.getTasksByProject(selectedProjectId);
-              set({ projectTasks: updatedTasks });
-            }
           }
-          
+
           return result;
         } catch (error) {
-          console.error(`Error in ${funct.name}:`, error);
-          
-          // Rollback on error - restore the entire previous state
-          // Different handling based on what kind of operation failed
-          if (funct.name === "updateTask" || funct.name === "createTask" || funct.name === "deleteTask") {
-            // Restore tasks, sprints and domain state for task operations
-            set({ 
-              projectBook: prevState,
-              projectTasks: prevTasks,
-              projectSprints: prevSprints
-            });
-          } else if (funct.name === "updateProject") {
-            // Restore project and domain state for project operations
-            set({ 
-              projectBook: prevState,
-              selectedProject: prevSelectedProject
-            });
-          } else {
-            // Default rollback for other operations
-            set({ projectBook: prevState });
-          }
-          
+          // On error, restore the previous state
+          set({
+            projectBook: prevState,
+            projectTasks: prevTasks,
+            projectSprints: prevSprints,
+            selectedProject: prevSelectedProject,
+          });
           throw error;
         }
       };
@@ -287,7 +391,7 @@ export default create<ProjectStoreState>((set, get) => ({
 
   setSelectedProject: (project) => {
     set({ selectedProject: project });
-    
+
     // If a project is selected, fetch its details (sprints and tasks)
     if (project && project.projectId) {
       get().setProjectWithDetails(project.projectId);
@@ -296,46 +400,49 @@ export default create<ProjectStoreState>((set, get) => ({
       set({ projectSprints: null, projectTasks: null });
     }
   },
-  
+
   setProjectWithDetails: async (projectId) => {
     try {
       // Set loading state
       set({ isLoadingProjectDetails: true });
-      
+
       // Fetch project with sprints and tasks
-      const { project, sprints, tasks } = await getProjects.withSprintsAndTasks(projectId);
-      
+      const { project, sprints, tasks } = await getProjects.withSprintsAndTasks(
+        projectId
+      );
+
       // Ensure tasks is always an array
       const tasksList = Array.isArray(tasks) ? tasks : [];
-      
+
       // Group tasks by sprint
-      const sprintsWithTasks = sprints.map(sprint => {
+      const sprintsWithTasks = sprints.map((sprint) => {
         // Safely filter tasks
-        const sprintTasks = tasksList.filter(task => 
-          task && task.sprint && task.sprint.sprintId === sprint.sprintId
+        const sprintTasks = tasksList.filter(
+          (task) =>
+            task && task.sprint && task.sprint.sprintId === sprint.sprintId
         );
         return { ...sprint, tasks: sprintTasks };
       });
-      
+
       // Initialize or update the ProjectBook
       let { projectBook } = get();
-      
+
       // If projectBook is null, create a new instance with the current project
       if (!projectBook) {
         projectBook = new ProjectBook([project]);
         // Make sure to set it in the store so the injectable methods are available
         get().setProjectBook(projectBook);
       }
-      
+
       // Now that we have an initialized ProjectBook, set the tasks
       projectBook.setProjectTasks(projectId, tasksList);
-      
+
       // Update store with all the data
       set({
         selectedProject: project,
         projectSprints: sprintsWithTasks,
         projectTasks: tasksList,
-        isLoadingProjectDetails: false
+        isLoadingProjectDetails: false,
       });
     } catch (error) {
       console.error("Error fetching project details:", error);
@@ -395,6 +502,107 @@ export default create<ProjectStoreState>((set, get) => ({
       const projects = projectBook.getProjectsByStatus(status);
       set({ filteredProjects: projects });
       set({ selectedStatus: status });
+    }
+  },
+
+  createTask: async (projectId: number, taskData: TaskCreate) => {
+    const { projectBook, _updateBook } = get();
+    if (!projectBook) return;
+
+    const prevState = _.cloneDeep(projectBook);
+    const prevTasks = _.cloneDeep(get().projectTasks);
+    const prevSprints = _.cloneDeep(get().projectSprints);
+
+    try {
+      // Create optimistic task for immediate UI update
+      const optimisticTask = {
+        ...taskData,
+        taskId: `temp_${Date.now()}`,
+        status: taskData.status || "To Do",
+        creationDate: new Date().toISOString(),
+        realFinishDate: null,
+        realHours: 0,
+        deletedAt: null,
+        project: { projectId },
+      };
+
+      // Update UI immediately with optimistic data
+      if (get().projectTasks) {
+        // Update projectTasks
+        const currentTasks = _.cloneDeep(get().projectTasks || []);
+        const updatedTasks = currentTasks
+          .filter((t: Task) => !String(t.taskId).startsWith("temp_"))
+          .concat(optimisticTask);
+
+        // Update projectSprints
+        const currentSprints = _.cloneDeep(get().projectSprints || []);
+        const sprintId = taskData.sprint?.sprintId;
+
+        if (sprintId) {
+          const targetSprint = currentSprints.find(
+            (s) => s.sprintId === sprintId
+          );
+          if (targetSprint) {
+            if (!targetSprint.tasks) {
+              targetSprint.tasks = [];
+            }
+            targetSprint.tasks = targetSprint.tasks
+              .filter((t: Task) => !String(t.taskId).startsWith("temp_"))
+              .concat(optimisticTask);
+          }
+        }
+
+        // Update store with optimistic changes
+        set({
+          projectTasks: updatedTasks,
+          projectSprints: currentSprints,
+        });
+      }
+
+      // Make the actual API call
+      const result = await projectBook.createTask(projectId, taskData);
+
+      if (!result || !result.taskId) {
+        throw new Error("Invalid response from server");
+      }
+
+      // Update both projectTasks and projectSprints with the real data
+      const currentTasks = get().projectTasks || [];
+      const validTasks = currentTasks
+        .filter((t: Task) => !String(t.taskId).startsWith("temp_"))
+        .concat(result);
+
+      const currentSprints = _.cloneDeep(get().projectSprints || []);
+      const sprintId = taskData.sprint?.sprintId;
+
+      if (sprintId) {
+        const targetSprint = currentSprints.find(
+          (s) => s.sprintId === sprintId
+        );
+        if (targetSprint) {
+          targetSprint.tasks = (targetSprint.tasks || [])
+            .filter((t: Task) => !String(t.taskId).startsWith("temp_"))
+            .concat(result);
+        }
+      }
+
+      // Update the store with the final state
+      projectBook.setProjectTasks(projectId, validTasks);
+      set({
+        projectBook,
+        projectTasks: validTasks,
+        projectSprints: currentSprints,
+      });
+
+      return result;
+    } catch (error) {
+      // Restore previous state on error
+      set({
+        projectBook: prevState,
+        projectTasks: prevTasks,
+        projectSprints: prevSprints,
+      });
+      throw error;
     }
   },
 }));

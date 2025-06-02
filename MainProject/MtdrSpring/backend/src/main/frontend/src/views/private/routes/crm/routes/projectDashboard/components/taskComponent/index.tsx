@@ -9,7 +9,7 @@ import {
   SelectWrapper,
   HoursContainer,
 } from "./elements";
-import { Row, Button, Popover, Checkbox, Tooltip } from "antd";
+import { Row, Button, Popover, Checkbox, Tooltip, message } from "antd";
 import {
   MoreOutlined,
   EditOutlined,
@@ -78,6 +78,18 @@ const TaskComponent: React.FC<TaskComponentProps> = ({ task }) => {
     }
   };
 
+  const handleDelete = () => {
+    if (task?.taskId) {
+      try {
+        // Call delete task
+        projectStore.deleteTask?.(task.taskId);
+      } catch (error) {
+        console.error("Error deleting task:", error);
+        message.error("Failed to delete task");
+      }
+    }
+  };
+
   const content = (
     <div
       style={{
@@ -99,7 +111,6 @@ const TaskComponent: React.FC<TaskComponentProps> = ({ task }) => {
         type="text"
         icon={<EditOutlined />}
         onClick={() => {
-          // Set focus to the task name input
           setIsInputFocused(true);
         }}
       >
@@ -108,12 +119,7 @@ const TaskComponent: React.FC<TaskComponentProps> = ({ task }) => {
       <StyledButton
         type="text"
         icon={<DeleteOutlined />}
-        onClick={() => {
-          // Handle delete task
-          if (task?.taskId) {
-            projectStore.deleteTask?.(task.taskId);
-          }
-        }}
+        onClick={handleDelete}
       >
         Delete
       </StyledButton>
@@ -256,7 +262,9 @@ const TaskComponent: React.FC<TaskComponentProps> = ({ task }) => {
           )}
         </SelectWrapper>
         <Tooltip title={task.user?.name} placement="topLeft">
-          <ProfileImage> {getInitials(task.user?.name)} </ProfileImage>
+          <ProfileImage>
+            {task.user?.name ? getInitials(task.user.name) : "NA"}
+          </ProfileImage>
         </Tooltip>
         <Popover
           placement="right"
