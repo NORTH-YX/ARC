@@ -154,7 +154,7 @@ const SprintComponent: React.FC<SprintComponentProps> = ({
         <NewTaskModal
           onCancel={() => setIsTaskModalOpen(false)}
           onCreate={handleCreateTask}
-          sprintId={sprint?.sprintId}
+          sprint={sprint}
         />
       )}
       {currentSprintTasks.map((task: Task) => (

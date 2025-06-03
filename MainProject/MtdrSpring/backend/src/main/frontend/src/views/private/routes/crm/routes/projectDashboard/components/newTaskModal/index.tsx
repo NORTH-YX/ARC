@@ -1,6 +1,6 @@
 import { Form, Input, Select, DatePicker, Row, Button, Col } from "antd";
 import { CloseOutlined, CheckOutlined } from "@ant-design/icons";
-import { TaskCreate } from "../../../../../../../../interfaces/task";
+import { Sprint, TaskCreate } from "../../../../../../../../interfaces/task";
 import { Container } from "./elements";
 import useUserStore from "../../../../../../../../modules/users/store/useUserStore";
 import { useDataInitialization } from "../../../../../../../../modules/users/hooks/useDataInitialization";
@@ -12,13 +12,13 @@ const { TextArea } = Input;
 interface NewTaskModalProps {
   onCancel: () => void;
   onCreate: (taskData: TaskCreate) => void;
-  sprintId: number;
+  sprint: Sprint;
 }
 
 const NewTaskModal: React.FC<NewTaskModalProps> = ({
   onCancel,
   onCreate,
-  sprintId,
+  sprint,
 }) => {
   const { data } = useUserBook();
   const store = useUserStore();
@@ -34,7 +34,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({
         High: 3,
       };
 
-      if (!sprintId) {
+      if (!sprint?.sprintId) {
         console.error("Sprint ID is required");
         return;
       }
@@ -52,7 +52,7 @@ const NewTaskModal: React.FC<NewTaskModalProps> = ({
         user: users.find((u) => u.userId === values.userId) || {
           userId: values.userId,
         },
-        sprint: { sprintId },
+        sprint,
       };
 
       onCreate(formattedValues);

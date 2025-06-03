@@ -338,6 +338,14 @@ const TasksTable: React.FC = () => {
     }
   };
 
+  const selectedSprint =
+        sprints.find(
+          s =>
+            s.sprintId ===
+            (store.selectedSprintId ||
+              (sprints.length > 0 ? sprints[0].sprintId : 1))
+        );
+
   return (
     <div style={{ width: '100%' }}>
       <div
@@ -425,14 +433,14 @@ const TasksTable: React.FC = () => {
         )}
       </div>
 
-      {store.isTaskModalOpen && (
+      {store.isTaskModalOpen && selectedSprint && (
         <NewTaskModal
           onCancel={store.closeTaskModal}
           onCreate={async (taskData) => {
             await store.createTask(taskData);
             store.closeTaskModal();
           }}
-          sprintId={store.selectedSprintId || (sprints.length > 0 ? sprints[0].sprintId : 1)}
+          sprint={selectedSprint}
         />
       )}
       
