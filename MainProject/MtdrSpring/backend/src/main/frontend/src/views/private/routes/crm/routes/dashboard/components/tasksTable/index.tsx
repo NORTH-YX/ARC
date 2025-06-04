@@ -444,169 +444,172 @@ const TasksTable: React.FC = () => {
         />
       )}
       
-      <StyledTable
-        dataSource={getFilteredTasks()}
-        rowKey="taskId"
-        onChange={handleTableChange}
-        pagination={{ pageSize: 35 }}
-      >
-        <StyledTable.Column
-          title="Task Name"
-          dataIndex="taskName"
-          key="taskName"
-          ellipsis={false}
-          width="20%"
-        />
-        <StyledTable.Column
-          title="Status"
-          dataIndex="status"
-          key="status"
-          width={130}
-          ellipsis={false}
-          render={(status: string, record: Task) => (
-            <div style={{ width: '120px' }}>
-              <Select
-                value={status}
-                style={{ width: '100%' }}
-                onChange={(newStatus) => handleStatusChange(newStatus, record)}
-                options={TASK_STATUSES.map((statusOption) => {
-                  const optionInfo = getStatusTag(statusOption);
-                  return {
-                    value: statusOption,
-                    label: optionInfo.label,
-                  };
-                })}
-                className="status-select"
-                rootClassName={`status-select-${status
-                  .toLowerCase()
-                  .replace(" ", "-")}`}
-                popupClassName="status-select-dropdown"
-                dropdownStyle={{ zIndex: 1100 }}
-              />
-            </div>
-          )}
-        />
-        <StyledTable.Column
-          title="Sprint"
-          dataIndex={["sprint", "sprintName"]}
-          key="sprint"
-          width={130}
-          ellipsis={true}
-          sorter={{
-            compare: (a: any, b: any) => {
-              const sprintA = a.sprint?.sprintName || "";
-              const sprintB = b.sprint?.sprintName || "";
-              return sprintA.localeCompare(sprintB);
-            },
-          }}
-        />
-        <StyledTable.Column
-          title="Creation Date"
-          dataIndex="creationDate"
-          key="creationDate"
-          width={140}
-          ellipsis={true}
-          className="editable-cell"
-          render={(date: string, record: Task) => renderEditableDate(date, record, "creationDate")}
-          sorter={{
-            compare: (a: any, b: any) =>
-              compareDates(a.creationDate, b.creationDate),
-          }}
-        />
-        <StyledTable.Column
-          title="Estimated Finish"
-          dataIndex="estimatedFinishDate"
-          key="estimatedFinishDate"
-          width={140}
-          ellipsis={true}
-          className="editable-cell"
-          render={(date: string, record: Task) => renderEditableDate(date, record, "estimatedFinishDate")}
-          sorter={{
-            compare: (a: any, b: any) =>
-              compareDates(a.estimatedFinishDate, b.estimatedFinishDate),
-          }}
-        />
-        <StyledTable.Column
-          title="Priority"
-          dataIndex="priority"
-          key="priority"
-          width={80}
-          ellipsis={true}
-        />
-        <StyledTable.Column
-          title="User"
-          dataIndex={["user", "name"]}
-          key="user"
-          width={150}
-          ellipsis={false}
-          render={(_, record: Task) => (
-            <div style={{ width: '130px' }}>
-              <Select
-                value={record.user?.userId}
-                style={{ width: '100%' }}
-                onChange={(newUserId) => handleUserChange(newUserId, record)}
-                options={users.map((user) => ({
-                  value: user.userId,
-                  label: user.name,
-                }))}
-                className="user-select"
-                popupClassName="user-select-dropdown"
-                dropdownStyle={{ zIndex: 1100 }}
-                placeholder="Assign user"
-                suffixIcon={<UserOutlined />}
-                showSearch
-                optionFilterProp="label"
-              />
-            </div>
-          )}
-        />
-        <StyledTable.Column
-          title="Real Finish"
-          dataIndex="realFinishDate"
-          key="realFinishDate"
-          width={140}
-          ellipsis={true}
-          className="editable-cell"
-          render={(date: string | null, record: Task) => renderEditableDate(date, record, "realFinishDate")}
-          sorter={{
-            compare: (a: any, b: any) =>
-              compareDates(a.realFinishDate, b.realFinishDate),
-          }}
-        />
-        <StyledTable.Column
-          title="Action"
-          key="action"
-          width={80}
-          ellipsis={true}
-          render={(_: any, record: any) => {
-            const items: MenuProps['items'] = [
-              {
-                key: 'edit',
-                label: 'Edit',
-                onClick: () => handleEdit(record.taskId),
+      <div style={{ width: '100%', overflowX: 'auto' }}>
+        <StyledTable
+          dataSource={getFilteredTasks()}
+          rowKey="taskId"
+          onChange={handleTableChange}
+          pagination={{ pageSize: 35 }}
+          scroll={{ x: 'max-content' }}
+        >
+          <StyledTable.Column
+            title="Task Name"
+            dataIndex="taskName"
+            key="taskName"
+            ellipsis={false}
+            width="20%"
+          />
+          <StyledTable.Column
+            title="Status"
+            dataIndex="status"
+            key="status"
+            width={130}
+            ellipsis={false}
+            render={(status: string, record: Task) => (
+              <div style={{ width: '120px' }}>
+                <Select
+                  value={status}
+                  style={{ width: '100%' }}
+                  onChange={(newStatus) => handleStatusChange(newStatus, record)}
+                  options={TASK_STATUSES.map((statusOption) => {
+                    const optionInfo = getStatusTag(statusOption);
+                    return {
+                      value: statusOption,
+                      label: optionInfo.label,
+                    };
+                  })}
+                  className="status-select"
+                  rootClassName={`status-select-${status
+                    .toLowerCase()
+                    .replace(" ", "-")}`}
+                  popupClassName="status-select-dropdown"
+                  dropdownStyle={{ zIndex: 1100 }}
+                />
+              </div>
+            )}
+          />
+          <StyledTable.Column
+            title="Sprint"
+            dataIndex={["sprint", "sprintName"]}
+            key="sprint"
+            width={130}
+            ellipsis={true}
+            sorter={{
+              compare: (a: any, b: any) => {
+                const sprintA = a.sprint?.sprintName || "";
+                const sprintB = b.sprint?.sprintName || "";
+                return sprintA.localeCompare(sprintB);
               },
-              {
-                key: 'delete',
-                label: 'Delete',
-                danger: true,
-                onClick: () => handleDelete(record.taskId),
-              },
-            ];
-            
-            return (
-              <Tooltip title="Task Actions">
-                <Dropdown menu={{ items }} placement="bottomRight" trigger={['click']}>
-                  <Button 
-                    type="text" 
-                    icon={<EllipsisOutlined style={{ fontSize: '20px' }} />} 
-                    onClick={(e) => e.preventDefault()}
-                  />
-                </Dropdown>
-              </Tooltip>
-            );
-          }}
-        />
-      </StyledTable>
+            }}
+          />
+          <StyledTable.Column
+            title="Creation Date"
+            dataIndex="creationDate"
+            key="creationDate"
+            width={140}
+            ellipsis={true}
+            className="editable-cell"
+            render={(date: string, record: Task) => renderEditableDate(date, record, "creationDate")}
+            sorter={{
+              compare: (a: any, b: any) =>
+                compareDates(a.creationDate, b.creationDate),
+            }}
+          />
+          <StyledTable.Column
+            title="Estimated Finish"
+            dataIndex="estimatedFinishDate"
+            key="estimatedFinishDate"
+            width={140}
+            ellipsis={true}
+            className="editable-cell"
+            render={(date: string, record: Task) => renderEditableDate(date, record, "estimatedFinishDate")}
+            sorter={{
+              compare: (a: any, b: any) =>
+                compareDates(a.estimatedFinishDate, b.estimatedFinishDate),
+            }}
+          />
+          <StyledTable.Column
+            title="Priority"
+            dataIndex="priority"
+            key="priority"
+            width={80}
+            ellipsis={true}
+          />
+          <StyledTable.Column
+            title="User"
+            dataIndex={["user", "name"]}
+            key="user"
+            width={150}
+            ellipsis={false}
+            render={(_, record: Task) => (
+              <div style={{ width: '130px' }}>
+                <Select
+                  value={record.user?.userId}
+                  style={{ width: '100%' }}
+                  onChange={(newUserId) => handleUserChange(newUserId, record)}
+                  options={users.map((user) => ({
+                    value: user.userId,
+                    label: user.name,
+                  }))}
+                  className="user-select"
+                  popupClassName="user-select-dropdown"
+                  dropdownStyle={{ zIndex: 1100 }}
+                  placeholder="Assign user"
+                  suffixIcon={<UserOutlined />}
+                  showSearch
+                  optionFilterProp="label"
+                />
+              </div>
+            )}
+          />
+          <StyledTable.Column
+            title="Real Finish"
+            dataIndex="realFinishDate"
+            key="realFinishDate"
+            width={140}
+            ellipsis={true}
+            className="editable-cell"
+            render={(date: string | null, record: Task) => renderEditableDate(date, record, "realFinishDate")}
+            sorter={{
+              compare: (a: any, b: any) =>
+                compareDates(a.realFinishDate, b.realFinishDate),
+            }}
+          />
+          <StyledTable.Column
+            title="Action"
+            key="action"
+            width={80}
+            ellipsis={true}
+            render={(_: any, record: any) => {
+              const items: MenuProps['items'] = [
+                {
+                  key: 'edit',
+                  label: 'Edit',
+                  onClick: () => handleEdit(record.taskId),
+                },
+                {
+                  key: 'delete',
+                  label: 'Delete',
+                  danger: true,
+                  onClick: () => handleDelete(record.taskId),
+                },
+              ];
+              
+              return (
+                <Tooltip title="Task Actions">
+                  <Dropdown menu={{ items }} placement="bottomRight" trigger={['click']}>
+                    <Button 
+                      type="text" 
+                      icon={<EllipsisOutlined style={{ fontSize: '20px' }} />} 
+                      onClick={(e) => e.preventDefault()}
+                    />
+                  </Dropdown>
+                </Tooltip>
+              );
+            }}
+          />
+        </StyledTable>
+      </div>
     </div>
   );
 };
