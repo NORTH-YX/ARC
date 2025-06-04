@@ -6,14 +6,9 @@ shell: bash
 env:
   variables:
     JAVA_HOME: /usr/lib64/graalvm/graalvm22-ee-java17
+    BUCKET_NAME: reacttodo-puebo
     NAMESPACE_NAME: ax2fs7hibrfo
     COMPARTMENT_ID: ocid1.compartment.oc1..aaaaaaaamhzttr3lwlq665qwm7xztqqdw53igngf3o6xnsztqerx36ckzegq
-    REPO_NAME: artifact-repository-20250528-1120
-
-  exportedVariables:
-    - BuildServiceDemoVersion
-    - JAVA_HOME
-    - REPO_OCID
 
 steps:
   - type: Command
@@ -26,7 +21,6 @@ steps:
     name: "Configurar entorno Java 17 (GraalVM)"
     command: |
       export PATH=$JAVA_HOME/bin:$PATH
-      echo "✅ Versión de Java:"
       java -version
 
   - type: Command
@@ -67,34 +61,20 @@ steps:
       cd ZAP_2.16.1
       chmod +x zap.sh
 
-      echo "🔍 Ejecutando escaneo ZAP con Java 17 (GraalVM)..."
+      echo "🔍 Ejecutando escaneo ZAP..."
       JAVA_HOME=$JAVA_HOME ./zap.sh -cmd -quickurl http://$TARGET_IP -quickout /root/zap-report.html -quickprogress
       echo "📄 Contenido de zap-report.html:"
       cat /root/zap-report.html
 
   - type: Command
-    name: "Copiar reporte para artefacto local"
+    name: "Subir ZAP Report al Bucket de Object Storage"
     command: |
-      cp /root/zap-report.html $OCI_PRIMARY_SOURCE_DIR/zap-report.html
-
-  - type: Command
-    name: "Obtener OCID del repositorio"
-    command: |
-      export REPO_OCID=$(oci artifacts generic-repository list \
-        --compartment-id $COMPARTMENT_ID \
-        --name $REPO_NAME \
-        --query "data[0].id" \
-        --raw-output)
-      echo "📦 OCID del repositorio: $REPO_OCID"
-
-  - type: Command
-    name: "Subir reporte a Artifact Registry"
-    command: |
-      echo "⬆️ Subiendo zap-report.html a Artifact Registry..."
-      oci artifacts generic-artifact upload-by-path \
-        --artifact-path zap-report.html \
-        --repository-id $REPO_OCID \
+      echo "⬆️ Subiendo zap-report.html a bucket $BUCKET_NAME ..."
+      oci os object put \
+        --bucket-name $BUCKET_NAME \
+        --name zap-report.html \
+        --file /root/zap-report.html \
+        --namespace $NAMESPACE_NAME \
         --content-type text/html \
-        --compartment-id $COMPARTMENT_ID \
-        --artifact-display-name zap-report.html \
-        --artifact-version $(date +%Y%m%d%H%M%S)
+        --force
+
