@@ -70,11 +70,9 @@ steps:
     name: "Subir ZAP Report al Bucket de Object Storage"
     command: |
       echo "⬆️ Subiendo zap-report.html a bucket $BUCKET_NAME ..."
+      DATE=$(date +%Y%m%d%H%M%S)
       oci os object put \
         --bucket-name $BUCKET_NAME \
-        --name zap-report.html \
+        --name zap-report-$DATE.html \
         --file /root/zap-report.html \
-        --namespace $NAMESPACE_NAME \
-        --content-type text/html \
-        --force
-
+        --namespace $NAMESPACE_NAME
