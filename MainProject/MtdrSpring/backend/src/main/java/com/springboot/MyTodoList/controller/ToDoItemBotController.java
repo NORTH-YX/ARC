@@ -90,14 +90,15 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 			String messageText = update.getMessage().getText();
 			long chatId = update.getMessage().getChatId();
 
-			User user = validateChatIdAndGetUserData(chatId);
-			if (user == null) {
-				sendMessage(chatId, "User not found. Please register to use the bot.");
-				return;
-			}
+			// User user = validateChatIdAndGetUserData(chatId);
+			// if (user == null) {
+			// 	sendMessage(chatId, "User not found. Please register to use the bot.");
+			// 	return;
+			// }
 
 			if (!userWelcomeState.getOrDefault(chatId, false)) {
-				sendMessage(chatId, "Welcome, " + user.getName() + "! 👋");
+				// sendMessage(chatId, "Welcome, " + user.getName() + "! 👋");
+				sendMessage(chatId, "Welcome, " + "! 👋");
 				userWelcomeState.put(chatId, true);
 			}
 
@@ -179,7 +180,8 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 			if (aiAction.getParams().get("estimated_finish_date") != null) {
 				try {
 					String dateString = aiAction.getParams().get("estimated_finish_date").toString();
-					OffsetDateTime finishDate = OffsetDateTime.parse(dateString);
+					OffsetDateTime finishDate = OffsetDateTime.parse(dateString)
+						.withOffsetSameInstant(ZoneOffset.of("-06:00"));
 					task.setEstimatedFinishDate(finishDate);
 				} catch (DateTimeParseException e) {
 					logger.warn("Could not parse estimated finish date: " + aiAction.getParams().get("estimated_finish_date"));
@@ -582,14 +584,14 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 	private void showMyTasks(long chatId) {
 		try {
 			// Validar el usuario actual
-			User user = validateChatIdAndGetUserData(chatId);
-			if (user == null) {
-				sendMessage(chatId, "User not found. Please register to use the bot.");
-				return;
-			}
+			// User user = validateChatIdAndGetUserData(chatId);
+			// if (user == null) {
+			// 	sendMessage(chatId, "User not found. Please register to use the bot.");
+			// 	return;
+			// }
 	
 			// Obtener las tareas del usuario actual
-			List<Task> tasks = getTasksByUserId(user.getUserId());
+			List<Task> tasks = getTasksByUserId(24);
 			if (tasks.isEmpty()) {
 				sendMessage(chatId, "You have no tasks assigned.");
 				return;
@@ -1152,12 +1154,13 @@ public class ToDoItemBotController extends TelegramLongPollingBot {
 				try {
 					String dateString = aiAction.getParams().get("estimated_finish_date").toString();
 					OffsetDateTime finishDate = OffsetDateTime.parse(dateString);
+					// CORRECCIÓN: fuerza a tu zona horaria
+					finishDate = finishDate.withOffsetSameInstant(ZoneOffset.of("-06:00"));
 					task.setEstimatedFinishDate(finishDate);
 				} catch (DateTimeParseException e) {
 					logger.warn("Could not parse estimated finish date: " + aiAction.getParams().get("estimated_finish_date"));
 				}
 			}
-	
 			// Set sprint
 			if (aiAction.getParams().get("sprint_id") != null) {
 				try {
